@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "build": "tsc --noEmit && vitest run && vite build",
     "preview": "vite preview",
-    "sync:ordamor": "tsx scripts/sync-ordamor.ts"
+    "sync:ordamor": "tsx scripts/sync-ordamor.ts",
+    "media:manifest": "tsx scripts/generate-media-pack.ts",
+    "media:tts": "tsx scripts/generate-media-pack.ts --synthesize-tts"
   },
   "dependencies": {
     "react": "^19.3.0",

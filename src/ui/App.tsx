@@ -1,6 +1,13 @@
-import { useRef, useState } from "react";
-import { playBoothSfx } from "../game/audio.js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  playBoothSfx,
+  setBoothAmbience,
+  speakIntercomLine,
+  stopAllBoothAudio,
+  stopIntercomVoice
+} from "../game/audio.js";
 import { UI_STRINGS, tl } from "../game/i18n.js";
+import type { ClipState, VoiceLineVariant } from "../game/media.js";
 import {
   SHIFT_EXCUSES,
   type IntakeOption,
@@ -33,6 +40,7 @@ type Stage = "intake" | "booth" | "night5";
 export function App() {
   const [lang, setLang] = useState<Locale>("zh");
   const [sfx, setSfx] = useState(true);
+  const [voice, setVoice] = useState(true);
   const [stage, setStage] = useState<Stage>("intake");
   const [campaignMode, setCampaignMode] = useState<CampaignMode>("full");
 
@@ -65,8 +73,10 @@ export function App() {
   const [turnsLeft, setTurnsLeft] = useState(4);
   const [powerLeft, setPowerLeft] = useState(2);
   const [bpm, setBpm] = useState(visitor.baseBpm);
+  const [clipState, setClipState] = useState<ClipState>("idle");
   const [reaction, setReaction] = useState("IDLE: COLD_BREATH");
   const [strobeTrigger, setStrobeTrigger] = useState(0);
+  const [thermalTrigger, setThermalTrigger] = useState(0);
   const [sensorToast, setSensorToast] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<TranscriptLine[]>([
     { speaker: "npc", text: visitor.openingLine, meta: `N${visitor.night} · INTERCOM CH-01` }
@@ -81,7 +91,29 @@ export function App() {
     turns_remaining: 4
   });
 
-  const resetVisitorState = (idx: number, roster: readonly VisitorSpec[] = activeVisitors) => {
+  // Continuous Arctic blizzard wind + Night 3 geomagnetic storm ambience
+  useEffect(() => {
+    setBoothAmbience(sfx && stage === "booth", visitor.night);
+  }, [sfx, stage, visitor.night]);
+
+  useEffect(() => {
+    return () => {
+      stopAllBoothAudio();
+    };
+  }, []);
+
+  const handleClipComplete = useCallback(() => {
+    setClipState((prev) => (prev === "admit" || prev === "purge" ? prev : "idle"));
+    setReaction((prev) =>
+      prev.includes("PURGE") || prev.includes("ADMIT") ? prev : "IDLE: COLD_BREATH"
+    );
+  }, []);
+
+  const resetVisitorState = (
+    idx: number,
+    roster: readonly VisitorSpec[] = activeVisitors,
+    speakOpening = true
+  ) => {
     shiftEpochRef.current += 1;
     const v = roster[idx]!;
     setVisitorIdx(idx);
@@ -89,6 +121,7 @@ export function App() {
     setTurnsLeft(4);
     setPowerLeft(2);
     setBpm(v.baseBpm);
+    setClipState("idle");
     setReaction("IDLE: COLD_BREATH");
     setSensorToast(null);
     setTranscript([
@@ -100,6 +133,16 @@ export function App() {
     setActiveTab("baseline");
     setSpoilerOpen(false);
     setLastPipelinePayload({ status: "AWAITING_INTERROGATION", turns_remaining: 4 });
+
+    if (speakOpening) {
+      speakIntercomLine({
+        visitorId: v.id,
+        locale: lang,
+        text: tl(v.openingLine, lang),
+        lineId: "opening",
+        enabled: voice
+      });
+    }
   };
 
   const startNewShift = (modeOverride: CampaignMode = campaignMode) => {
@@ -108,7 +151,7 @@ export function App() {
     setRolls(rollShift(roster));
     setHistory([]);
     setStage("booth");
-    resetVisitorState(0, roster);
+    resetVisitorState(0, roster, true);
   };
 
   const handleSwitchCampaignMode = (nextMode: CampaignMode) => {
@@ -116,7 +159,7 @@ export function App() {
     const roster = getVisitorsForMode(nextMode);
     setRolls(rollShift(roster));
     setHistory([]);
-    resetVisitorState(0, roster);
+    resetVisitorState(0, roster, stage === "booth");
   };
 
   const handleTriggerSensor = (kind: "strobe" | "thermal") => {
@@ -128,7 +171,8 @@ export function App() {
       const msg = currentRoll.isMimic ? visitor.sensors.strobeMimic : visitor.sensors.strobeHuman;
       setSensorToast(`🔦 ${tl(msg, lang)}`);
     } else {
-      playBoothSfx("ptt", sfx);
+      playBoothSfx("thermal", sfx);
+      setThermalTrigger((c) => c + 1);
       const msg = currentRoll.isMimic ? visitor.sensors.thermalMimic : visitor.sensors.thermalHuman;
       setSensorToast(`🌡️ ${tl(msg, lang)}`);
     }
@@ -153,12 +197,22 @@ export function App() {
           ? probe.human
           : probe[stance.lineKey] ?? probe.human;
 
+    const resolvedLineId: VoiceLineVariant =
+      probeKey === "off_axis" || !probe
+        ? "off_axis"
+        : !onAxis
+          ? `${probeKey}_human`
+          : `${probeKey}_${stance.lineKey}`;
+
+    const nextClip: ClipState = onAxis ? "flinch" : "lean_in";
     const reactionClip = onAxis ? "flinch_eyes_dart" : "angry_lean_in";
     const bpmDelta = onAxis ? 10 : 4;
 
     setTurnsLeft((t) => t - 1);
     setBpm((b) => Math.min(148, b + bpmDelta));
+    setClipState(nextClip);
     setReaction(`CLIP: ${reactionClip.toUpperCase()}`);
+    if (onAxis) playBoothSfx("heartbeat", sfx);
     if (!onAxis) setOffAxisCount((c) => c + 1);
 
     const llmInput = buildRephraseInput(
@@ -183,6 +237,14 @@ export function App() {
           next.push({ speaker: "system", text: UI_STRINGS.offAxisSystemNote });
         }
         return next;
+      });
+
+      speakIntercomLine({
+        visitorId: visitor.id,
+        locale: lang,
+        text: tl(canonicalReply, lang),
+        lineId: resolvedLineId,
+        enabled: voice
       });
 
       const { lineKey: _hiddenKey, ...publicStance } = stance;
@@ -239,6 +301,15 @@ export function App() {
       return next;
     });
 
+    speakIntercomLine({
+      visitorId: visitor.id,
+      locale: lang,
+      text: tl(finalReply, lang),
+      lineId: resolvedLineId,
+      isDynamicFlash: outcome.source === "flash",
+      enabled: voice
+    });
+
     const { lineKey: _hiddenKey, ...publicStance } = stance;
     setLastPipelinePayload({
       "1_axis_detection": {
@@ -266,8 +337,10 @@ export function App() {
 
   const handleVerdict = (decision: "ADMIT" | "PURGE") => {
     if (verdictState !== "NONE" || isRephrasing) return;
+    stopIntercomVoice();
     playBoothSfx(decision === "PURGE" ? "purge" : "admit", sfx);
     setVerdictState(decision);
+    setClipState(decision === "PURGE" ? "purge" : "admit");
     setReaction(decision === "PURGE" ? "CLIP: HIGH_TEMP_PURGE" : "CLIP: AIRLOCK_ADMIT");
     setActiveTab("verdict");
   };
@@ -289,8 +362,9 @@ export function App() {
 
   const handleNextVisitor = () => {
     if (safeIdx < activeVisitors.length - 1) {
-      resetVisitorState(safeIdx + 1);
+      resetVisitorState(safeIdx + 1, activeVisitors, true);
     } else {
+      stopIntercomVoice();
       playBoothSfx("purge", sfx);
       setStage("night5");
     }
@@ -356,11 +430,26 @@ export function App() {
             type="button"
             className="ctrl-btn amber"
             onClick={() => {
+              stopIntercomVoice();
               playBoothSfx("purge", sfx);
               setStage("night5");
             }}
           >
             {tl(UI_STRINGS.night5Btn, lang)}
+          </button>
+
+          <button
+            id="btn-voice-toggle"
+            type="button"
+            className="ctrl-btn"
+            onClick={() => {
+              setVoice((v) => {
+                if (v) stopIntercomVoice();
+                return !v;
+              });
+            }}
+          >
+            {voice ? "🎙️ VOICE: ON" : "🎙️ VOICE: OFF"}
           </button>
 
           <button type="button" className="ctrl-btn" onClick={() => setSfx((s) => !s)}>
@@ -372,7 +461,10 @@ export function App() {
             aria-label="Language"
             className="ctrl-select"
             value={lang}
-            onChange={(e) => setLang(e.target.value as Locale)}
+            onChange={(e) => {
+              stopIntercomVoice();
+              setLang(e.target.value as Locale);
+            }}
           >
             <option value="zh">简体中文</option>
             <option value="en">English</option>
@@ -421,9 +513,12 @@ export function App() {
 
                 <ViewportCanvas
                   visitor={visitor}
-                  reaction={reaction}
+                  clipState={clipState}
+                  bpm={bpm}
                   strobeTrigger={strobeTrigger}
+                  thermalTrigger={thermalTrigger}
                   verdictState={verdictState}
+                  onClipComplete={handleClipComplete}
                 />
 
                 {visitor.night === 3 ? (

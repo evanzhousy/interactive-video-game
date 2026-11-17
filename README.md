@@ -17,9 +17,11 @@ Requires **Node.js 24+** and **pnpm**:
 
 ```bash
 pnpm install
-pnpm dev        # Start local Vite dev server (includes /api/rephrase middleware)
-pnpm test       # Run hermetic Vitest suite (Ordamor v6 invariants + Stance + Flash + UI)
-pnpm build      # tsc --noEmit && vitest run && vite build -> dist/
+pnpm dev             # Start local Vite dev server (includes /api/rephrase middleware)
+pnpm media:manifest  # Export 40 I2V video prompts + 264 trilingual voice scripts -> public/media-manifest.json
+pnpm media:tts       # Optional: batch-render studio .mp3 intercom voices (requires TTS_API_KEY)
+pnpm test            # Run hermetic Vitest suite (Ordamor v6 + Stance + Flash + Media + UI)
+pnpm build           # tsc --noEmit && vitest run && vite build -> dist/
 ```
 
 ---

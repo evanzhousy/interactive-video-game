@@ -67,7 +67,8 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash O
       (document.getElementById("btn-start-shift") as HTMLButtonElement).click();
     });
 
-    // Enable Flash Online Rephrase via topbar drawer
+    // Enable Flash Online Rephrase via topbar drawer & test VOICE toggle
+    expect(document.getElementById("btn-voice-toggle")?.textContent).toContain("VOICE: ON");
     await act(async () => {
       (document.getElementById("btn-flash-toggle") as HTMLButtonElement).click();
     });
@@ -79,6 +80,18 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash O
 
     // Walk through all 8 survivors: V-01..V-08
     for (let idx = 0; idx < 8; idx++) {
+      expect(
+        document.getElementById("quarantine-viewport")?.getAttribute("data-clip-state")
+      ).toBe("idle");
+
+      // On V-01, trigger Neural Thermal (1⚡) and verify FLIR false-color shader class activates
+      if (idx === 0) {
+        await act(async () => {
+          (document.getElementById("btn-thermal") as HTMLButtonElement).click();
+        });
+        expect(document.querySelector(".viewport-media-stage.mode-thermal")).not.toBeNull();
+      }
+
       // Night 1 (idx 0, 1): MindCrystal locked; Night 2+ (idx >= 2): MindCrystal unlocked
       if (idx < 2) {
         expect(document.getElementById("arc-locked")).not.toBeNull();
