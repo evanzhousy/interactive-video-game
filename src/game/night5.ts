@@ -1,7 +1,10 @@
 import type { ValueToken } from "../ordamor/index.js";
+import { tl } from "./i18n.js";
+import type { Night5VoiceVariant } from "./media.js";
 import type {
   DisposalStyleKey,
   EndingId,
+  Locale,
   LocalizedText,
   ShiftExcuse,
   ShiftHistoryEntry
@@ -192,6 +195,47 @@ export const INTAKE_QUESTIONS: readonly IntakeQuestion[] = [
     ]
   }
 ];
+
+export const NIGHT5_KNOCK_SUFFIX: LocalizedText = {
+  zh: "这是我入职时亲口说的话。这几夜我每一次都是这么做的。你呢？",
+  en: "That's what I said at intake. Every night since, that's what I did. Did you?",
+  ja: "それが入所時に私が言った言葉だ。この数夜、私はその通りに動いた。お前はどうだ？"
+};
+
+export function resolveNight5KnockLine(
+  baseline: PlayerCompactProfile,
+  intakeAnswers: readonly IntakeOption[],
+  lang: Locale
+): { quote: string; knockSpeech: string; voiceLineId: Night5VoiceVariant } {
+  const matchingIntake = intakeAnswers.find((a) => a.sig === baseline.sig);
+  if (matchingIntake) {
+    for (let qi = 0; qi < INTAKE_QUESTIONS.length; qi++) {
+      const opts = INTAKE_QUESTIONS[qi]!.options;
+      for (let oi = 0; oi < opts.length; oi++) {
+        if (opts[oi]!.text.en === matchingIntake.text.en) {
+          const quote = tl(matchingIntake.text, lang);
+          return {
+            quote,
+            knockSpeech: `${quote} ${tl(NIGHT5_KNOCK_SUFFIX, lang)}`,
+            voiceLineId: `n5_q${qi as 0 | 1 | 2}_o${oi as 0 | 1 | 2}`
+          };
+        }
+      }
+    }
+  }
+
+  const exIdx = Math.max(
+    0,
+    SHIFT_EXCUSES.findIndex((e) => e.sig === baseline.sig)
+  );
+  const excuse = SHIFT_EXCUSES[exIdx] ?? SHIFT_EXCUSES[0]!;
+  const quote = tl(excuse.label, lang);
+  return {
+    quote,
+    knockSpeech: `${quote} ${tl(NIGHT5_KNOCK_SUFFIX, lang)}`,
+    voiceLineId: `n5_ex_${exIdx as 0 | 1 | 2}`
+  };
+}
 
 export interface PlayerCompactProfile {
   sig: DisposalStyleKey;

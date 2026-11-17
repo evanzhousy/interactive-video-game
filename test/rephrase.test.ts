@@ -1,10 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { GET as apiGet, POST as apiPost } from "../api/rephrase.js";
+import {
+  GET as apiGet,
+  OPTIONS as apiOptions,
+  POST as apiPost
+} from "../api/rephrase.js";
 import {
   DEFAULT_FLASH_CONFIG,
+  VERCEL_PRODUCTION_REPHRASE_URL,
   buildFlashRephraseMessages,
   hasIdentityLeakage,
   requestFlashRephrase,
+  resolveInitialFlashConfig,
   validateRephrasedLine
 } from "../src/game/rephrase.js";
 import { buildRephraseInput, decideStance } from "../src/game/stance.js";
@@ -165,5 +171,51 @@ describe("Optional Flash Online Free-Text Rephrase Pipeline & Zero-Leakage Guard
 
     const healthRes = await apiGet();
     expect(healthRes.status).toBe(200);
+    expect(healthRes.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://evanzhousy.github.io"
+    );
+
+    const preflightRes = await apiOptions(
+      new Request("https://quarantine-gate-0.vercel.app/api/rephrase", {
+        method: "OPTIONS",
+        headers: { Origin: "https://evanzhousy.github.io" }
+      })
+    );
+    expect(preflightRes.status).toBe(204);
+    expect(preflightRes.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://evanzhousy.github.io"
+    );
+
+    // Host-aware initial config enables Flash on GitHub Pages & Vercel while keeping localhost deterministic
+    const ghCfg = resolveInitialFlashConfig("evanzhousy.github.io", "https:");
+    expect(ghCfg.enabled).toBe(true);
+    expect(ghCfg.proxyPath).toBe(VERCEL_PRODUCTION_REPHRASE_URL);
+
+    const vercelCfg = resolveInitialFlashConfig("quarantine-gate-0.vercel.app", "https:");
+    expect(vercelCfg.enabled).toBe(true);
+    expect(vercelCfg.proxyPath).toBe("/api/rephrase");
+
+    const localCfg = resolveInitialFlashConfig("localhost", "http:");
+    expect(localCfg.enabled).toBe(false);
+
+    // Static-host HTTP 404 on /api/rephrase automatically retries against VERCEL_PRODUCTION_REPHRASE_URL
+    const seenUrls: string[] = [];
+    const fallbackToVercel = await requestFlashRephrase(
+      input,
+      { ...DEFAULT_FLASH_CONFIG, enabled: true, mode: "server_proxy", proxyPath: "/api/rephrase" },
+      async (url) => {
+        const strUrl = String(url);
+        seenUrls.push(strUrl);
+        if (strUrl === "/api/rephrase") {
+          return new Response("Not Found", { status: 404 });
+        }
+        return new Response(JSON.stringify(okResult.body), {
+          status: 200,
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+    );
+    expect(seenUrls).toEqual(["/api/rephrase", VERCEL_PRODUCTION_REPHRASE_URL]);
+    expect(fallbackToVercel.source).toBe("flash");
   });
 });

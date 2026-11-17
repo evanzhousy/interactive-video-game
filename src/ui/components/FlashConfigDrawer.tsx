@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { tl } from "../../game/i18n.js";
+import { VERCEL_PRODUCTION_REPHRASE_URL } from "../../game/rephrase.js";
 import type { FlashRephraseConfig, FlashTransportMode, Locale } from "../../game/types.js";
 
 interface Props {
@@ -13,9 +14,13 @@ export function FlashConfigDrawer({ lang, config, onChange, onClose }: Props) {
   const [probeStatus, setProbeStatus] = useState<string | null>(null);
 
   const checkServerProxy = async () => {
-    setProbeStatus("Checking /api/rephrase...");
+    const targetUrl = config.proxyPath || "/api/rephrase";
+    setProbeStatus(`Checking ${targetUrl}...`);
     try {
-      const res = await fetch(config.proxyPath || "/api/rephrase", { method: "GET" });
+      let res = await fetch(targetUrl, { method: "GET" });
+      if ((res.status === 404 || res.status === 405) && targetUrl !== VERCEL_PRODUCTION_REPHRASE_URL) {
+        res = await fetch(VERCEL_PRODUCTION_REPHRASE_URL, { method: "GET" });
+      }
       if (!res.ok) {
         setProbeStatus(`HTTP ${res.status} (static host — switch to Custom Endpoint or deploy on Vercel)`);
         return;

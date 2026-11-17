@@ -1,13 +1,22 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { stripStageDirections } from "../src/game/audio.js";
+import { tl } from "../src/game/i18n.js";
 import {
   VOCAL_SYNTH_PROFILES,
+  buildNight5VideoPrompts,
   buildVisitorVideoPrompts,
   getVisitorSlug,
+  type Night5VoiceVariant,
   type VideoPromptSpec,
   type VoiceLineVariant
 } from "../src/game/media.js";
+import {
+  INTAKE_QUESTIONS,
+  NIGHT5_KNOCK_SUFFIX,
+  SHIFT_EXCUSES
+} from "../src/game/night5.js";
 import type { Locale, ProbeKey } from "../src/game/types.js";
 import { ALL_VISITORS } from "../src/game/visitors/index.js";
 
@@ -32,9 +41,11 @@ export interface MediaPackManifest {
   counts: {
     visitors: number;
     videoClips: number;
+    night5VideoClips: number;
     voiceLines: number;
   };
   videoClips: VideoPromptSpec[];
+  night5VideoClips: VideoPromptSpec[];
   voiceLines: VoiceAssetSpec[];
 }
 
@@ -42,6 +53,7 @@ const LOCALES: readonly Locale[] = ["zh", "en", "ja"];
 
 export function generateMediaManifest(): MediaPackManifest {
   const videoClips: VideoPromptSpec[] = [];
+  const night5VideoClips = buildNight5VideoPrompts();
   const voiceLines: VoiceAssetSpec[] = [];
 
   for (const visitor of ALL_VISITORS) {
@@ -76,7 +88,7 @@ export function generateMediaManifest(): MediaPackManifest {
     pushLocalizedLines("off_axis", visitor.offAxisReply);
 
     for (const [probeKey, probe] of Object.entries(visitor.probes) as Array<
-      [ProbeKey, NonNullable<typeof visitor.probes[ProbeKey]>]
+      [ProbeKey, NonNullable<(typeof visitor.probes)[ProbeKey]>]
     >) {
       pushLocalizedLines(`${probeKey}_human`, probe.human);
       if (probe.mimic_say) {
@@ -88,6 +100,40 @@ export function generateMediaManifest(): MediaPackManifest {
     }
   }
 
+  // Night 5 Operator #09 Doppelgänger intake mirror lines (9 intake variants + 3 shift-excuse fallbacks)
+  const opVocal = VOCAL_SYNTH_PROFILES["OP-09"]!;
+  const pushNight5Line = (lineId: Night5VoiceVariant, quoteTexts: Record<Locale, string>) => {
+    for (const locale of LOCALES) {
+      const spokenText = `${tl(quoteTexts, locale)} ${tl(NIGHT5_KNOCK_SUFFIX, locale)}`;
+      voiceLines.push({
+        visitorId: "OP-09",
+        slug: "operator09",
+        locale,
+        lineId,
+        targetMp3: `public/audio/${locale}/operator09/${lineId}.mp3`,
+        voiceDirection: "calm, unnervingly steady mirror cadence reciting the player's own intake words",
+        genderHint: opVocal.genderHint,
+        pitchHint: opVocal.pitch,
+        rateHint: opVocal.rate,
+        spokenText
+      });
+    }
+  };
+
+  for (let qi = 0; qi < INTAKE_QUESTIONS.length; qi++) {
+    const q = INTAKE_QUESTIONS[qi]!;
+    for (let oi = 0; oi < q.options.length; oi++) {
+      pushNight5Line(
+        `n5_q${qi as 0 | 1 | 2}_o${oi as 0 | 1 | 2}`,
+        q.options[oi]!.text
+      );
+    }
+  }
+
+  for (let ei = 0; ei < SHIFT_EXCUSES.length; ei++) {
+    pushNight5Line(`n5_ex_${ei as 0 | 1 | 2}`, SHIFT_EXCUSES[ei]!.label);
+  }
+
   return {
     schemaVersion: 1,
     generatedAt: "2026-11-17T00:00:00Z",
@@ -97,9 +143,11 @@ export function generateMediaManifest(): MediaPackManifest {
     counts: {
       visitors: ALL_VISITORS.length,
       videoClips: videoClips.length,
+      night5VideoClips: night5VideoClips.length,
       voiceLines: voiceLines.length
     },
     videoClips,
+    night5VideoClips,
     voiceLines
   };
 }
@@ -112,11 +160,33 @@ const OPENAI_VOICE_MAP: Record<string, string> = {
   "V-05": "sage",
   "V-06": "shimmer",
   "V-07": "coral",
-  "V-08": "alloy"
+  "V-08": "alloy",
+  "OP-09": "onyx"
 };
 
+function synthesizeViaEdgeNeural(): void {
+  const args = ["run", "--with", "edge-tts", "python3", "scripts/synthesize-edge-tts.py"];
+  if (process.env.TTS_LOCALE) {
+    args.push("--locale", process.env.TTS_LOCALE);
+  }
+  if (process.argv.includes("--force")) {
+    args.push("--force");
+  }
+  execFileSync("uv", args, { stdio: "inherit" });
+}
+
 async function synthesizeAllTts(manifest: MediaPackManifest): Promise<void> {
+  const explicitProvider = process.argv.includes("--provider")
+    ? process.argv[process.argv.indexOf("--provider") + 1]
+    : undefined;
   const apiKey = process.env.TTS_API_KEY || process.env.OPENAI_API_KEY || "";
+
+  if (explicitProvider === "edge" || (!apiKey && explicitProvider !== "openai")) {
+    console.log("🎙️ Synthesizing trilingual intercom voice pack via Edge Neural TTS + FFmpeg...");
+    synthesizeViaEdgeNeural();
+    return;
+  }
+
   const baseUrl = (process.env.TTS_BASE_URL || "https://api.openai.com/v1/audio/speech").replace(
     /\/+$/,
     ""
@@ -126,7 +196,7 @@ async function synthesizeAllTts(manifest: MediaPackManifest): Promise<void> {
 
   if (!apiKey) {
     console.error(
-      "✗ Missing TTS_API_KEY (or OPENAI_API_KEY). Set it in .env.local to batch-render .mp3 files."
+      "✗ Missing TTS_API_KEY (or OPENAI_API_KEY) for --provider openai."
     );
     process.exitCode = 1;
     return;
@@ -141,7 +211,7 @@ async function synthesizeAllTts(manifest: MediaPackManifest): Promise<void> {
 
   for (const item of lines) {
     const outPath = path.resolve(process.cwd(), item.targetMp3);
-    if (fs.existsSync(outPath) && fs.statSync(outPath).size > 512) {
+    if (!process.argv.includes("--force") && fs.existsSync(outPath) && fs.statSync(outPath).size > 512) {
       skipped += 1;
       continue;
     }
@@ -184,7 +254,7 @@ async function main() {
   fs.writeFileSync(outPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
   console.log(
-    `✓ Wrote public/media-manifest.json — ${manifest.counts.visitors} visitors, ${manifest.counts.videoClips} I2V clip prompts, ${manifest.counts.voiceLines} trilingual voice lines`
+    `✓ Wrote public/media-manifest.json — ${manifest.counts.visitors} visitors, ${manifest.counts.videoClips} survivor I2V clips (+${manifest.counts.night5VideoClips} Night 5 clips), ${manifest.counts.voiceLines} trilingual voice lines`
   );
 
   if (process.argv.includes("--synthesize-tts")) {

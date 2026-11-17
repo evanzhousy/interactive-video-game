@@ -13,13 +13,18 @@ import {
   type IntakeOption,
   type PlayerCompactProfile
 } from "../game/night5.js";
-import { DEFAULT_FLASH_CONFIG, requestFlashRephrase } from "../game/rephrase.js";
+import {
+  requestFlashRephrase,
+  resolveInitialFlashConfig
+} from "../game/rephrase.js";
 import { buildRephraseInput, decideStance } from "../game/stance.js";
 import {
   clearSavedShift,
   loadCompendium,
+  loadOnboardingDismissed,
   loadSavedShift,
   recordRunCompletion,
+  saveOnboardingDismissed,
   saveShiftState,
   type AchievementId,
   type CompendiumState
@@ -43,6 +48,7 @@ import { FlashConfigDrawer } from "./components/FlashConfigDrawer.js";
 import { IntakeModal } from "./components/IntakeModal.js";
 import { IntercomPanel, type TranscriptLine } from "./components/IntercomPanel.js";
 import { Night5Audit } from "./components/Night5Audit.js";
+import { OnboardingGuide } from "./components/OnboardingGuide.js";
 import { OrdamorDossier, type DossierTab } from "./components/OrdamorDossier.js";
 import { ViewportCanvas } from "./components/ViewportCanvas.js";
 
@@ -53,7 +59,11 @@ export function App() {
 
   const [lang, setLang] = useState<Locale>(initialSave?.lang ?? "zh");
   const [sfx, setSfx] = useState(true);
+  const [ambience, setAmbience] = useState(true);
   const [voice, setVoice] = useState(true);
+  const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() =>
+    loadOnboardingDismissed()
+  );
   const [stage, setStage] = useState<Stage>(initialSave?.stage ?? "intake");
   const [campaignMode, setCampaignMode] = useState<CampaignMode>(
     initialSave?.campaignMode ?? "full"
@@ -92,7 +102,9 @@ export function App() {
     defectMode: "HUMAN"
   };
 
-  const [flashConfig, setFlashConfig] = useState<FlashRephraseConfig>(DEFAULT_FLASH_CONFIG);
+  const [flashConfig, setFlashConfig] = useState<FlashRephraseConfig>(() =>
+    resolveInitialFlashConfig()
+  );
   const [flashDrawerOpen, setFlashDrawerOpen] = useState(false);
   const [isRephrasing, setIsRephrasing] = useState(false);
   const shiftEpochRef = useRef(0);
@@ -147,10 +159,13 @@ export function App() {
     stage
   ]);
 
-  // Continuous Arctic blizzard wind + Night 3 geomagnetic storm ambience
+  // Continuous Arctic -46°C blizzard + metallic hull stress + Night 3 geomagnetic storm ambience
   useEffect(() => {
-    setBoothAmbience(sfx && stage === "booth", visitor.night);
-  }, [sfx, stage, visitor.night]);
+    setBoothAmbience(
+      ambience && sfx && (stage === "booth" || stage === "night5"),
+      stage === "night5" ? 5 : visitor.night
+    );
+  }, [ambience, sfx, stage, visitor.night]);
 
   useEffect(() => {
     return () => {
@@ -588,8 +603,32 @@ export function App() {
             {voice ? "🎙️ VOICE: ON" : "🎙️ VOICE: OFF"}
           </button>
 
+          <button
+            id="btn-ambience-toggle"
+            type="button"
+            className="ctrl-btn"
+            title="-46°C Blizzard & Hull Stress Ambience"
+            onClick={() => setAmbience((a) => !a)}
+          >
+            {ambience ? "🌨️ AMB: ON" : "🌨️ AMB: OFF"}
+          </button>
+
           <button type="button" className="ctrl-btn" onClick={() => setSfx((s) => !s)}>
             {sfx ? "SFX: ON" : "SFX: OFF"}
+          </button>
+
+          <button
+            id="btn-help-toggle"
+            type="button"
+            className={`ctrl-btn ${!onboardingDismissed && visitor.id === "V-01" ? "amber" : ""}`}
+            title="Toggle Tactical Interrogation Guide"
+            onClick={() => {
+              const next = !onboardingDismissed;
+              setOnboardingDismissed(next);
+              saveOnboardingDismissed(next);
+            }}
+          >
+            ?
           </button>
 
           <select
@@ -640,7 +679,27 @@ export function App() {
         ) : null}
 
         {stage === "booth" ? (
-          <div className="booth-grid" id="main-booth">
+          <>
+            {visitor.id === "V-01" && !onboardingDismissed ? (
+              <OnboardingGuide
+                lang={lang}
+                turnsUsed={4 - turnsLeft}
+                verdictState={verdictState}
+                logSigned={logSigned}
+                onDismiss={() => {
+                  setOnboardingDismissed(true);
+                  saveOnboardingDismissed(true);
+                }}
+              />
+            ) : null}
+            <div
+              className={`booth-grid ${
+                visitor.id === "V-01" && !onboardingDismissed
+                  ? `tutorial-step-${verdictState !== "NONE" ? 3 : turnsLeft === 4 ? 1 : 2}`
+                  : ""
+              }`.trim()}
+              id="main-booth"
+            >
             <div className="left-stack">
               <section className="panel">
                 <div className="viewport-header">
@@ -729,7 +788,8 @@ export function App() {
               onToggleSpoiler={() => setSpoilerOpen((o) => !o)}
               lastPipelinePayload={lastPipelinePayload}
             />
-          </div>
+            </div>
+          </>
         ) : null}
 
         {stage === "night5" ? (

@@ -36,6 +36,9 @@ export function hasIdentityLeakage(payload: unknown): string | null {
   return null;
 }
 
+export const VERCEL_PRODUCTION_REPHRASE_URL =
+  "https://quarantine-gate-0.vercel.app/api/rephrase";
+
 export const DEFAULT_FLASH_CONFIG: FlashRephraseConfig = {
   enabled: false,
   mode: "server_proxy",
@@ -46,6 +49,50 @@ export const DEFAULT_FLASH_CONFIG: FlashRephraseConfig = {
   timeoutMs: 3600,
   freeTextOnly: true
 };
+
+/**
+ * Resolves host-aware initial Flash configuration:
+ * - On Vercel (`*.vercel.app`), enables `/api/rephrase` same-origin proxy by default.
+ * - On GitHub Pages (`*.github.io`), enables Flash and routes directly to the CORS-enabled
+ *   Vercel production endpoint (`https://quarantine-gate-0.vercel.app/api/rephrase`).
+ * - On Tauri desktop (`tauri.localhost`), points `proxyPath` to Vercel production while keeping
+ *   offline-first default until toggled on.
+ * - On `localhost` / Vitest (`happy-dom`), preserves deterministic offline `DEFAULT_FLASH_CONFIG`.
+ */
+export function resolveInitialFlashConfig(hostname?: string, protocol?: string): FlashRephraseConfig {
+  const host =
+    hostname ??
+    (typeof window !== "undefined" ? window.location?.hostname ?? "" : "");
+  const proto =
+    protocol ??
+    (typeof window !== "undefined" ? window.location?.protocol ?? "" : "");
+
+  if (host.endsWith(".vercel.app")) {
+    return {
+      ...DEFAULT_FLASH_CONFIG,
+      enabled: true,
+      proxyPath: "/api/rephrase"
+    };
+  }
+
+  if (host.endsWith(".github.io")) {
+    return {
+      ...DEFAULT_FLASH_CONFIG,
+      enabled: true,
+      proxyPath: VERCEL_PRODUCTION_REPHRASE_URL
+    };
+  }
+
+  if (proto === "tauri:" || host === "tauri.localhost") {
+    return {
+      ...DEFAULT_FLASH_CONFIG,
+      enabled: false,
+      proxyPath: VERCEL_PRODUCTION_REPHRASE_URL
+    };
+  }
+
+  return { ...DEFAULT_FLASH_CONFIG };
+}
 
 const LOCALE_LABELS: Record<Locale, string> = {
   zh: "Simplified Chinese (简体中文)",
@@ -219,12 +266,24 @@ export async function requestFlashRephrase(
 
   try {
     if (config.mode === "server_proxy") {
-      const res = await fetchImpl(config.proxyPath || "/api/rephrase", {
+      const primaryUrl = config.proxyPath || "/api/rephrase";
+      let res = await fetchImpl(primaryUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
         signal: controller.signal
       });
+      if (
+        (res.status === 404 || res.status === 405) &&
+        primaryUrl !== VERCEL_PRODUCTION_REPHRASE_URL
+      ) {
+        res = await fetchImpl(VERCEL_PRODUCTION_REPHRASE_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(input),
+          signal: controller.signal
+        });
+      }
       const latencyMs = Date.now() - started;
       if (!res.ok) {
         return {

@@ -1,6 +1,7 @@
 # Quarantine Gate 0: 2036（零号隔离窗）
 
-> **在线即开即玩 (GitHub Pages)**: https://evanzhousy.github.io/interactive-video-game/
+> **在线生产版 (Vercel · 含 `/api/rephrase` 自由提问改写)**: https://quarantine-gate-0.vercel.app
+> **在线静态镜像 (GitHub Pages · 跨域直连改写网关)**: https://evanzhousy.github.io/interactive-video-game/
 
 Claustrophobic Svalbard quarantine interrogation game (`-46°C`, 60–90 min short-form Steam title) powered by the **Ordamor Persona Engine (`schemaVersion: 6`)**.
 
@@ -79,9 +80,12 @@ FLASH_MODEL=google/gemini-3.8-flash
 ## Repository Structure
 
 ```text
-├── .github/workflows/ci.yml      # Node 24 + pnpm automated typecheck, test & build gate
+├── .github/workflows/
+│   ├── ci.yml                    # Node 24 + pnpm automated typecheck, test & build gate
+│   ├── pages.yml                 # Automatic GitHub Pages static deployment
+│   └── tauri-release.yml         # Cross-platform Tauri v2 desktop bundler (Win / Mac / Steam Deck)
 ├── api/
-│   └── rephrase.ts               # Vercel Web API route for zero-leakage Flash rephrasing
+│   └── rephrase.ts               # CORS-enabled Vercel Web API route for zero-leakage Flash rephrasing
 ├── docs/
 │   ├── HANDOFF.md                # Current project progress, architecture & prioritized next steps
 │   ├── GDD.md                    # Full v3.1 Game Design & Engineering Document
@@ -89,20 +93,21 @@ FLASH_MODEL=google/gemini-3.8-flash
 ├── notebooks/
 │   └── gate0_ai_video_studio.ipynb # One-click Colab studio (Google AI Studio Veo 3 + T4 GPU LTX-Video)
 ├── public/
+│   ├── audio/                    # 300 studio neural intercom MP3 lines (zh / en / ja + Night 5 OP-09)
 │   ├── portraits/                # 28 photorealistic 35mm AI cinema frames (idle + reactions + chamber)
-│   └── media-manifest.json       # 40 I2V video prompts + 264 trilingual intercom voice lines
+│   └── media-manifest.json       # 40+3 I2V video prompts + 300 trilingual intercom voice lines
 ├── scripts/
 │   ├── sync-ordamor.ts           # Syncs pure-TS Persona Engine files from ../ordamor
-│   ├── generate-media-pack.ts    # Exports media-manifest.json & optional TTS batch renderer
+│   ├── generate-media-pack.ts    # Exports media-manifest.json & runs Edge Neural / OpenAI TTS
+│   ├── synthesize-edge-tts.py    # Character-cast trilingual neural TTS + FFmpeg radio mastering
 │   ├── generate-videos.ts        # Batch-renders I2V .mp4 clips via Veo 3 / Kling 2.0 / Runway Gen-4
 │   └── pull-gdrive-videos.ts     # Syncs Colab-rendered .mp4 clips from Google Drive into public/videos/
 ├── src/
 │   ├── ordamor/                  # Read-only synced upstream Ordamor v6 modules (Red Line 2)
 │   ├── game/                     # Deterministic client engine + 8 survivors + Flash + storage
 │   ├── server/                   # Shared server/Vite handler for /api/rephrase
-│   └── ui/                       # React 19 + interactive video rig + cryo-amber Vanilla CSS
-├── tauri/
-│   └── tauri.conf.json           # Tauri v2 desktop wrapper blueprint for Steam (<25 MB)
+│   └── ui/                       # React 19 + interactive video rig + onboarding + cryo-amber CSS
+├── tauri/                        # Complete Tauri v2 Rust desktop crate + icons for Steam (<25 MB)
 ├── vercel.json                   # One-click Vercel SPA + Serverless API configuration
 └── test/                         # Hermetic Vitest verification suite (7 test files / 21 tests)
 ```

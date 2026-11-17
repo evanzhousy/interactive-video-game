@@ -18,7 +18,8 @@ export const VISITOR_SLUGS: Record<string, string> = {
   "V-05": "ana",
   "V-06": "ingrid",
   "V-07": "linmei",
-  "V-08": "hannah"
+  "V-08": "hannah",
+  "OP-09": "operator09"
 };
 
 export function getVisitorSlug(visitorId: string): string {
@@ -28,6 +29,21 @@ export function getVisitorSlug(visitorId: string): string {
 export function getVideoClipCandidates(visitorId: string, state: ClipState): string[] {
   const slug = getVisitorSlug(visitorId);
   return [`./videos/${slug}/${state}.mp4`, `./videos/${slug}/${state}.webm`];
+}
+
+export type Night5VisualAction = "NONE" | "PURGE" | "ADMIT" | "STEP_OUT";
+
+export function getNight5VideoCandidates(action: Night5VisualAction): string[] {
+  switch (action) {
+    case "NONE":
+      return ["./videos/operator09/idle.mp4", "./videos/operator09/idle.webm"];
+    case "PURGE":
+      return ["./videos/operator09/purge.mp4", "./videos/operator09/purge.webm"];
+    case "ADMIT":
+      return ["./videos/operator09/admit.mp4", "./videos/operator09/admit.webm"];
+    case "STEP_OUT":
+      return ["./videos/operator09/whiteout.mp4", "./videos/operator09/whiteout.webm"];
+  }
 }
 
 /**
@@ -61,9 +77,7 @@ export function getVisitorPreloadFrames(
   return CLIP_STATES.map((state) => getPhotorealFrameSrc(visitorId, state, fallbackPortraitUrl));
 }
 
-export function getNight5FrameSrc(
-  action: "NONE" | "PURGE" | "ADMIT" | "STEP_OUT"
-): string {
+export function getNight5FrameSrc(action: Night5VisualAction): string {
   switch (action) {
     case "PURGE":
       return "./portraits/reactions/chamber_purge.jpg";
@@ -76,7 +90,15 @@ export function getNight5FrameSrc(
   }
 }
 
-export type VoiceLineVariant = "opening" | "off_axis" | `${ProbeKey}_${"human" | "mimic_say" | "mimic_disp"}`;
+export type Night5VoiceVariant =
+  | `n5_q${0 | 1 | 2}_o${0 | 1 | 2}`
+  | `n5_ex_${0 | 1 | 2}`;
+
+export type VoiceLineVariant =
+  | "opening"
+  | "off_axis"
+  | `${ProbeKey}_${"human" | "mimic_say" | "mimic_disp"}`
+  | Night5VoiceVariant;
 
 export function getVoiceAudioPath(
   visitorId: string,
@@ -101,7 +123,8 @@ export const VOCAL_SYNTH_PROFILES: Record<string, VocalSynthProfile> = {
   "V-05": { pitch: 0.88, rate: 0.96, genderHint: "female" },
   "V-06": { pitch: 1.04, rate: 0.91, genderHint: "female" },
   "V-07": { pitch: 0.98, rate: 0.95, genderHint: "female" },
-  "V-08": { pitch: 0.94, rate: 1.05, genderHint: "female" }
+  "V-08": { pitch: 0.94, rate: 1.05, genderHint: "female" },
+  "OP-09": { pitch: 0.92, rate: 0.95, genderHint: "male" }
 };
 
 export interface VideoPromptSpec {
@@ -125,7 +148,8 @@ export interface VideoPromptSpec {
  */
 export function buildVisitorVideoPrompts(visitor: VisitorSpec): VideoPromptSpec[] {
   const slug = getVisitorSlug(visitor.id);
-  const firstFrame = visitor.portraitUrl?.replace(/^\.\//, "public/") ?? `public/portraits/${slug}.jpg`;
+  const firstFrame =
+    visitor.portraitUrl?.replace(/^\.\//, "public/") ?? `public/portraits/${slug}.jpg`;
   const baseScene = `Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at ${visitor.name.en} (${visitor.role.en}). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement).`;
   const negativePrompt =
     "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark";
@@ -192,4 +216,57 @@ export function buildVisitorVideoPrompts(visitor: VisitorSpec): VideoPromptSpec[
     prompt: `${baseScene} ${s.motion}`,
     negativePrompt
   }));
+}
+
+/**
+ * Generates Night 5 Operator #09 Doppelgänger I2V specs (`public/videos/operator09/*.mp4`).
+ */
+export function buildNight5VideoPrompts(): VideoPromptSpec[] {
+  const firstFrame = "public/portraits/operator09.jpg";
+  const baseScene =
+    "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Operator #09 Doppelgänger in hooded polar station parka. Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement).";
+  const negativePrompt =
+    "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark";
+
+  return [
+    {
+      visitorId: "OP-09",
+      slug: "operator09",
+      state: "idle",
+      loop: true,
+      durationSec: 5,
+      firstFramePortrait: firstFrame,
+      referenceEndFrame: firstFrame,
+      targetMp4: "public/videos/operator09/idle.mp4",
+      targetWebm: "public/videos/operator09/idle.webm",
+      prompt: `${baseScene} Seamless loop: unnervingly calm mirror posture outside the glass, slow steady cold breath misting the lower pane, unblinking gaze locked onto the operator inside.`,
+      negativePrompt
+    },
+    {
+      visitorId: "OP-09",
+      slug: "operator09",
+      state: "admit",
+      loop: false,
+      durationSec: 4,
+      firstFramePortrait: firstFrame,
+      referenceEndFrame: "public/portraits/reactions/chamber_admit.jpg",
+      targetMp4: "public/videos/operator09/admit.mp4",
+      targetWebm: "public/videos/operator09/admit.webm",
+      prompt: `${baseScene} Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the bulkhead as the doppelgänger steps calmly toward the unsealed inner hatch.`,
+      negativePrompt
+    },
+    {
+      visitorId: "OP-09",
+      slug: "operator09",
+      state: "purge",
+      loop: false,
+      durationSec: 4,
+      firstFramePortrait: firstFrame,
+      referenceEndFrame: "public/portraits/reactions/chamber_purge.jpg",
+      targetMp4: "public/videos/operator09/purge.mp4",
+      targetWebm: "public/videos/operator09/purge.webm",
+      prompt: `${baseScene} Red thermal alarm strobes across the chamber; heavy corrugated steel blast shutter slams down over the exterior window as 1,100°C orange furnace flames roar behind the lower seam.`,
+      negativePrompt
+    }
+  ];
 }

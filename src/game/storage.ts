@@ -10,6 +10,31 @@ import type {
 
 export const SHIFT_SAVE_KEY = "gate0.shift.v1";
 export const COMPENDIUM_SAVE_KEY = "gate0.compendium.v1";
+export const ONBOARDING_DISMISSED_KEY = "gate0.onboarding.dismissed.v1";
+
+export function loadOnboardingDismissed(): boolean {
+  const store = getStorage();
+  if (!store) return false;
+  try {
+    return store.getItem(ONBOARDING_DISMISSED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+export function saveOnboardingDismissed(dismissed: boolean): void {
+  const store = getStorage();
+  if (!store) return;
+  try {
+    if (dismissed) {
+      store.setItem(ONBOARDING_DISMISSED_KEY, "1");
+    } else {
+      store.removeItem(ONBOARDING_DISMISSED_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
 
 export type AchievementId =
   | "FIRST_SHIFT"

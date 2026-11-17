@@ -396,7 +396,13 @@ async function main(): Promise<void> {
   loadDotEnvIfPresent();
   const opts = parseVideoCliArgs(process.argv.slice(2));
   const manifest = generateMediaManifest();
-  const selected = filterVideoSpecs(manifest.videoClips, opts);
+  const allSpecs =
+    opts.visitorId === "OP-09" ||
+    opts.visitorId === "operator09" ||
+    process.argv.includes("--include-night5")
+      ? [...manifest.videoClips, ...manifest.night5VideoClips]
+      : manifest.videoClips;
+  const selected = filterVideoSpecs(allSpecs, opts);
 
   if (selected.length === 0) {
     console.error("✗ No video clip specs matched the given --visitor / --state filter.");

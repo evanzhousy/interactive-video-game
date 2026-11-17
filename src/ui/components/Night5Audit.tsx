@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { playBoothSfx, speakIntercomLine, stopIntercomVoice } from "../../game/audio.js";
 import { tl } from "../../game/i18n.js";
-import { getNight5FrameSrc } from "../../game/media.js";
+import {
+  getNight5FrameSrc,
+  getNight5VideoCandidates,
+  type Night5VisualAction
+} from "../../game/media.js";
 import {
   ENDINGS,
-  SHIFT_EXCUSES,
   SIG_LABELS,
   evaluateNight5Audit,
   resolveNight5Ending,
+  resolveNight5KnockLine,
   type IntakeOption,
   type PlayerCompactProfile
 } from "../../game/night5.js";
@@ -40,23 +44,17 @@ export function Night5Audit({
 }: Props) {
   const [confess, setConfess] = useState(false);
   const [endingKey, setEndingKey] = useState<EndingId | null>(null);
-  const [finalAction, setFinalAction] = useState<"NONE" | "PURGE" | "ADMIT" | "STEP_OUT">("NONE");
+  const [finalAction, setFinalAction] = useState<Night5VisualAction>("NONE");
   const [newBadges, setNewBadges] = useState<AchievementId[]>([]);
+  const [idleVideoReady, setIdleVideoReady] = useState(false);
+  const [verdictVideoReady, setVerdictVideoReady] = useState(false);
 
   const audit = evaluateNight5Audit(baseline, history);
-  const matchingIntake = intakeAnswers.find((a) => a.sig === baseline.sig);
-  const quote = matchingIntake
-    ? tl(matchingIntake.text, lang)
-    : tl(SHIFT_EXCUSES.find((e) => e.sig === baseline.sig)?.label ?? SHIFT_EXCUSES[0]!.label, lang);
-
-  const knockSpeech = `${quote} ${tl(
-    {
-      zh: "这是我入职时亲口说的话。这几夜我每一次都是这么做的。你呢？",
-      en: "That's what I said at intake. Every night since, that's what I did. Did you?",
-      ja: "それが入所時に私が言った言葉だ。この数夜、私はその通りに動いた。お前はどうだ？"
-    },
+  const { quote, knockSpeech, voiceLineId } = resolveNight5KnockLine(
+    baseline,
+    intakeAnswers,
     lang
-  )}`;
+  );
 
   useEffect(() => {
     if (typeof Image !== "undefined") {
@@ -67,10 +65,10 @@ export function Night5Audit({
     }
 
     speakIntercomLine({
-      visitorId: "V-01",
+      visitorId: "OP-09",
       locale: lang,
       text: knockSpeech,
-      isDynamicFlash: true,
+      lineId: voiceLineId,
       enabled: voice
     });
     return () => {
@@ -84,6 +82,7 @@ export function Night5Audit({
     stopIntercomVoice();
     playBoothSfx(action === "PURGE" ? "purge" : "admit", sfx);
     const resolved = resolveNight5Ending(audit, action, confess);
+    setVerdictVideoReady(false);
     setFinalAction(action);
     setEndingKey(resolved);
     const unlocked = onResolveEnding(resolved);
@@ -91,6 +90,10 @@ export function Night5Audit({
   };
 
   const verdictFrameSrc = getNight5FrameSrc(finalAction);
+  const idleVideoCandidates = getNight5VideoCandidates("NONE");
+  const verdictVideoCandidates =
+    finalAction !== "NONE" ? getNight5VideoCandidates(finalAction) : [];
+  const showVerdictPhoto = finalAction !== "NONE" && !verdictVideoReady;
 
   return (
     <section className="panel" id="night5-panel">
@@ -107,7 +110,8 @@ export function Night5Audit({
         <div className="left-stack">
           <div className="dossier-section" style={{ marginBottom: 0 }}>
             <div className="section-kicker">
-              GATE CAM 01 // SUBJECT: OPERATOR #09 [FACIAL MATCH 99.98%]
+              GATE CAM 01 // SUBJECT: OPERATOR #09 [FACIAL MATCH 99.98%] ·{" "}
+              {idleVideoReady || verdictVideoReady ? "LIVE I2V STREAM" : "35MM AI LIVE"}
             </div>
             <div className="viewport-frame n5-doppelganger-frame" id="night5-viewport">
               <div className="viewport-media-stage">
@@ -121,10 +125,53 @@ export function Night5Audit({
                   src={verdictFrameSrc}
                   alt={`Gate 0 Night 5 (${finalAction})`}
                   className={`viewport-photo reaction-photo-layer ${
-                    finalAction !== "NONE" ? "is-visible" : ""
+                    showVerdictPhoto ? "is-visible" : ""
                   }`}
                   decoding="async"
                 />
+
+                <video
+                  key="op09-idle-video"
+                  className="viewport-video"
+                  style={{ opacity: idleVideoReady ? 1 : 0 }}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                  onLoadedData={() => setIdleVideoReady(true)}
+                  onCanPlay={() => setIdleVideoReady(true)}
+                  onError={() => setIdleVideoReady(false)}
+                >
+                  {idleVideoCandidates.map((src) => (
+                    <source
+                      key={src}
+                      src={src}
+                      type={src.endsWith(".webm") ? "video/webm" : "video/mp4"}
+                    />
+                  ))}
+                </video>
+
+                {finalAction !== "NONE" ? (
+                  <video
+                    key={`op09-${finalAction}-video`}
+                    className="viewport-video reaction-layer"
+                    style={{ opacity: verdictVideoReady ? 1 : 0 }}
+                    muted
+                    playsInline
+                    autoPlay
+                    onLoadedData={() => setVerdictVideoReady(true)}
+                    onCanPlay={() => setVerdictVideoReady(true)}
+                    onError={() => setVerdictVideoReady(false)}
+                  >
+                    {verdictVideoCandidates.map((src) => (
+                      <source
+                        key={src}
+                        src={src}
+                        type={src.endsWith(".webm") ? "video/webm" : "video/mp4"}
+                      />
+                    ))}
+                  </video>
+                ) : null}
               </div>
               <div className="viewport-scanlines" aria-hidden="true" />
               {finalAction === "PURGE" ? (

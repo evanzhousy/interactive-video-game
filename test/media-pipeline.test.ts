@@ -59,6 +59,16 @@ describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
       expect(line.spokenText.length).toBeGreaterThan(2);
       expect(line.spokenText.startsWith("（")).toBe(false);
       expect(line.spokenText.startsWith("(")).toBe(false);
+      const absMp3 = path.resolve(process.cwd(), line.targetMp3);
+      expect(fs.existsSync(absMp3)).toBe(true);
+      expect(fs.statSync(absMp3).size).toBeGreaterThan(4_000);
+    }
+
+    expect(manifest.night5VideoClips).toHaveLength(3);
+    for (const n5Clip of manifest.night5VideoClips) {
+      expect(n5Clip.visitorId).toBe("OP-09");
+      expect(fs.existsSync(path.resolve(process.cwd(), n5Clip.firstFramePortrait))).toBe(true);
+      expect(fs.existsSync(path.resolve(process.cwd(), n5Clip.referenceEndFrame))).toBe(true);
     }
   });
 

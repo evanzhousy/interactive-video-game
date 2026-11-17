@@ -793,3 +793,71 @@ select {
   gap: 6px;
   margin-top: 10px;
 }
+
+/* Night 1 V-01 First-Shift Tactical Interrogation Onboarding */
+.onboarding-callout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid hsla(38, 92%, 52%, 0.55);
+  background: linear-gradient(
+    90deg,
+    hsla(38, 92%, 52%, 0.14) 0%,
+    hsla(204, 28%, 9%, 0.96) 55%
+  );
+  box-shadow: 0 0 18px hsla(38, 92%, 52%, 0.1);
+}
+
+.onboarding-main {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.onboarding-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: hsl(204, 35%, 6%);
+  background: var(--amber-crt);
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.onboarding-copy {
+  color: var(--text-primary);
+}
+
+@keyframes onboardingPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px hsla(38, 92%, 52%, 0.5), 0 0 12px hsla(38, 92%, 52%, 0.16);
+  }
+  50% {
+    box-shadow: 0 0 0 2px hsla(38, 92%, 52%, 0.9), 0 0 20px hsla(38, 92%, 52%, 0.32);
+  }
+}
+
+.booth-grid.tutorial-step-1 #never-won-pills,
+.booth-grid.tutorial-step-1 #probe-buttons {
+  border-radius: 6px;
+  padding: 5px;
+  animation: onboardingPulse 2.2s ease-in-out infinite;
+}
+
+.booth-grid.tutorial-step-2 .verdict-levers {
+  border-radius: 6px;
+  padding: 4px;
+  animation: onboardingPulse 2.4s ease-in-out infinite;
+}
+
+.booth-grid.tutorial-step-3 #shift-log-box {
+  animation: onboardingPulse 2.2s ease-in-out infinite;
+}

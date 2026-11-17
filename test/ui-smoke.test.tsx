@@ -68,11 +68,13 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       (document.getElementById("btn-start-shift") as HTMLButtonElement).click();
     });
 
-    // Complete V-01, verifying photorealistic 35mm portrait is visible immediately (never display:none)
+    // Complete V-01, verifying photorealistic 35mm portrait + progressive 3-step Onboarding Guide
     const baseImg = document.querySelector("#quarantine-viewport .base-photo-layer") as HTMLImageElement;
     expect(baseImg).not.toBeNull();
     expect(baseImg.style.display).not.toBe("none");
     expect(baseImg.getAttribute("src")).toBe("./portraits/elena.jpg");
+    expect(document.getElementById("onboarding-guide")?.getAttribute("data-step")).toBe("1");
+    expect(document.getElementById("btn-ambience-toggle")?.textContent).toContain("AMB: ON");
 
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "t", bubbles: true }));
@@ -82,9 +84,16 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "1", bubbles: true }));
     });
+    expect(document.getElementById("onboarding-guide")?.getAttribute("data-step")).toBe("2");
+
     await act(async () => {
       (document.getElementById("btn-purge") as HTMLButtonElement).click();
     });
+    expect(document.getElementById("onboarding-guide")?.getAttribute("data-step")).toBe("3");
+    await act(async () => {
+      (document.getElementById("btn-dismiss-onboarding") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("onboarding-guide")).toBeNull();
     const reactionImg = document.querySelector(
       "#quarantine-viewport .reaction-photo-layer"
     ) as HTMLImageElement;
@@ -170,9 +179,12 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       });
     }
 
-    // Night 5 Self-Audit Climax with Doppelgänger Viewport & Compendium unlock
+    // Night 5 Self-Audit Climax with Doppelgänger Viewport (<video> + 35mm layer) & Compendium unlock
     expect(document.getElementById("night5-panel")).not.toBeNull();
     expect(document.getElementById("night5-viewport")).not.toBeNull();
+    expect(document.querySelector("#night5-viewport video source")?.getAttribute("src")).toBe(
+      "./videos/operator09/idle.mp4"
+    );
     expect(document.getElementById("night5-panel")?.textContent).toContain("/8");
 
     await act(async () => {

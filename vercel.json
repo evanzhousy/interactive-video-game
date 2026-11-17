@@ -10,7 +10,7 @@
   },
   "headers": [
     {
-      "source": "/portraits/(.*)",
+      "source": "/(portraits|audio|videos)/(.*)",
       "headers": [
         {
           "key": "Cache-Control",

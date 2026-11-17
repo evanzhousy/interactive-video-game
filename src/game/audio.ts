@@ -14,6 +14,7 @@ interface AmbienceHandle {
   masterGain: GainNode;
   stormGain: GainNode;
   sources: AudioScheduledSourceNode[];
+  creakTimer: ReturnType<typeof setInterval> | null;
 }
 
 let activeAmbience: AmbienceHandle | null = null;
@@ -77,7 +78,49 @@ function playStaticBurst(ctx: AudioContext, durationSec: number, gainPeak: numbe
 }
 
 /**
- * Starts, updates, or mutes the continuous Svalbard -46°C blizzard wind + fluorescent booth hum.
+ * Synthesizes a subtle -46°C metallic bulkhead / submarine pressure-hull thermal contraction groan.
+ */
+function triggerHullStressCreak(ctx: AudioContext, destination: AudioNode): void {
+  try {
+    const now = ctx.currentTime;
+    const duration = 1.65;
+    const baseHz = 82 + Math.random() * 34;
+
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    osc1.type = "triangle";
+    osc2.type = "sine";
+    osc1.frequency.setValueAtTime(baseHz * 1.18, now);
+    osc1.frequency.exponentialRampToValueAtTime(baseHz * 0.78, now + duration);
+    osc2.frequency.setValueAtTime(baseHz * 1.71, now);
+    osc2.frequency.exponentialRampToValueAtTime(baseHz * 1.12, now + duration);
+
+    const resonance = ctx.createBiquadFilter();
+    resonance.type = "bandpass";
+    resonance.frequency.setValueAtTime(195 + Math.random() * 85, now);
+    resonance.Q.setValueAtTime(6.5, now);
+
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0.0002, now);
+    env.gain.linearRampToValueAtTime(0.032, now + 0.42);
+    env.gain.exponentialRampToValueAtTime(0.0002, now + duration);
+
+    osc1.connect(resonance);
+    osc2.connect(resonance);
+    resonance.connect(env).connect(destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + duration);
+    osc2.stop(now + duration);
+  } catch {
+    // ignore WebAudio scheduling errors
+  }
+}
+
+/**
+ * Starts, updates, or mutes the continuous Svalbard -46°C blizzard wind + sub-bass polar gusts +
+ * submarine/outpost metallic bulkhead stress creaks + fluorescent booth hum.
  * On Night 3 (`night === 3`), boosts geomagnetic aurora static interference.
  */
 export function setBoothAmbience(enabled: boolean, night: number): void {
@@ -86,6 +129,10 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
 
   if (!enabled) {
     if (activeAmbience) {
+      if (activeAmbience.creakTimer) {
+        clearInterval(activeAmbience.creakTimer);
+        activeAmbience.creakTimer = null;
+      }
       const now = ctx.currentTime;
       activeAmbience.masterGain.gain.setTargetAtTime(0.0001, now, 0.15);
     }
@@ -99,7 +146,7 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
       masterGain.gain.setValueAtTime(0.0001, now);
       masterGain.connect(ctx.destination);
 
-      // 1. Exterior Arctic blizzard wind (LFO-swept lowpass filtered noise)
+      // 1. Exterior Arctic blizzard wind (LFO-swept mid-low bandpass noise)
       const windSrc = ctx.createBufferSource();
       windSrc.buffer = getNoiseBuffer(ctx);
       windSrc.loop = true;
@@ -120,7 +167,28 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
       windGain.gain.setValueAtTime(0.28, now);
       windSrc.connect(windFilter).connect(windGain).connect(masterGain);
 
-      // 2. Interior 60Hz CRT / transformer booth hum
+      // 2. Deep -46°C sub-bass polar pressure rumble (58Hz resonant lowpass + slow 0.08Hz swell)
+      const subWindSrc = ctx.createBufferSource();
+      subWindSrc.buffer = getNoiseBuffer(ctx);
+      subWindSrc.loop = true;
+
+      const subFilter = ctx.createBiquadFilter();
+      subFilter.type = "lowpass";
+      subFilter.frequency.setValueAtTime(64, now);
+      subFilter.Q.setValueAtTime(2.8, now);
+
+      const subLfo = ctx.createOscillator();
+      subLfo.type = "sine";
+      subLfo.frequency.setValueAtTime(0.08, now);
+      const subLfoGain = ctx.createGain();
+      subLfoGain.gain.setValueAtTime(22, now);
+      subLfo.connect(subLfoGain).connect(subFilter.frequency);
+
+      const subGain = ctx.createGain();
+      subGain.gain.setValueAtTime(0.34, now);
+      subWindSrc.connect(subFilter).connect(subGain).connect(masterGain);
+
+      // 3. Interior 60Hz CRT / transformer booth hum
       const humOsc = ctx.createOscillator();
       humOsc.type = "sine";
       humOsc.frequency.setValueAtTime(60, now);
@@ -128,7 +196,7 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
       humGain.gain.setValueAtTime(0.018, now);
       humOsc.connect(humGain).connect(masterGain);
 
-      // 3. Night 3 geomagnetic storm crackle layer
+      // 4. Night 3 geomagnetic storm crackle layer
       const stormSrc = ctx.createBufferSource();
       stormSrc.buffer = getNoiseBuffer(ctx);
       stormSrc.loop = true;
@@ -141,26 +209,41 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
 
       windSrc.start(now);
       windLfo.start(now);
+      subWindSrc.start(now);
+      subLfo.start(now);
       humOsc.start(now);
       stormSrc.start(now);
 
       activeAmbience = {
         masterGain,
         stormGain,
-        sources: [windSrc, windLfo, humOsc, stormSrc]
+        sources: [windSrc, windLfo, subWindSrc, subLfo, humOsc, stormSrc],
+        creakTimer: null
       };
     } catch {
       return;
     }
   }
 
+  if (!activeAmbience.creakTimer) {
+    activeAmbience.creakTimer = setInterval(() => {
+      if (activeAmbience) {
+        triggerHullStressCreak(ctx, activeAmbience.masterGain);
+      }
+    }, 12500);
+  }
+
   const now = ctx.currentTime;
-  activeAmbience.masterGain.gain.setTargetAtTime(0.14, now, 0.35);
+  activeAmbience.masterGain.gain.setTargetAtTime(0.15, now, 0.35);
   activeAmbience.stormGain.gain.setTargetAtTime(night === 3 ? 0.065 : 0.004, now, 0.35);
 }
 
 export function stopAllBoothAudio(): void {
   if (activeAmbience) {
+    if (activeAmbience.creakTimer) {
+      clearInterval(activeAmbience.creakTimer);
+      activeAmbience.creakTimer = null;
+    }
     for (const s of activeAmbience.sources) {
       try {
         s.stop();

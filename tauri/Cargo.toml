@@ -1,0 +1,15 @@
+[package]
+name = "quarantine-gate-0"
+version = "0.2.0"
+description = "Quarantine Gate 0: 2036 (零号隔离窗) — Svalbard quarantine interrogation desktop client"
+authors = ["Ordamor Studio"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
