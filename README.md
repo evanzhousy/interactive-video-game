@@ -1,5 +1,7 @@
 # Quarantine Gate 0: 2036（零号隔离窗）
 
+> **在线即开即玩 (GitHub Pages)**: https://evanzhousy.github.io/interactive-video-game/
+
 Claustrophobic Svalbard quarantine interrogation game (`-46°C`, 60–90 min short-form Steam title) powered by the **Ordamor Persona Engine (`schemaVersion: 6`)**.
 
 Instead of spotting pixel anomalies on forged IDs, Operator `#09` interrogates **8 survivors across 5 nights** through double-glazed blast glass (4 PTT questions max) using their pre-outbreak **Ordamor Forensic Profile**:
