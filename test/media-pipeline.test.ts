@@ -70,6 +70,22 @@ describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
       expect(fs.existsSync(path.resolve(process.cwd(), n5Clip.firstFramePortrait))).toBe(true);
       expect(fs.existsSync(path.resolve(process.cwd(), n5Clip.referenceEndFrame))).toBe(true);
     }
+
+    // Verify rendered AI Studio 720p H.264 live-action MP4 clips on disk (Elena full set + Leo idle + shared chamber admit/purge/whiteout)
+    const expectedRenderedVideos = [
+      "public/videos/elena/idle.mp4",
+      "public/videos/elena/flinch.mp4",
+      "public/videos/elena/lean_in.mp4",
+      "public/videos/leo/idle.mp4",
+      "public/videos/chamber/admit.mp4",
+      "public/videos/chamber/purge.mp4",
+      "public/videos/chamber/whiteout.mp4"
+    ];
+    for (const relVid of expectedRenderedVideos) {
+      const absVid = path.resolve(process.cwd(), relVid);
+      expect(fs.existsSync(absVid)).toBe(true);
+      expect(fs.statSync(absVid).size).toBeGreaterThan(100_000);
+    }
   });
 
   it("parses I2V video generator CLI flags and filters clip specs accurately", () => {

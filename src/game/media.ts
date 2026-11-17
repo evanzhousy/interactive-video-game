@@ -28,6 +28,14 @@ export function getVisitorSlug(visitorId: string): string {
 
 export function getVideoClipCandidates(visitorId: string, state: ClipState): string[] {
   const slug = getVisitorSlug(visitorId);
+  if (state === "admit" || state === "purge") {
+    return [
+      `./videos/${slug}/${state}.mp4`,
+      `./videos/${slug}/${state}.webm`,
+      `./videos/chamber/${state}.mp4`,
+      `./videos/chamber/${state}.webm`
+    ];
+  }
   return [`./videos/${slug}/${state}.mp4`, `./videos/${slug}/${state}.webm`];
 }
 
@@ -38,11 +46,23 @@ export function getNight5VideoCandidates(action: Night5VisualAction): string[] {
     case "NONE":
       return ["./videos/operator09/idle.mp4", "./videos/operator09/idle.webm"];
     case "PURGE":
-      return ["./videos/operator09/purge.mp4", "./videos/operator09/purge.webm"];
+      return [
+        "./videos/operator09/purge.mp4",
+        "./videos/chamber/purge.mp4",
+        "./videos/chamber/purge.webm"
+      ];
     case "ADMIT":
-      return ["./videos/operator09/admit.mp4", "./videos/operator09/admit.webm"];
+      return [
+        "./videos/operator09/admit.mp4",
+        "./videos/chamber/admit.mp4",
+        "./videos/chamber/admit.webm"
+      ];
     case "STEP_OUT":
-      return ["./videos/operator09/whiteout.mp4", "./videos/operator09/whiteout.webm"];
+      return [
+        "./videos/operator09/whiteout.mp4",
+        "./videos/chamber/whiteout.mp4",
+        "./videos/chamber/whiteout.webm"
+      ];
   }
 }
 

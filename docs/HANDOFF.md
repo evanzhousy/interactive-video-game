@@ -24,14 +24,19 @@
   - `src/game/night5.ts` + `src/ui/components/Night5Audit.tsx`：窗外出现 99.98% 面部匹配的 `#09` 替身（带 `<video>` 动态流挂载与专属神经配音），背诵玩家入职 `SAY` 宣言，对比玩家 4 夜真实排班日志 `DO` 结算 **7 大结局**。
   - `src/game/storage.ts` + `src/ui/components/CompendiumModal.tsx`：`localStorage` 跨刷新自动存档续玩（`gate0.shift.v1`）+ **7 结局 / 6 项审讯勋章图鉴**（`gate0.compendium.v1`）+ 桌面端战术快捷键（`1`–`5`、`S`、`T`、`[` / `]`）。
 
-### 1.2 视听资产现状（28 张 35mm 电影帧 + 300 条三语神经语音已上线，待合入 I2V `.mp4`）
+### 1.2 视听资产现状（28 张 35mm 电影帧 + 300 条三语神经语音 + 首轮 7 段 720p 真人动态 `.mp4` 已上线，双 Google Drive 资产库已建仓）
 - **28 张同演员、同机位 35mm AI 真人电影帧（已内置）**：
   - `public/portraits/{elena,leo,arthur,marcus,ana,ingrid,linmei,hannah,operator09}.jpg`（9 张底片）+ `public/portraits/reactions/{slug}_{flinch,lean_in}.jpg`（16 张微表情反应帧）+ `public/portraits/reactions/chamber_{purge,admit,whiteout}.jpg`（3 张实景结局帧）。
 - **300 条三语对讲机录音棚级神经语音包（✅ 已全量落盘 `public/audio/{zh,en,ja}/`）**：
   - 覆盖 8 名幸存者全部探针分支（264 条）+ 第 5 夜 `operator09` 替身全部入职宣言镜像变体（36 条），经 `scripts/synthesize-edge-tts.py` 按角色国籍/性别/语速分轨演绎并由 `ffmpeg` 统一母带处理（`300–3500Hz` 对讲滤波 + `-16 LUFS` 响度对齐，`24kHz 48kbps` 共 `16 MB`）。
   - `src/game/audio.ts` 已同步加入可选的 **`-46°C` 极地超低频暴风雪底噪 + 潜艇/前哨站金属舱壁热胀冷缩应力呻吟声**（顶部栏 `🌨️ AMB: ON/OFF` 独立开关）。
-- **43 段动态 `.mp4` I2V 生成管线（40 段幸存者 + 3 段 Night 5 `operator09`，随时一键运行）**：
-  - `ViewportCanvas.tsx` 与 `Night5Audit.tsx` 均已挂载 `<video>`，一旦 `public/videos/{slug}/*.mp4` 落盘即自动升级为 `LIVE I2V STREAM`。
+- **零 API 扣费的 Google AI Studio 网页端动态视频渲染器（`scripts/render-aistudio-web.mjs`）与首轮 7 段 `1280×720` `.mp4` 已上线**：
+  - 通过 `ego-browser` 驱动 `public@tfsharedspace.com` 账号下的 AI Studio 网页版 `Gemini Omni 1.2 Flash`（强制校验 `"No API key selected"` 确保 `$0` API 额度消耗），已完成首轮 **7 段实机监控 `.mp4`** 渲染并合入 `public/videos/`：
+    - `V-01` Elena 全套动作（`elena/{idle,flinch,lean_in}.mp4`）+ `V-02` Leo（`leo/idle.mp4`）；
+    - 全角色与第 5 夜共享的实景处决/放行/暴风雪动态视频（`chamber/{admit,purge,whiteout}.mp4`，`media.ts` 已对全体 8 名幸存者及 `OP-09` 自动回退挂载）。
+  - **双 Google Drive 云端资产归档已就绪**：
+    - `public@tfsharedspace.com` 网盘：`quarantine-gate-0-videos`（`1sB2OSIXVflmYK2aJ4MkkKYMv_UeL2c9l`）与 `quarantine-gate-0-assets`（`1Jld4N9lhQO9HEp5hLRNuiZdmm26oMeLg`）；
+    - `evanzhousyforward@gmail.com` 网盘（5 TB 存储）：`My Drive/quarantine-gate-0-assets/`（存放全套视频、35mm 底片、300 条神经配音及清单归档）。
 
 ### 1.3 在线 Flash 自由提问改写与三端发行管线（✅ 已全部打通）
 - **Vercel 生产部署与 GitHub Pages 跨域共享**：
@@ -44,18 +49,10 @@
 
 ## 2. 下一步待办事项（Next Steps 优先级清单）
 
-### Priority 1（最高优）：跑出并合入 40+3 段真实 AI 动态监控视频（`public/videos/{slug}/*.mp4`）
-前端 `<video>` 自动切换层与 `OP-09` 替身视频槽位均已就绪，仅需在有云端配额或 Colab GPU 时生成 `.mp4`（注意本地磁盘剩余空间较紧，推荐走云端 API 或 Colab）：
-1. **推荐先拿 `V-01`（Elena，5 段视频）做首轮样片验证**，确认呼吸幅度、眼神微表情和零口型效果后再全量跑完 `V-01` ~ `V-08` 及 `OP-09`：
-   - **路径 A（Colab / AI Studio 推荐，零本地磁盘占用）**：打开 [`notebooks/gate0_ai_video_studio.ipynb`](../notebooks/gate0_ai_video_studio.ipynb)，`VISITOR_FILTER` 可选 `'V-01'` 或 `'ALL_WITH_NIGHT5'`，选 `PROVIDER = 'veo'`（Colab Secrets 填入 `GEMINI_API_KEY`）或免费 T4 GPU `PROVIDER = 'ltx_gpu'`，跑完导出至 Google Drive `MyDrive/quarantine-gate-0-videos/`，回到仓库执行：
-     ```bash
-     pnpm media:pull-drive
-     ```
-   - **路径 B（本地命令行调云端 API）**：
-     ```bash
-     GEMINI_API_KEY=... pnpm media:videos -- --visitor V-01 --with-end-frame
-     GEMINI_API_KEY=... pnpm media:videos -- --include-night5 --with-end-frame
-     ```
+### Priority 1（最高优）：在 AI Studio 完成账号一次性人工验证后，续跑剩余 21 段角色专属 `.mp4`（`leo` 剩余 2 段 + `V-03`~`V-08` + `OP-09/idle`）
+`V-01` Elena 全套动作、`V-02` Leo `idle` 以及全员通用的 `chamber/{admit,purge,whiteout}.mp4` 已完成上线；AI Studio 网页端在连续免 Key 生成 7 段视频后弹出一次性真人账号验证提示（`https://aistudio.google.com/verify-account`）：
+1. 在已移交的 `ego-lite` 浏览器窗口完成 `public@tfsharedspace.com` 的 `verify-account` 验证；
+2. 告知 Agent 续跑 `ego-browser nodejs < scripts/render-aistudio-web.mjs`（自动跳过已生成的 7 段，仅渲染剩余 21 段角色微表情片段并同步至两个 Google Drive 资产库）。
 
 ### Priority 2：校验或按需配置 Vercel AI Gateway / Gemini 生产密钥
 - 仓库已上线 `https://quarantine-gate-0.vercel.app` 并支持 `x-vercel-oidc-token`（Vercel AI Gateway）自动透传；若需固定使用独立 Gemini Key 或自定义网关配额，可在 Vercel 项目后台 `Settings -> Environment Variables` 添加 `GEMINI_API_KEY` 或 `AI_GATEWAY_API_KEY`（未配置或超额时系统 0 阻塞自动回退至预审台词）。
