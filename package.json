@@ -17,7 +17,8 @@
     "sync:ordamor": "tsx scripts/sync-ordamor.ts",
     "media:manifest": "tsx scripts/generate-media-pack.ts",
     "media:tts": "tsx scripts/generate-media-pack.ts --synthesize-tts",
-    "media:videos": "tsx scripts/generate-videos.ts"
+    "media:videos": "tsx scripts/generate-videos.ts",
+    "media:pull-drive": "tsx scripts/pull-gdrive-videos.ts"
   },
   "dependencies": {
     "react": "^19.3.0",

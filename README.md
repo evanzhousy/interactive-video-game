@@ -37,8 +37,11 @@ Instead of uncanny 3D character meshes, Gate 0 uses a **two-tier AI live-action 
    - `public/portraits/{slug}.jpg`: 8 survivor `idle` blast-window portraits + Night 5 `operator09.jpg`.
    - `public/portraits/reactions/{slug}_{flinch,lean_in}.jpg`: 16 actor-consistent image-to-image reaction shots that crossfade dynamically when probes hit contradictions or trigger urgent lean-ins.
    - `public/portraits/reactions/chamber_{purge,admit,whiteout}.jpg`: 3 photorealistic chamber shots (`1,100°C` blast-shutter sterilization, green cryo-steam airlock clearance, and `-46°C` Arctic whiteout).
-2. **Full Motion I2V Video Stream (`pnpm media:videos`)**:
-   - Configure `GEMINI_API_KEY` (**Google Veo 3**), `FAL_KEY` (**Kling 2.0 / Wan 2.1**), or `RUNWAYML_API_SECRET` (**Runway Gen-4 Turbo**) in `.env.local` and run `pnpm media:videos` (or filter e.g. `pnpm media:videos -- --visitor V-01 --state idle --with-end-frame`).
+2. **Full Motion I2V Video Stream (`pnpm media:videos` or One-Click Google Colab)**:
+   - **Option A — One-Click Google Colab (`Veo 3` via AI Studio OR Free `T4 GPU` Open-Source `LTX-Video`)**:
+     [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/evanzhousy/interactive-video-game/blob/main/notebooks/gate0_ai_video_studio.ipynb)
+     Open [`notebooks/gate0_ai_video_studio.ipynb`](./notebooks/gate0_ai_video_studio.ipynb) in Colab to render clips either via Google AI Studio's `GEMINI_API_KEY` (`veo-3.0-generate-001`) or free Colab T4 GPU (`Lightricks/LTX-Video`), export to Google Drive (`MyDrive/quarantine-gate-0-videos`), and pull straight into `public/videos/` via `pnpm media:pull-drive`.
+   - **Option B — Direct Node CLI**: Configure `GEMINI_API_KEY` (**Google Veo 3**), `FAL_KEY` (**Kling 2.0 / Wan 2.1**), or `RUNWAYML_API_SECRET` (**Runway Gen-4 Turbo**) in `.env.local` and run `pnpm media:videos` (or filter e.g. `pnpm media:videos -- --visitor V-01 --state idle --with-end-frame`).
    - Whenever `public/videos/{slug}/{idle,flinch,lean_in,admit,purge}.mp4` is present, `ViewportCanvas` automatically upgrades from 35mm keyframe crossfades to continuous `<video>` streams.
 
 ---
