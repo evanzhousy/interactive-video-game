@@ -83,14 +83,19 @@ FLASH_MODEL=google/gemini-3.8-flash
 ├── api/
 │   └── rephrase.ts               # Vercel Web API route for zero-leakage Flash rephrasing
 ├── docs/
+│   ├── HANDOFF.md                # Current project progress, architecture & prioritized next steps
 │   ├── GDD.md                    # Full v3.1 Game Design & Engineering Document
 │   └── ORDAMOR_SPIKE.md          # Empirical benchmark & Ordamor schema alignment report
+├── notebooks/
+│   └── gate0_ai_video_studio.ipynb # One-click Colab studio (Google AI Studio Veo 3 + T4 GPU LTX-Video)
 ├── public/
-│   ├── portraits/                # 8 survivor portraits + Operator #09 doppelgänger portrait
+│   ├── portraits/                # 28 photorealistic 35mm AI cinema frames (idle + reactions + chamber)
 │   └── media-manifest.json       # 40 I2V video prompts + 264 trilingual intercom voice lines
 ├── scripts/
 │   ├── sync-ordamor.ts           # Syncs pure-TS Persona Engine files from ../ordamor
-│   └── generate-media-pack.ts    # Exports media-manifest.json & optional TTS batch renderer
+│   ├── generate-media-pack.ts    # Exports media-manifest.json & optional TTS batch renderer
+│   ├── generate-videos.ts        # Batch-renders I2V .mp4 clips via Veo 3 / Kling 2.0 / Runway Gen-4
+│   └── pull-gdrive-videos.ts     # Syncs Colab-rendered .mp4 clips from Google Drive into public/videos/
 ├── src/
 │   ├── ordamor/                  # Read-only synced upstream Ordamor v6 modules (Red Line 2)
 │   ├── game/                     # Deterministic client engine + 8 survivors + Flash + storage
@@ -99,7 +104,7 @@ FLASH_MODEL=google/gemini-3.8-flash
 ├── tauri/
 │   └── tauri.conf.json           # Tauri v2 desktop wrapper blueprint for Steam (<25 MB)
 ├── vercel.json                   # One-click Vercel SPA + Serverless API configuration
-└── test/                         # Hermetic Vitest verification suite (7 test files)
+└── test/                         # Hermetic Vitest verification suite (7 test files / 21 tests)
 ```
 
 ## Syncing with `ordamor`
