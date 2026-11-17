@@ -38,3 +38,18 @@ export async function POST(request: Request): Promise<Response> {
     headers: JSON_HEADERS
   });
 }
+
+export async function handleRephraseFetch(request: Request): Promise<Response> {
+  if (request.method === "GET") {
+    return GET();
+  }
+  if (request.method === "POST") {
+    return POST(request);
+  }
+  return new Response(
+    JSON.stringify({ status: "ERROR", error: "METHOD_NOT_ALLOWED" }),
+    { status: 405, headers: JSON_HEADERS }
+  );
+}
+
+export default { fetch: handleRephraseFetch };
