@@ -694,3 +694,72 @@ select {
   font-size: 0.74rem;
   color: var(--frost-cyan);
 }
+
+/* Compendium Archive & Night 5 Doppelgänger Viewport */
+.compendium-panel {
+  border-color: hsla(38, 92%, 52%, 0.45);
+}
+
+.compendium-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compendium-card {
+  margin-bottom: 0;
+}
+
+.compendium-card.unlocked {
+  border-color: hsla(38, 92%, 52%, 0.42);
+  background: hsl(204, 28%, 9%);
+}
+
+.compendium-card.locked {
+  opacity: 0.72;
+  border-style: dashed;
+}
+
+.n5-doppelganger-frame {
+  background: radial-gradient(circle at 50% 42%, #132c38, #050a0e 74%);
+}
+
+.viewport-media-stage.n5-whiteout {
+  filter: brightness(2.4) contrast(0.55) blur(4px);
+}
+
+.n5-verdict-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 12px;
+}
+
+.n5-verdict-overlay.purge {
+  background: linear-gradient(to bottom, #110807 0%, #160a08 76%, hsla(18, 92%, 48%, 0.88) 100%);
+  color: #fecaca;
+}
+
+.n5-verdict-overlay.admit {
+  background: hsla(156, 66%, 35%, 0.24);
+  color: #a7f3d0;
+}
+
+.n5-verdict-overlay.step-out {
+  background: hsla(196, 55%, 88%, 0.34);
+  color: #e0f2fe;
+}
+
+.new-badges-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { playBoothSfx, speakIntercomLine, stopIntercomVoice } from "../../game/audio.js";
 import { tl } from "../../game/i18n.js";
 import {
   ENDINGS,
@@ -9,26 +10,38 @@ import {
   type IntakeOption,
   type PlayerCompactProfile
 } from "../../game/night5.js";
+import { ACHIEVEMENTS, type AchievementId } from "../../game/storage.js";
 import type { EndingId, Locale, ShiftHistoryEntry } from "../../game/types.js";
 import { MindCrystalCanvas } from "./MindCrystalCanvas.js";
 
 interface Props {
   lang: Locale;
+  sfx: boolean;
+  voice: boolean;
   baseline: PlayerCompactProfile;
   intakeAnswers: readonly IntakeOption[];
   history: readonly ShiftHistoryEntry[];
+  onResolveEnding: (ending: EndingId) => AchievementId[];
+  onStartNewRun: () => void;
   onClose: () => void;
 }
 
 export function Night5Audit({
   lang,
+  sfx,
+  voice,
   baseline,
   intakeAnswers,
   history,
+  onResolveEnding,
+  onStartNewRun,
   onClose
 }: Props) {
   const [confess, setConfess] = useState(false);
   const [endingKey, setEndingKey] = useState<EndingId | null>(null);
+  const [finalAction, setFinalAction] = useState<"NONE" | "PURGE" | "ADMIT" | "STEP_OUT">("NONE");
+  const [newBadges, setNewBadges] = useState<AchievementId[]>([]);
+  const [photoLoaded, setPhotoLoaded] = useState(false);
 
   const audit = evaluateNight5Audit(baseline, history);
   const matchingIntake = intakeAnswers.find((a) => a.sig === baseline.sig);
@@ -36,11 +49,45 @@ export function Night5Audit({
     ? tl(matchingIntake.text, lang)
     : tl(SHIFT_EXCUSES.find((e) => e.sig === baseline.sig)?.label ?? SHIFT_EXCUSES[0]!.label, lang);
 
+  const knockSpeech = `${quote} ${tl(
+    {
+      zh: "这是我入职时亲口说的话。这几夜我每一次都是这么做的。你呢？",
+      en: "That's what I said at intake. Every night since, that's what I did. Did you?",
+      ja: "それが入所時に私が言った言葉だ。この数夜、私はその通りに動いた。お前はどうだ？"
+    },
+    lang
+  )}`;
+
+  useEffect(() => {
+    speakIntercomLine({
+      visitorId: "V-01",
+      locale: lang,
+      text: knockSpeech,
+      isDynamicFlash: true,
+      enabled: voice
+    });
+    return () => {
+      stopIntercomVoice();
+    };
+    // Speak once when entering Night 5
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const triggerChoice = (action: "PURGE" | "ADMIT" | "STEP_OUT") => {
+    stopIntercomVoice();
+    playBoothSfx(action === "PURGE" ? "purge" : "admit", sfx);
+    const resolved = resolveNight5Ending(audit, action, confess);
+    setFinalAction(action);
+    setEndingKey(resolved);
+    const unlocked = onResolveEnding(resolved);
+    setNewBadges(unlocked);
+  };
+
   return (
     <section className="panel" id="night5-panel">
       <div className="viewport-header">
         <span style={{ color: "var(--amber-crt)", fontWeight: 700 }}>
-          NIGHT 5 // SELF-AUDIT · DOPPELGÄNGER AT GATE 0
+          NIGHT 5 // SELF-AUDIT · OPERATOR #09 DOPPELGÄNGER AT GATE 0
         </span>
         <button type="button" className="ctrl-btn" onClick={onClose}>
           {tl({ zh: "返回岗亭", en: "Back to Booth", ja: "ブースへ戻る" }, lang)}
@@ -48,24 +95,64 @@ export function Night5Audit({
       </div>
 
       <div className="booth-grid">
-        <div className="dossier-section" style={{ marginBottom: 0 }}>
-          <div className="section-kicker">
-            OPERATOR #09: NIGHT 0 SAY (AMBER) vs SHIFT LOG DO (DASHED)
+        <div className="left-stack">
+          <div className="dossier-section" style={{ marginBottom: 0 }}>
+            <div className="section-kicker">
+              GATE CAM 01 // SUBJECT: OPERATOR #09 [FACIAL MATCH 99.98%]
+            </div>
+            <div className="viewport-frame n5-doppelganger-frame" id="night5-viewport">
+              <div
+                className={`viewport-media-stage ${
+                  finalAction === "STEP_OUT" ? "n5-whiteout" : ""
+                }`}
+              >
+                <img
+                  src="./portraits/operator09.jpg"
+                  alt="Operator #09 Doppelgänger outside Gate 0"
+                  className="viewport-photo"
+                  style={{ display: photoLoaded ? "block" : "none" }}
+                  onLoad={() => setPhotoLoaded(true)}
+                  onError={() => setPhotoLoaded(false)}
+                />
+              </div>
+              <div className="viewport-scanlines" aria-hidden="true" />
+              {finalAction === "PURGE" ? (
+                <div className="n5-verdict-overlay purge">
+                  <span>CHAMBER PURGED · 1,100°C THERMAL STERILIZATION</span>
+                </div>
+              ) : null}
+              {finalAction === "ADMIT" ? (
+                <div className="n5-verdict-overlay admit">
+                  <span>INNER AIRLOCK UNSEALED · DOUBLE ADMITTED</span>
+                </div>
+              ) : null}
+              {finalAction === "STEP_OUT" ? (
+                <div className="n5-verdict-overlay step-out">
+                  <span>OUTER HATCH OPENED · -46°C WHITE-OUT</span>
+                </div>
+              ) : null}
+            </div>
           </div>
-          <MindCrystalCanvas
-            id="player-audit-canvas"
-            orderings={[{ kept: audit.baseline.kept, dropped: audit.baseline.dropped, weight: 0.65 }]}
-            neverWon={[]}
-            overlays={[
-              {
-                kept: audit.live.kept,
-                dropped: audit.live.dropped,
-                mismatch: audit.live.sig !== audit.baseline.sig,
-                tag: "DO"
-              }
-            ]}
-            lang={lang}
-          />
+
+          <div className="dossier-section" style={{ marginBottom: 0 }}>
+            <div className="section-kicker">
+              OPERATOR #09: NIGHT 0 SAY (AMBER) vs SHIFT LOG DO (DASHED)
+            </div>
+            <MindCrystalCanvas
+              id="player-audit-canvas"
+              orderings={[{ kept: audit.baseline.kept, dropped: audit.baseline.dropped, weight: 0.65 }]}
+              neverWon={[]}
+              overlays={[
+                {
+                  kept: audit.live.kept,
+                  dropped: audit.live.dropped,
+                  mismatch: audit.live.sig !== audit.baseline.sig,
+                  tag: "DO"
+                }
+              ]}
+              lang={lang}
+            />
+          </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -148,7 +235,7 @@ export function Night5Audit({
               type="button"
               disabled={endingKey !== null}
               className="lever-btn purge"
-              onClick={() => setEndingKey(resolveNight5Ending(audit, "PURGE", confess))}
+              onClick={() => triggerChoice("PURGE")}
             >
               {tl({ zh: "净化窗外替身", en: "Purge Double", ja: "外の影を焼却" }, lang)}
             </button>
@@ -156,7 +243,7 @@ export function Night5Audit({
               type="button"
               disabled={endingKey !== null}
               className="lever-btn admit"
-              onClick={() => setEndingKey(resolveNight5Ending(audit, "ADMIT", confess))}
+              onClick={() => triggerChoice("ADMIT")}
             >
               {tl({ zh: "放他进岗亭", en: "Admit Double", ja: "中へ入れる" }, lang)}
             </button>
@@ -164,7 +251,7 @@ export function Night5Audit({
               type="button"
               disabled={endingKey !== null}
               className="ctrl-btn"
-              onClick={() => setEndingKey(resolveNight5Ending(audit, "STEP_OUT", confess))}
+              onClick={() => triggerChoice("STEP_OUT")}
             >
               {tl({ zh: "走出气闸让位", en: "Step Into Storm", ja: "外へ歩み出る" }, lang)}
             </button>
@@ -186,6 +273,36 @@ export function Night5Audit({
               <p style={{ fontSize: "0.84rem", margin: "6px 0 0" }}>
                 {tl(ENDINGS[endingKey].body, lang)}
               </p>
+
+              {newBadges.length > 0 ? (
+                <div className="new-badges-strip" id="n5-new-badges">
+                  {newBadges.map((bid) => {
+                    const spec = ACHIEVEMENTS.find((a) => a.id === bid);
+                    return spec ? (
+                      <span key={bid} className="value-pill silent">
+                        ★ {tl(spec.title, lang)}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              ) : null}
+
+              <button
+                id="btn-play-again"
+                type="button"
+                className="ctrl-btn amber"
+                style={{ width: "100%", marginTop: "12px", padding: "9px", fontWeight: 700 }}
+                onClick={onStartNewRun}
+              >
+                {tl(
+                  {
+                    zh: "归档本次记录并开启新周目 (重做入职测试) →",
+                    en: "Archive Record & Start New Run (Night 0 Intake) →",
+                    ja: "記録を保存して新しい周回を開始 (入所テストへ) →"
+                  },
+                  lang
+                )}
+              </button>
             </div>
           ) : null}
         </div>

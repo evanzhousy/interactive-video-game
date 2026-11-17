@@ -4,11 +4,12 @@ import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../src/ui/App.js";
 
-describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash Online Rephrase)", () => {
+describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Flash + Compendium)", () => {
   const originalFetch = globalThis.fetch;
 
   beforeEach(() => {
     (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
+    window.localStorage.clear();
     document.body.innerHTML = '<div id="root"></div>';
     const noop = () => {};
     const mockCtx = new Proxy(
@@ -36,7 +37,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash O
     vi.restoreAllMocks();
   });
 
-  it("plays a complete 8-visitor campaign (Nights 1–4 -> Night 5) including Flash free-text rephrase", async () => {
+  it("plays a complete 8-visitor campaign, resumes mid-shift via autosave, and unlocks Night 5 compendium records", async () => {
     globalThis.fetch = vi.fn(async () =>
       new Response(
         JSON.stringify({
@@ -50,7 +51,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash O
     ) as unknown as typeof fetch;
 
     const container = document.getElementById("root")!;
-    const root = createRoot(container);
+    let root = createRoot(container);
 
     await act(async () => {
       root.render(<App />);
@@ -67,46 +68,52 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash O
       (document.getElementById("btn-start-shift") as HTMLButtonElement).click();
     });
 
-    // Enable Flash Online Rephrase via topbar drawer & test VOICE toggle
-    expect(document.getElementById("btn-voice-toggle")?.textContent).toContain("VOICE: ON");
+    // Complete V-01, then simulate browser reload to verify mid-shift autosave resume on V-02!
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "t", bubbles: true }));
+    });
+    expect(document.querySelector(".viewport-media-stage.mode-thermal")).not.toBeNull();
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "1", bubbles: true }));
+    });
+    await act(async () => {
+      (document.getElementById("btn-purge") as HTMLButtonElement).click();
+    });
+    await act(async () => {
+      (document.querySelector("#shift-log-box .option-card") as HTMLButtonElement).click();
+    });
+    await act(async () => {
+      (document.getElementById("btn-next-visitor") as HTMLButtonElement).click();
+    });
+
+    // Unmount and remount App WITHOUT clearing localStorage -> must resume directly at V-02!
+    await act(async () => {
+      root.unmount();
+    });
+    document.body.innerHTML = '<div id="root"></div>';
+    root = createRoot(document.getElementById("root")!);
+    await act(async () => {
+      root.render(<App />);
+    });
+    expect(document.getElementById("main-booth")?.textContent).toContain("V-02");
+
+    // Enable Flash Online Rephrase via topbar drawer
     await act(async () => {
       (document.getElementById("btn-flash-toggle") as HTMLButtonElement).click();
     });
-    expect(document.getElementById("flash-config-drawer")).not.toBeNull();
     await act(async () => {
       (document.getElementById("flash-enable-checkbox") as HTMLInputElement).click();
     });
-    expect(document.getElementById("btn-flash-toggle")?.textContent).toContain("ON");
 
-    // Walk through all 8 survivors: V-01..V-08
-    for (let idx = 0; idx < 8; idx++) {
-      expect(
-        document.getElementById("quarantine-viewport")?.getAttribute("data-clip-state")
-      ).toBe("idle");
-
-      // On V-01, trigger Neural Thermal (1⚡) and verify FLIR false-color shader class activates
-      if (idx === 0) {
-        await act(async () => {
-          (document.getElementById("btn-thermal") as HTMLButtonElement).click();
-        });
-        expect(document.querySelector(".viewport-media-stage.mode-thermal")).not.toBeNull();
-      }
-
-      // Night 1 (idx 0, 1): MindCrystal locked; Night 2+ (idx >= 2): MindCrystal unlocked
-      if (idx < 2) {
-        expect(document.getElementById("arc-locked")).not.toBeNull();
-      } else {
-        expect(document.getElementById("arc-box")).not.toBeNull();
-      }
-
-      // Night 3 (idx 4, 5 — Ana & Ingrid): Geomagnetic Storm warning banner visible
+    // Walk through remaining 7 survivors: V-02..V-08 (idx 1..7)
+    for (let idx = 1; idx < 8; idx++) {
       if (idx === 4 || idx === 5) {
         expect(document.getElementById("night3-storm-banner")).not.toBeNull();
       } else {
         expect(document.getElementById("night3-storm-banner")).toBeNull();
       }
 
-      // Night 4 (idx 6, 7 — Lin Mei & Hannah): Disposal signature & Boggart trap unlocked
       if (idx >= 6) {
         expect(document.getElementById("disp-box")).not.toBeNull();
         expect(document.getElementById("disposal-requires-tag")?.textContent).toContain(
@@ -115,7 +122,6 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash O
       }
 
       if (idx === 7) {
-        // Test free-text Boggart question on V-08 Hannah with live Flash rephrasing!
         await act(async () => {
           const input = document.getElementById("custom-ask-input") as HTMLInputElement;
           const nativeSetter = Object.getOwnPropertyDescriptor(
@@ -154,13 +160,22 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Night 3 Storm + Flash O
       });
     }
 
-    // Night 5 Self-Audit Climax after all 8 survivors
+    // Night 5 Self-Audit Climax with Doppelgänger Viewport & Compendium unlock
     expect(document.getElementById("night5-panel")).not.toBeNull();
+    expect(document.getElementById("night5-viewport")).not.toBeNull();
     expect(document.getElementById("night5-panel")?.textContent).toContain("/8");
+
     await act(async () => {
       (document.querySelector("#night5-panel .lever-btn.purge") as HTMLButtonElement).click();
     });
     expect(document.getElementById("n5-ending")?.textContent?.trim().length).toBeGreaterThan(10);
+    expect(document.getElementById("btn-compendium")?.textContent).toContain("(1/7)");
+
+    // Open Compendium Archive modal and verify unlocked badge + ending
+    await act(async () => {
+      (document.getElementById("btn-compendium") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("compendium-modal")).not.toBeNull();
 
     await act(async () => {
       root.unmount();

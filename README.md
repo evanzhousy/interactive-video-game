@@ -48,31 +48,38 @@ FLASH_MODEL=google/gemini-3.8-flash
 
 ---
 
+## Desktop Keyboard Shortcuts & Meta-Progression
+
+- **Tactical Shortcuts (Booth)**: `1`–`5` fire tactical probe chips · `S` Pupil Strobe (`1⚡`) · `T` Neural Thermal (`1⚡`) · `[` / `]` cycle ORD-OS Dossier tabs.
+- **Mid-Shift Autosave**: Progress across Nights 1–5 automatically saves to `localStorage` (`gate0.shift.v1`) and resumes seamlessly on reload.
+- **ORD-OS Archive (`🏆 0/7`)**: Tracks all **7 Night-5 Self-Audit Endings** (with non-spoiler deduction hints) and **6 Forensic Interrogator Commendations** across runs.
+
+---
+
 ## Repository Structure
 
 ```text
+├── .github/workflows/ci.yml      # Node 24 + pnpm automated typecheck, test & build gate
 ├── api/
 │   └── rephrase.ts               # Vercel Web API route for zero-leakage Flash rephrasing
 ├── docs/
 │   ├── GDD.md                    # Full v3.1 Game Design & Engineering Document
 │   └── ORDAMOR_SPIKE.md          # Empirical benchmark & Ordamor schema alignment report
-├── public/portraits/             # All 8 photorealistic 16:9 blast-window portraits
+├── public/
+│   ├── portraits/                # 8 survivor portraits + Operator #09 doppelgänger portrait
+│   └── media-manifest.json       # 40 I2V video prompts + 264 trilingual intercom voice lines
 ├── scripts/
-│   └── sync-ordamor.ts           # Syncs pure-TS Persona Engine files from ../ordamor
+│   ├── sync-ordamor.ts           # Syncs pure-TS Persona Engine files from ../ordamor
+│   └── generate-media-pack.ts    # Exports media-manifest.json & optional TTS batch renderer
 ├── src/
 │   ├── ordamor/                  # Read-only synced upstream Ordamor v6 modules (Red Line 2)
-│   ├── game/                     # Deterministic client engine + 8 survivors + Flash validator
-│   │   ├── visitors/             # V-01..V-08 full 5-night roster + quick 3-visitor slice
-│   │   ├── intent.ts             # Multilingual question classifier & axis preview
-│   │   ├── stance.ts             # Progressive mimic stance engine + LLM payload sanitizer
-│   │   ├── rephrase.ts           # Flash prompt builder, post-validator & fallback client
-│   │   └── night5.ts             # Night 0 intake, crew quota, and 7-ending resolver
-│   ├── server/
-│   │   └── rephrase-handler.ts   # Shared server/Vite handler for /api/rephrase
-│   └── ui/                       # React 19 + industrial cryo-amber Vanilla CSS booth UI
+│   ├── game/                     # Deterministic client engine + 8 survivors + Flash + storage
+│   ├── server/                   # Shared server/Vite handler for /api/rephrase
+│   └── ui/                       # React 19 + interactive video rig + cryo-amber Vanilla CSS
 ├── tauri/
 │   └── tauri.conf.json           # Tauri v2 desktop wrapper blueprint for Steam (<25 MB)
-└── test/                         # Hermetic Vitest verification suite
+├── vercel.json                   # One-click Vercel SPA + Serverless API configuration
+└── test/                         # Hermetic Vitest verification suite (7 test files)
 ```
 
 ## Syncing with `ordamor`

@@ -15,7 +15,17 @@ import {
 } from "../game/night5.js";
 import { DEFAULT_FLASH_CONFIG, requestFlashRephrase } from "../game/rephrase.js";
 import { buildRephraseInput, decideStance } from "../game/stance.js";
+import {
+  clearSavedShift,
+  loadCompendium,
+  loadSavedShift,
+  recordRunCompletion,
+  saveShiftState,
+  type AchievementId,
+  type CompendiumState
+} from "../game/storage.js";
 import type {
+  EndingId,
   FlashRephraseConfig,
   Locale,
   ProbeKey,
@@ -28,6 +38,7 @@ import {
   rollShift,
   type CampaignMode
 } from "../game/visitors/index.js";
+import { CompendiumModal } from "./components/CompendiumModal.js";
 import { FlashConfigDrawer } from "./components/FlashConfigDrawer.js";
 import { IntakeModal } from "./components/IntakeModal.js";
 import { IntercomPanel, type TranscriptLine } from "./components/IntercomPanel.js";
@@ -38,24 +49,40 @@ import { ViewportCanvas } from "./components/ViewportCanvas.js";
 type Stage = "intake" | "booth" | "night5";
 
 export function App() {
-  const [lang, setLang] = useState<Locale>("zh");
+  const initialSave = useRef(loadSavedShift()).current;
+
+  const [lang, setLang] = useState<Locale>(initialSave?.lang ?? "zh");
   const [sfx, setSfx] = useState(true);
   const [voice, setVoice] = useState(true);
-  const [stage, setStage] = useState<Stage>("intake");
-  const [campaignMode, setCampaignMode] = useState<CampaignMode>("full");
+  const [stage, setStage] = useState<Stage>(initialSave?.stage ?? "intake");
+  const [campaignMode, setCampaignMode] = useState<CampaignMode>(
+    initialSave?.campaignMode ?? "full"
+  );
 
   const activeVisitors = getVisitorsForMode(campaignMode);
 
-  const [baseline, setBaseline] = useState<PlayerCompactProfile>({
-    sig: "own_it",
-    kept: "truth",
-    dropped: "status"
-  });
-  const [intakeAnswers, setIntakeAnswers] = useState<IntakeOption[]>([]);
+  const [baseline, setBaseline] = useState<PlayerCompactProfile>(
+    initialSave?.baseline ?? {
+      sig: "own_it",
+      kept: "truth",
+      dropped: "status"
+    }
+  );
+  const [intakeAnswers, setIntakeAnswers] = useState<IntakeOption[]>(
+    initialSave?.intakeAnswers ?? []
+  );
 
-  const [rolls, setRolls] = useState<VisitorRoll[]>(() => rollShift(activeVisitors));
-  const [visitorIdx, setVisitorIdx] = useState(0);
-  const [history, setHistory] = useState<ShiftHistoryEntry[]>([]);
+  const [rolls, setRolls] = useState<VisitorRoll[]>(
+    () => initialSave?.rolls ?? rollShift(activeVisitors)
+  );
+  const [visitorIdx, setVisitorIdx] = useState(initialSave?.visitorIdx ?? 0);
+  const [history, setHistory] = useState<ShiftHistoryEntry[]>(initialSave?.history ?? []);
+  const [boggartUsedIds, setBoggartUsedIds] = useState<string[]>(
+    initialSave?.boggartUsedIds ?? []
+  );
+
+  const [compendium, setCompendium] = useState<CompendiumState>(() => loadCompendium());
+  const [compendiumOpen, setCompendiumOpen] = useState(false);
 
   const safeIdx = Math.min(visitorIdx, activeVisitors.length - 1);
   const visitor = activeVisitors[safeIdx]!;
@@ -90,6 +117,35 @@ export function App() {
     status: "AWAITING_INTERROGATION",
     turns_remaining: 4
   });
+
+  // Autosave mid-shift progress whenever stage / visitorIdx / history updates
+  useEffect(() => {
+    if (stage === "booth" || stage === "night5") {
+      saveShiftState({
+        version: 1,
+        savedAt: new Date().toISOString(),
+        lang,
+        campaignMode,
+        stage,
+        baseline,
+        intakeAnswers,
+        rolls,
+        visitorIdx: safeIdx,
+        history,
+        boggartUsedIds
+      });
+    }
+  }, [
+    baseline,
+    boggartUsedIds,
+    campaignMode,
+    history,
+    intakeAnswers,
+    lang,
+    rolls,
+    safeIdx,
+    stage
+  ]);
 
   // Continuous Arctic blizzard wind + Night 3 geomagnetic storm ambience
   useEffect(() => {
@@ -150,8 +206,17 @@ export function App() {
     playBoothSfx("ptt", sfx);
     setRolls(rollShift(roster));
     setHistory([]);
+    setBoggartUsedIds([]);
     setStage("booth");
     resetVisitorState(0, roster, true);
+  };
+
+  const handleRestartFromIntake = () => {
+    stopIntercomVoice();
+    clearSavedShift();
+    setHistory([]);
+    setBoggartUsedIds([]);
+    setStage("intake");
   };
 
   const handleSwitchCampaignMode = (nextMode: CampaignMode) => {
@@ -159,79 +224,152 @@ export function App() {
     const roster = getVisitorsForMode(nextMode);
     setRolls(rollShift(roster));
     setHistory([]);
+    setBoggartUsedIds([]);
     resetVisitorState(0, roster, stage === "booth");
   };
 
-  const handleTriggerSensor = (kind: "strobe" | "thermal") => {
-    if (powerLeft <= 0 || verdictState !== "NONE") return;
-    setPowerLeft((p) => p - 1);
-    if (kind === "strobe") {
-      playBoothSfx("strobe", sfx);
-      setStrobeTrigger((c) => c + 1);
-      const msg = currentRoll.isMimic ? visitor.sensors.strobeMimic : visitor.sensors.strobeHuman;
-      setSensorToast(`🔦 ${tl(msg, lang)}`);
-    } else {
-      playBoothSfx("thermal", sfx);
-      setThermalTrigger((c) => c + 1);
-      const msg = currentRoll.isMimic ? visitor.sensors.thermalMimic : visitor.sensors.thermalHuman;
-      setSensorToast(`🌡️ ${tl(msg, lang)}`);
-    }
-  };
+  const handleTriggerSensor = useCallback(
+    (kind: "strobe" | "thermal") => {
+      if (powerLeft <= 0 || verdictState !== "NONE") return;
+      setPowerLeft((p) => p - 1);
+      if (kind === "strobe") {
+        playBoothSfx("strobe", sfx);
+        setStrobeTrigger((c) => c + 1);
+        const msg = currentRoll.isMimic ? visitor.sensors.strobeMimic : visitor.sensors.strobeHuman;
+        setSensorToast(`🔦 ${tl(msg, lang)}`);
+      } else {
+        playBoothSfx("thermal", sfx);
+        setThermalTrigger((c) => c + 1);
+        const msg = currentRoll.isMimic
+          ? visitor.sensors.thermalMimic
+          : visitor.sensors.thermalHuman;
+        setSensorToast(`🌡️ ${tl(msg, lang)}`);
+      }
+    },
+    [currentRoll.isMimic, lang, powerLeft, sfx, verdictState, visitor.sensors]
+  );
 
-  const handleAskProbe = async (probeKey: ProbeKey | "off_axis", customText?: string) => {
-    if (turnsLeft <= 0 || verdictState !== "NONE" || isRephrasing) return;
-    playBoothSfx("ptt", sfx);
+  const handleAskProbe = useCallback(
+    async (probeKey: ProbeKey | "off_axis", customText?: string) => {
+      if (turnsLeft <= 0 || verdictState !== "NONE" || isRephrasing) return;
+      playBoothSfx("ptt", sfx);
 
-    const epochAtStart = shiftEpochRef.current;
-    const probe = probeKey !== "off_axis" ? visitor.probes[probeKey] : undefined;
-    const onAxis = Boolean(probe && probe.axis !== null);
-    const playerText = customText
-      ? { zh: customText, en: customText, ja: customText }
-      : probe?.label ?? { zh: customText ?? "", en: customText ?? "", ja: customText ?? "" };
+      if (probeKey === "boggart_trap") {
+        setBoggartUsedIds((prev) => (prev.includes(visitor.id) ? prev : [...prev, visitor.id]));
+      }
 
-    const stance = decideStance(visitor, currentRoll, probeKey);
-    const canonicalReply =
-      probeKey === "off_axis" || !probe
-        ? visitor.offAxisReply
-        : !onAxis
-          ? probe.human
-          : probe[stance.lineKey] ?? probe.human;
+      const epochAtStart = shiftEpochRef.current;
+      const probe = probeKey !== "off_axis" ? visitor.probes[probeKey] : undefined;
+      const onAxis = Boolean(probe && probe.axis !== null);
+      const playerText = customText
+        ? { zh: customText, en: customText, ja: customText }
+        : probe?.label ?? { zh: customText ?? "", en: customText ?? "", ja: customText ?? "" };
 
-    const resolvedLineId: VoiceLineVariant =
-      probeKey === "off_axis" || !probe
-        ? "off_axis"
-        : !onAxis
-          ? `${probeKey}_human`
-          : `${probeKey}_${stance.lineKey}`;
+      const stance = decideStance(visitor, currentRoll, probeKey);
+      const canonicalReply =
+        probeKey === "off_axis" || !probe
+          ? visitor.offAxisReply
+          : !onAxis
+            ? probe.human
+            : probe[stance.lineKey] ?? probe.human;
 
-    const nextClip: ClipState = onAxis ? "flinch" : "lean_in";
-    const reactionClip = onAxis ? "flinch_eyes_dart" : "angry_lean_in";
-    const bpmDelta = onAxis ? 10 : 4;
+      const resolvedLineId: VoiceLineVariant =
+        probeKey === "off_axis" || !probe
+          ? "off_axis"
+          : !onAxis
+            ? `${probeKey}_human`
+            : `${probeKey}_${stance.lineKey}`;
 
-    setTurnsLeft((t) => t - 1);
-    setBpm((b) => Math.min(148, b + bpmDelta));
-    setClipState(nextClip);
-    setReaction(`CLIP: ${reactionClip.toUpperCase()}`);
-    if (onAxis) playBoothSfx("heartbeat", sfx);
-    if (!onAxis) setOffAxisCount((c) => c + 1);
+      const nextClip: ClipState = onAxis ? "flinch" : "lean_in";
+      const reactionClip = onAxis ? "flinch_eyes_dart" : "angry_lean_in";
+      const bpmDelta = onAxis ? 10 : 4;
 
-    const llmInput = buildRephraseInput(
-      visitor,
-      tl(playerText, lang),
-      stance,
-      lang,
-      tl(canonicalReply, lang)
-    );
+      setTurnsLeft((t) => t - 1);
+      setBpm((b) => Math.min(148, b + bpmDelta));
+      setClipState(nextClip);
+      setReaction(`CLIP: ${reactionClip.toUpperCase()}`);
+      if (onAxis) playBoothSfx("heartbeat", sfx);
+      if (!onAxis) setOffAxisCount((c) => c + 1);
 
-    const shouldInvokeFlash =
-      flashConfig.enabled && (Boolean(customText) || !flashConfig.freeTextOnly);
+      const llmInput = buildRephraseInput(
+        visitor,
+        tl(playerText, lang),
+        stance,
+        lang,
+        tl(canonicalReply, lang)
+      );
 
-    if (!shouldInvokeFlash) {
+      const shouldInvokeFlash =
+        flashConfig.enabled && (Boolean(customText) || !flashConfig.freeTextOnly);
+
+      if (!shouldInvokeFlash) {
+        setTranscript((prev) => {
+          const next: TranscriptLine[] = [
+            ...prev,
+            { speaker: "player", text: playerText },
+            { speaker: "npc", text: canonicalReply, meta: `+${bpmDelta} BPM · ${reactionClip}` }
+          ];
+          if (!onAxis) {
+            next.push({ speaker: "system", text: UI_STRINGS.offAxisSystemNote });
+          }
+          return next;
+        });
+
+        speakIntercomLine({
+          visitorId: visitor.id,
+          locale: lang,
+          text: tl(canonicalReply, lang),
+          lineId: resolvedLineId,
+          enabled: voice
+        });
+
+        const { lineKey: _hiddenKey, ...publicStance } = stance;
+        setLastPipelinePayload({
+          "1_axis_detection": {
+            question: tl(playerText, lang),
+            detected: probeKey,
+            on_axis: onAxis
+          },
+          "2_stance_engine": publicStance,
+          "3_llm_visible_input": llmInput,
+          "4_offline_profile_anchor": {
+            orderings: visitor.profile.valueOrderings.map((o) => o.id),
+            signatures: visitor.profile.disposalSignatures.map((s) => s.id)
+          },
+          "5_flash_rephrase": {
+            enabled: flashConfig.enabled,
+            invoked: false,
+            source: "offline_canonical"
+          }
+        });
+        return;
+      }
+
+      // Online Flash rephrase flow: append player line immediately, then stream/resolve NPC line
+      setIsRephrasing(true);
+      setTranscript((prev) => [...prev, { speaker: "player", text: playerText }]);
+
+      const outcome = await requestFlashRephrase(llmInput, flashConfig);
+      if (shiftEpochRef.current !== epochAtStart) return;
+      setIsRephrasing(false);
+
+      const finalReply =
+        outcome.source === "flash"
+          ? { ...canonicalReply, [lang]: outcome.line }
+          : canonicalReply;
+      const flashTag =
+        outcome.source === "flash"
+          ? `⚡ FLASH ${outcome.latencyMs}ms`
+          : `FALLBACK (${outcome.fallbackReason ?? "CANONICAL"})`;
+
       setTranscript((prev) => {
         const next: TranscriptLine[] = [
           ...prev,
-          { speaker: "player", text: playerText },
-          { speaker: "npc", text: canonicalReply, meta: `+${bpmDelta} BPM · ${reactionClip}` }
+          {
+            speaker: "npc",
+            text: finalReply,
+            meta: `+${bpmDelta} BPM · ${reactionClip} · ${flashTag}`
+          }
         ];
         if (!onAxis) {
           next.push({ speaker: "system", text: UI_STRINGS.offAxisSystemNote });
@@ -242,8 +380,9 @@ export function App() {
       speakIntercomLine({
         visitorId: visitor.id,
         locale: lang,
-        text: tl(canonicalReply, lang),
+        text: tl(finalReply, lang),
         lineId: resolvedLineId,
+        isDynamicFlash: outcome.source === "flash",
         enabled: voice
       });
 
@@ -261,79 +400,53 @@ export function App() {
           signatures: visitor.profile.disposalSignatures.map((s) => s.id)
         },
         "5_flash_rephrase": {
-          enabled: flashConfig.enabled,
-          invoked: false,
-          source: "offline_canonical"
+          enabled: true,
+          invoked: true,
+          mode: flashConfig.mode,
+          source: outcome.source,
+          latency_ms: outcome.latencyMs,
+          model: outcome.model ?? null,
+          fallback_reason: outcome.fallbackReason ?? null
         }
       });
-      return;
-    }
+    },
+    [currentRoll, flashConfig, isRephrasing, lang, sfx, turnsLeft, verdictState, visitor, voice]
+  );
 
-    // Online Flash rephrase flow: append player line immediately, then stream/resolve NPC line
-    setIsRephrasing(true);
-    setTranscript((prev) => [...prev, { speaker: "player", text: playerText }]);
+  // Desktop Steam / Keyboard Tactical Shortcuts (1-5 probes, S strobe, T thermal, [/] dossier tabs)
+  useEffect(() => {
+    if (stage !== "booth" || compendiumOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
 
-    const outcome = await requestFlashRephrase(llmInput, flashConfig);
-    if (shiftEpochRef.current !== epochAtStart) return;
-    setIsRephrasing(false);
-
-    const finalReply =
-      outcome.source === "flash"
-        ? { ...canonicalReply, [lang]: outcome.line }
-        : canonicalReply;
-    const flashTag =
-      outcome.source === "flash"
-        ? `⚡ FLASH ${outcome.latencyMs}ms`
-        : `FALLBACK (${outcome.fallbackReason ?? "CANONICAL"})`;
-
-    setTranscript((prev) => {
-      const next: TranscriptLine[] = [
-        ...prev,
-        {
-          speaker: "npc",
-          text: finalReply,
-          meta: `+${bpmDelta} BPM · ${reactionClip} · ${flashTag}`
+      if (e.key >= "1" && e.key <= "5") {
+        const keys = Object.keys(visitor.probes) as ProbeKey[];
+        const picked = keys[Number(e.key) - 1];
+        if (picked) {
+          e.preventDefault();
+          void handleAskProbe(picked);
         }
-      ];
-      if (!onAxis) {
-        next.push({ speaker: "system", text: UI_STRINGS.offAxisSystemNote });
+      } else if (e.key === "s" || e.key === "S") {
+        e.preventDefault();
+        handleTriggerSensor("strobe");
+      } else if (e.key === "t" || e.key === "T") {
+        e.preventDefault();
+        handleTriggerSensor("thermal");
+      } else if (e.key === "[" || e.key === "]") {
+        e.preventDefault();
+        const order: DossierTab[] = ["baseline", "verdict", "inspector"];
+        setActiveTab((cur) => {
+          const i = order.indexOf(cur);
+          const delta = e.key === "]" ? 1 : -1;
+          return order[(i + delta + order.length) % order.length]!;
+        });
       }
-      return next;
-    });
-
-    speakIntercomLine({
-      visitorId: visitor.id,
-      locale: lang,
-      text: tl(finalReply, lang),
-      lineId: resolvedLineId,
-      isDynamicFlash: outcome.source === "flash",
-      enabled: voice
-    });
-
-    const { lineKey: _hiddenKey, ...publicStance } = stance;
-    setLastPipelinePayload({
-      "1_axis_detection": {
-        question: tl(playerText, lang),
-        detected: probeKey,
-        on_axis: onAxis
-      },
-      "2_stance_engine": publicStance,
-      "3_llm_visible_input": llmInput,
-      "4_offline_profile_anchor": {
-        orderings: visitor.profile.valueOrderings.map((o) => o.id),
-        signatures: visitor.profile.disposalSignatures.map((s) => s.id)
-      },
-      "5_flash_rephrase": {
-        enabled: true,
-        invoked: true,
-        mode: flashConfig.mode,
-        source: outcome.source,
-        latency_ms: outcome.latencyMs,
-        model: outcome.model ?? null,
-        fallback_reason: outcome.fallbackReason ?? null
-      }
-    });
-  };
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [compendiumOpen, handleAskProbe, handleTriggerSensor, stage, visitor.probes]);
 
   const handleVerdict = (decision: "ADMIT" | "PURGE") => {
     if (verdictState !== "NONE" || isRephrasing) return;
@@ -368,6 +481,19 @@ export function App() {
       playBoothSfx("purge", sfx);
       setStage("night5");
     }
+  };
+
+  const handleResolveNight5Ending = (ending: EndingId): AchievementId[] => {
+    clearSavedShift();
+    const { next, newlyUnlockedAchievements } = recordRunCompletion({
+      current: compendium,
+      ending,
+      campaignMode,
+      history,
+      boggartUsedIds
+    });
+    setCompendium(next);
+    return newlyUnlockedAchievements;
   };
 
   return (
@@ -415,6 +541,16 @@ export function App() {
 
           <button type="button" className="ctrl-btn" onClick={() => startNewShift()}>
             {tl(UI_STRINGS.reroll, lang)}
+          </button>
+
+          <button
+            id="btn-compendium"
+            type="button"
+            className={`ctrl-btn ${compendiumOpen ? "amber" : ""}`}
+            onClick={() => setCompendiumOpen((o) => !o)}
+          >
+            🏆 {tl({ zh: "图鉴", en: "Archive", ja: "図鑑" }, lang)} (
+            {compendium.unlockedEndings.length}/7)
           </button>
 
           <button
@@ -482,6 +618,14 @@ export function App() {
         />
       ) : null}
 
+      {compendiumOpen ? (
+        <CompendiumModal
+          lang={lang}
+          compendium={compendium}
+          onClose={() => setCompendiumOpen(false)}
+        />
+      ) : null}
+
       <main>
         {stage === "intake" ? (
           <IntakeModal
@@ -534,6 +678,7 @@ export function App() {
                     <button
                       id="btn-strobe"
                       type="button"
+                      title="Shortcut: S"
                       className="ctrl-btn"
                       disabled={powerLeft <= 0 || verdictState !== "NONE"}
                       onClick={() => handleTriggerSensor("strobe")}
@@ -543,6 +688,7 @@ export function App() {
                     <button
                       id="btn-thermal"
                       type="button"
+                      title="Shortcut: T"
                       className="ctrl-btn"
                       disabled={powerLeft <= 0 || verdictState !== "NONE"}
                       onClick={() => handleTriggerSensor("thermal")}
@@ -589,9 +735,13 @@ export function App() {
         {stage === "night5" ? (
           <Night5Audit
             lang={lang}
+            sfx={sfx}
+            voice={voice}
             baseline={baseline}
             intakeAnswers={intakeAnswers}
             history={history}
+            onResolveEnding={handleResolveNight5Ending}
+            onStartNewRun={handleRestartFromIntake}
             onClose={() => setStage("booth")}
           />
         ) : null}
