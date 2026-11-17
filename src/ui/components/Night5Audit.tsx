@@ -95,7 +95,8 @@ export function Night5Audit({
               }}
             >
               CORRECT VERDICTS: {audit.correctVerdicts}/{audit.totalVisitors} · HUMANS PURGED:{" "}
-              {audit.wrongPurges} · SUB CREW QUOTA LEFT: {audit.crewQuotaRemaining}/4
+              {audit.wrongPurges} · SUB CREW QUOTA LEFT: {audit.crewQuotaRemaining}/
+              {audit.baseCrewQuota}
             </div>
           </div>
 

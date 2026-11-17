@@ -408,7 +408,7 @@ export function OrdamorDossier({
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
             <span className="section-kicker" style={{ marginBottom: 0 }}>
-              4-STAGE DETERMINISTIC STANCE + ANTI-LEAKAGE PIPELINE
+              5-STAGE DETERMINISTIC STANCE + ZERO-LEAKAGE FLASH PIPELINE
             </span>
             <button type="button" className="ctrl-btn" onClick={onToggleSpoiler}>
               {spoilerOpen ? "Hide Hidden Roll" : "Reveal Hidden Roll"}

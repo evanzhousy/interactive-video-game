@@ -147,5 +147,15 @@ export const UI_STRINGS = {
     zh: "Boggart · 拆退路前提 (disposalRequires)",
     en: "Boggart · Remove Precondition (disposalRequires)",
     ja: "Boggart · 退路前提の剥奪 (disposalRequires)"
+  },
+  stormBanner: {
+    zh: "⚡ 第 3 夜 · 极地强磁暴：强光测距与红外热成像全屏噪点，请纯靠对讲审讯判断！",
+    en: "⚡ NIGHT 3 · GEOMAGNETIC STORM: Optical & thermal sensors scrambled — rely strictly on intercom!",
+    ja: "⚡ 第3夜・極地磁気嵐：光学・熱画像センサー飽和中 —— インターホン尋問のみで判定せよ！"
+  },
+  rephrasingNote: {
+    zh: "🎙️ [对讲电波调制中 · Flash 在线改写...]",
+    en: "🎙️ [PTT STATIC · Flash Rephrasing...]",
+    ja: "🎙️ [通信変調中 · Flash オンライン改稿...]"
   }
 } as const;

@@ -93,12 +93,14 @@ export interface StanceDecision {
 
 /**
  * Strictly sanitized payload for the optional Flash-class LLM rephrasing layer.
- * Red Line / Anti-Leakage Invariant: NEVER contains `isMimic`, `defectMode`, or hidden roll state.
+ * Red Line / Anti-Leakage Invariant: NEVER contains `isMimic`, `defectMode`, `lineKey`, or hidden roll state.
  */
 export interface LlmRephraseInput {
   speaker: string;
+  role: string;
   persona_voice: string;
   question: string;
+  canonical_line: string;
   stance: {
     choose: ValueToken | null;
     over: ValueToken | null;
@@ -107,6 +109,30 @@ export interface LlmRephraseInput {
   };
   locale: Locale;
   max_sentences: 2;
+}
+
+export type FlashTransportMode = "server_proxy" | "custom_endpoint";
+
+export interface FlashRephraseConfig {
+  enabled: boolean;
+  mode: FlashTransportMode;
+  /** Used when `mode === "server_proxy"` (defaults to `/api/rephrase`). */
+  proxyPath: string;
+  /** Used when `mode === "custom_endpoint"` (OpenAI-compatible `/v1/chat/completions` URL). */
+  endpointUrl: string;
+  apiKey: string;
+  model: string;
+  timeoutMs: number;
+  /** When true (default), preset probe chips stay instant (0ms) and only typed free-text invokes Flash. */
+  freeTextOnly: boolean;
+}
+
+export interface RephraseOutcome {
+  line: string;
+  source: "flash" | "canonical_fallback" | "offline";
+  latencyMs: number;
+  model?: string;
+  fallbackReason?: string;
 }
 
 export type DisposalStyleKey = "rationalize" | "blame_rules" | "own_it";

@@ -564,3 +564,58 @@ select {
   overflow-x: auto;
   color: hsl(194, 38%, 82%);
 }
+
+/* Night 3 Geomagnetic Storm Banner & Flash Rephrase Drawer */
+.storm-banner {
+  margin-top: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--danger-soft);
+  border: 1px solid hsla(4, 82%, 58%, 0.48);
+  color: hsl(4, 88%, 76%);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+}
+
+.flash-drawer {
+  border-color: hsla(38, 92%, 52%, 0.42);
+}
+
+.flash-drawer-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 0.81rem;
+}
+
+.flash-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.flash-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+
+.flash-custom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.flash-status-pill {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--surface-inset);
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  color: var(--frost-cyan);
+}

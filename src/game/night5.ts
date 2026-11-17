@@ -227,6 +227,7 @@ export interface Night5AuditSummary {
   gap: number;
   correctVerdicts: number;
   wrongPurges: number;
+  baseCrewQuota: number;
   crewQuotaRemaining: number;
   totalVisitors: number;
   admittedMimic: boolean;
@@ -235,7 +236,7 @@ export interface Night5AuditSummary {
 export function evaluateNight5Audit(
   baseline: PlayerCompactProfile,
   history: readonly ShiftHistoryEntry[],
-  baseCrewQuota = 4
+  baseCrewQuota?: number
 ): Night5AuditSummary {
   const effective =
     history.length > 0
@@ -245,6 +246,7 @@ export function evaluateNight5Audit(
           { visitorId: "V-04", decision: "PURGE" as const, wasMimic: false, excuse: SHIFT_EXCUSES[1]! }
         ];
 
+  const resolvedQuota = baseCrewQuota ?? (effective.length >= 6 ? 6 : 4);
   const live = computePlayerProfile(effective.map((h) => h.excuse));
   const matches = effective.filter((h) => h.excuse.sig === baseline.sig).length;
   const consistency = matches / effective.length;
@@ -260,7 +262,8 @@ export function evaluateNight5Audit(
     gap,
     correctVerdicts,
     wrongPurges,
-    crewQuotaRemaining: Math.max(0, baseCrewQuota - wrongPurges),
+    baseCrewQuota: resolvedQuota,
+    crewQuotaRemaining: Math.max(0, resolvedQuota - wrongPurges),
     totalVisitors: effective.length,
     admittedMimic
   };

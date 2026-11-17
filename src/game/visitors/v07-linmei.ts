@@ -5,7 +5,7 @@ export const V07_LINMEI: VisitorSpec = {
   id: "V-07",
   night: 4,
   unlockTier: 4,
-  portraitUrl: null,
+  portraitUrl: "./portraits/linmei.jpg",
   silhouetteType: "biologist",
   baseBpm: 82,
   defectPool: ["MID_SECOND_AXIS", "HIGH_WRONG_DISPOSAL"],

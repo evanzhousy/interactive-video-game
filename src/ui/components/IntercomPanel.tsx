@@ -18,8 +18,9 @@ interface Props {
   lang: Locale;
   turnsLeft: number;
   verdictDone: boolean;
+  isRephrasing?: boolean;
   transcript: readonly TranscriptLine[];
-  onAskProbe: (probeKey: ProbeKey | "off_axis", customText?: string) => void;
+  onAskProbe: (probeKey: ProbeKey | "off_axis", customText?: string) => void | Promise<void>;
   onExecuteVerdict: (decision: "ADMIT" | "PURGE") => void;
 }
 
@@ -28,6 +29,7 @@ export function IntercomPanel({
   lang,
   turnsLeft,
   verdictDone,
+  isRephrasing = false,
   transcript,
   onAskProbe,
   onExecuteVerdict
@@ -47,9 +49,9 @@ export function IntercomPanel({
     if (logRef.current) {
       logRef.current.scrollTop = logRef.current.scrollHeight;
     }
-  }, [transcript.length]);
+  }, [transcript.length, isRephrasing]);
 
-  const askDisabled = turnsLeft <= 0 || verdictDone;
+  const askDisabled = turnsLeft <= 0 || verdictDone || isRephrasing;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +98,11 @@ export function IntercomPanel({
             </div>
           );
         })}
+        {isRephrasing ? (
+          <div className="msg-system" id="flash-rephrasing-indicator">
+            {tl(UI_STRINGS.rephrasingNote, lang)}
+          </div>
+        ) : null}
       </div>
 
       <div style={{ marginTop: "9px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>

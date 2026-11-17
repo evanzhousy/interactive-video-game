@@ -104,12 +104,15 @@ export function buildRephraseInput(
   visitor: VisitorSpec,
   question: string,
   stance: StanceDecision,
-  locale: Locale
+  locale: Locale,
+  canonicalLine = ""
 ): LlmRephraseInput {
   return {
-    speaker: visitor.name.en,
+    speaker: visitor.name[locale] || visitor.name.en,
+    role: visitor.role[locale] || visitor.role.en,
     persona_voice: visitor.voice,
     question,
+    canonical_line: canonicalLine,
     stance: {
       choose: stance.choose,
       over: stance.over,
