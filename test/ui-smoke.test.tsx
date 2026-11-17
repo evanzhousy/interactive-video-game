@@ -68,7 +68,12 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       (document.getElementById("btn-start-shift") as HTMLButtonElement).click();
     });
 
-    // Complete V-01, then simulate browser reload to verify mid-shift autosave resume on V-02!
+    // Complete V-01, verifying photorealistic 35mm portrait is visible immediately (never display:none)
+    const baseImg = document.querySelector("#quarantine-viewport .base-photo-layer") as HTMLImageElement;
+    expect(baseImg).not.toBeNull();
+    expect(baseImg.style.display).not.toBe("none");
+    expect(baseImg.getAttribute("src")).toBe("./portraits/elena.jpg");
+
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "t", bubbles: true }));
     });
@@ -80,6 +85,11 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
     await act(async () => {
       (document.getElementById("btn-purge") as HTMLButtonElement).click();
     });
+    const reactionImg = document.querySelector(
+      "#quarantine-viewport .reaction-photo-layer"
+    ) as HTMLImageElement;
+    expect(reactionImg.classList.contains("is-visible")).toBe(true);
+    expect(reactionImg.getAttribute("src")).toBe("./portraits/reactions/chamber_purge.jpg");
     await act(async () => {
       (document.querySelector("#shift-log-box .option-card") as HTMLButtonElement).click();
     });

@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { getVideoClipCandidates, type ClipState } from "../../game/media.js";
+import {
+  getPhotorealFrameSrc,
+  getVideoClipCandidates,
+  getVisitorPreloadFrames,
+  type ClipState
+} from "../../game/media.js";
 import type { VisitorSpec } from "../../game/types.js";
 
 interface Props {
@@ -22,26 +27,54 @@ export function ViewportCanvas({
   onClipComplete
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const idleVideoRef = useRef<HTMLVideoElement | null>(null);
   const reactionVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const strobeAlphaRef = useRef(0);
   const strobeHudUntilRef = useRef(0);
   const thermalHudUntilRef = useRef(0);
-  const shutterProgressRef = useRef(0);
 
-  const [photoVisible, setPhotoVisible] = useState(false);
   const [idleVideoReady, setIdleVideoReady] = useState(false);
   const [reactionVideoReady, setReactionVideoReady] = useState(false);
   const [thermalActive, setThermalActive] = useState(false);
 
-  // Reset media flags when switching visitors
+  const activeState: ClipState =
+    verdictState === "PURGE" ? "purge" : verdictState === "ADMIT" ? "admit" : clipState;
+
+  const idleFrameSrc = getPhotorealFrameSrc(visitor.id, "idle", visitor.portraitUrl);
+  const activeReactionFrameSrc =
+    activeState !== "idle"
+      ? getPhotorealFrameSrc(visitor.id, activeState, visitor.portraitUrl)
+      : null;
+
+  const [retainedReactionSrc, setRetainedReactionSrc] = useState<string | null>(null);
+
   useEffect(() => {
-    setPhotoVisible(false);
+    if (activeReactionFrameSrc) {
+      setRetainedReactionSrc(activeReactionFrameSrc);
+    }
+  }, [activeReactionFrameSrc]);
+
+  // Preload all 5 photorealistic AI frames (`idle`, `flinch`, `lean_in`, `admit`, `purge`) per visitor
+  // and reset video readiness flags on visitor change.
+  useEffect(() => {
     setIdleVideoReady(false);
     setReactionVideoReady(false);
     setThermalActive(false);
-    shutterProgressRef.current = 0;
-  }, [visitor.id]);
+    setRetainedReactionSrc(null);
+
+    if (typeof Image !== "undefined") {
+      for (const src of getVisitorPreloadFrames(visitor.id, visitor.portraitUrl)) {
+        const img = new Image();
+        img.src = src;
+      }
+    }
+
+    const idleVid = idleVideoRef.current;
+    if (idleVid && idleVid.readyState >= 2) {
+      setIdleVideoReady(true);
+    }
+  }, [visitor.id, visitor.portraitUrl]);
 
   // Strobe flash + 3.0s pupil reticle HUD
   useEffect(() => {
@@ -63,7 +96,7 @@ export function ViewportCanvas({
   // Auto-return non-terminal kinetic clips (`flinch` / `lean_in`) back to `idle`
   useEffect(() => {
     setReactionVideoReady(false);
-    if (clipState === "idle" || clipState === "admit" || clipState === "purge") {
+    if (activeState === "idle" || activeState === "admit" || activeState === "purge") {
       return;
     }
     const vid = reactionVideoRef.current;
@@ -76,24 +109,25 @@ export function ViewportCanvas({
     }
     const fallbackTimer = setTimeout(() => {
       onClipComplete?.();
-    }, 2600);
+    }, 3400);
     return () => clearTimeout(fallbackTimer);
-  }, [clipState, visitor.id, onClipComplete]);
+  }, [activeState, visitor.id, onClipComplete]);
 
   useEffect(() => {
-    const snow = Array.from({ length: 46 }, () => ({
+    const sleet = Array.from({ length: 28 }, () => ({
       x: Math.random(),
       y: Math.random(),
-      r: 1 + Math.random() * 2.1,
-      vx: 0.0012 + Math.random() * 0.0028,
-      vy: 0.0022 + Math.random() * 0.0038
+      len: 8 + Math.random() * 16,
+      vx: 0.0035 + Math.random() * 0.0045,
+      vy: 0.0055 + Math.random() * 0.0075
     }));
 
-    const embers = Array.from({ length: 26 }, () => ({
-      x: Math.random(),
-      y: 0.7 + Math.random() * 0.3,
-      vy: 0.004 + Math.random() * 0.008,
-      r: 1 + Math.random() * 2.2
+    const embers = Array.from({ length: 22 }, () => ({
+      x: 0.18 + Math.random() * 0.64,
+      y: 0.65 + Math.random() * 0.32,
+      vy: 0.0035 + Math.random() * 0.0075,
+      vx: (Math.random() - 0.5) * 0.002,
+      r: 0.9 + Math.random() * 1.8
     }));
 
     let rafId = 0;
@@ -113,85 +147,74 @@ export function ViewportCanvas({
             const now = Date.now();
             ctx.clearRect(0, 0, w, h);
 
-            // Silhouette fallback if neither video nor portrait image has loaded
-            if (!photoVisible && !idleVideoReady) {
-              const bg = ctx.createRadialGradient(w * 0.5, h * 0.35, 18, w * 0.5, h * 0.5, w * 0.72);
-              bg.addColorStop(0, "#123844");
-              bg.addColorStop(1, "#050b0f");
-              ctx.fillStyle = bg;
-              ctx.fillRect(0, 0, w, h);
-
-              ctx.fillStyle = "#091318";
+            // Subtle 1/48s shutter-blurred polar sleet wisps outside the double-glazed glass
+            if (verdictState !== "PURGE") {
+              ctx.strokeStyle =
+                now < thermalHudUntilRef.current
+                  ? "rgba(255, 190, 95, 0.14)"
+                  : "rgba(212, 240, 250, 0.11)";
+              ctx.lineWidth = 0.9;
               ctx.beginPath();
-              ctx.arc(w * 0.52, h * 0.42, h * 0.16, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.beginPath();
-              ctx.ellipse(w * 0.52, h * 0.89, w * 0.23, h * 0.34, 0, Math.PI, 0);
-              ctx.fill();
-
-              const eyeShift = clipState === "flinch" ? 4 : 0;
-              ctx.fillStyle = "#9bd5e0";
-              ctx.fillRect(w * 0.482 + eyeShift, h * 0.39, 6, 3);
-              ctx.fillRect(w * 0.545 + eyeShift, h * 0.39, 6, 3);
+              for (const p of sleet) {
+                p.x = (p.x + p.vx) % 1;
+                p.y = (p.y + p.vy) % 1;
+                const sx = p.x * w;
+                const sy = p.y * h;
+                ctx.moveTo(sx, sy);
+                ctx.lineTo(sx + p.len * 0.55, sy + p.len);
+              }
+              ctx.stroke();
             }
 
-            // Blowing polar snow outside the double-glazed glass
-            ctx.fillStyle =
-              now < thermalHudUntilRef.current
-                ? "rgba(255, 190, 95, 0.28)"
-                : "rgba(212, 240, 250, 0.34)";
-            for (const p of snow) {
-              p.x = (p.x + p.vx) % 1;
-              p.y = (p.y + p.vy) % 1;
-              ctx.beginPath();
-              ctx.arc(p.x * w, p.y * h, p.r, 0, Math.PI * 2);
-              ctx.fill();
+            // Subtle BPM-coupled cold breath condensation mist on lower glass pane
+            if (verdictState === "NONE") {
+              const breathHz = Math.max(0.9, bpm / 60);
+              const pulse = 0.5 + 0.5 * Math.sin((now / 1000) * Math.PI * 2 * breathHz * 0.55);
+              const mistBoost = activeState === "lean_in" ? 0.08 : 0;
+              const mist = ctx.createRadialGradient(
+                w * 0.5,
+                h * 0.94,
+                8,
+                w * 0.5,
+                h * 0.94,
+                h * (0.26 + pulse * 0.05 + mistBoost)
+              );
+              mist.addColorStop(
+                0,
+                `rgba(205, 232, 240, ${(0.09 + pulse * 0.06 + mistBoost).toFixed(3)})`
+              );
+              mist.addColorStop(1, "rgba(205, 232, 240, 0)");
+              ctx.fillStyle = mist;
+              ctx.fillRect(0, h * 0.5, w, h * 0.5);
             }
-
-            // BPM-coupled cold breath condensation mist on lower glass
-            const breathHz = Math.max(0.9, bpm / 60);
-            const pulse = 0.5 + 0.5 * Math.sin((now / 1000) * Math.PI * 2 * breathHz * 0.55);
-            const mistBoost = clipState === "lean_in" ? 0.12 : 0;
-            const mist = ctx.createRadialGradient(
-              w * 0.5,
-              h * 0.9,
-              10,
-              w * 0.5,
-              h * 0.9,
-              h * (0.31 + pulse * 0.07 + mistBoost)
-            );
-            mist.addColorStop(0, `rgba(205, 232, 240, ${(0.22 + pulse * 0.1 + mistBoost).toFixed(3)})`);
-            mist.addColorStop(1, "rgba(205, 232, 240, 0)");
-            ctx.fillStyle = mist;
-            ctx.fillRect(0, h * 0.42, w, h * 0.58);
 
             // Night 3 geomagnetic storm interference bands
             if (visitor.night === 3) {
               const bandY = ((now * 0.09) % (h + 60)) - 30;
               const aurora = ctx.createLinearGradient(0, 0, w, h * 0.45);
-              aurora.addColorStop(0, "rgba(56, 189, 248, 0.08)");
-              aurora.addColorStop(0.5, "rgba(168, 85, 247, 0.11)");
-              aurora.addColorStop(1, "rgba(16, 185, 129, 0.05)");
+              aurora.addColorStop(0, "rgba(56, 189, 248, 0.06)");
+              aurora.addColorStop(0.5, "rgba(168, 85, 247, 0.09)");
+              aurora.addColorStop(1, "rgba(16, 185, 129, 0.04)");
               ctx.fillStyle = aurora;
               ctx.fillRect(0, 0, w, h * 0.48);
 
-              ctx.fillStyle = "rgba(226, 232, 240, 0.12)";
-              ctx.fillRect(0, bandY, w, 6);
-              ctx.fillRect(0, (bandY + h * 0.47) % h, w, 2);
+              ctx.fillStyle = "rgba(226, 232, 240, 0.09)";
+              ctx.fillRect(0, bandY, w, 4);
+              ctx.fillRect(0, (bandY + h * 0.47) % h, w, 1.5);
             }
 
             // Pupil Strobe Flash + Biometric Reticle HUD
             if (strobeAlphaRef.current > 0.01) {
-              ctx.fillStyle = `rgba(235, 250, 255, ${strobeAlphaRef.current * 0.78})`;
+              ctx.fillStyle = `rgba(235, 250, 255, ${strobeAlphaRef.current * 0.74})`;
               ctx.fillRect(0, 0, w, h);
               strobeAlphaRef.current *= 0.87;
             }
             if (now < strobeHudUntilRef.current && verdictState === "NONE") {
               const cx = w * 0.5;
-              const cy = h * 0.36;
+              const cy = h * 0.34;
               const r = Math.min(w, h) * 0.11;
               ctx.strokeStyle = "rgba(125, 211, 252, 0.85)";
-              ctx.lineWidth = 1.4;
+              ctx.lineWidth = 1.3;
               ctx.strokeRect(cx - r, cy - r * 0.58, r * 2, r * 1.16);
               ctx.beginPath();
               ctx.moveTo(cx - r - 8, cy);
@@ -213,10 +236,10 @@ export function ViewportCanvas({
             // Neural Port FLIR Thermal HUD
             if (now < thermalHudUntilRef.current && verdictState === "NONE") {
               if (visitor.night === 3) {
-                for (let s = 0; s < 28; s++) {
+                for (let s = 0; s < 24; s++) {
                   const sy = Math.random() * h;
-                  ctx.fillStyle = `rgba(255, 120, 180, ${0.08 + Math.random() * 0.2})`;
-                  ctx.fillRect(0, sy, w, 2 + Math.random() * 5);
+                  ctx.fillStyle = `rgba(255, 120, 180, ${0.06 + Math.random() * 0.16})`;
+                  ctx.fillRect(0, sy, w, 2 + Math.random() * 4);
                 }
                 ctx.fillStyle = "#fda4af";
                 ctx.font = "bold 12px monospace";
@@ -224,7 +247,7 @@ export function ViewportCanvas({
                 ctx.fillText("⚡ FLIR ARRAY SATURATED · GEOMAGNETIC STATIC", w / 2, h * 0.5);
               } else {
                 const nx = w * 0.52;
-                const ny = h * 0.56;
+                const ny = h * 0.54;
                 const hotspot = ctx.createRadialGradient(nx, ny, 3, nx, ny, 34);
                 hotspot.addColorStop(0, "rgba(255, 250, 190, 0.82)");
                 hotspot.addColorStop(0.45, "rgba(249, 115, 22, 0.45)");
@@ -245,7 +268,6 @@ export function ViewportCanvas({
                 ctx.textAlign = "left";
                 ctx.fillText("IR TARGET // CERVICAL NEURAL PORT", nx + 22, ny + 4);
 
-                // Right-side FLIR scale bar
                 const barGrad = ctx.createLinearGradient(0, h * 0.2, 0, h * 0.78);
                 barGrad.addColorStop(0, "#fef08a");
                 barGrad.addColorStop(0.45, "#f97316");
@@ -259,77 +281,69 @@ export function ViewportCanvas({
               }
             }
 
-            // Verdict Mechanical Shutter / Airlock Cryo-Steam
+            // Diegetic Optical Telemetry over Photorealistic Verdict Cinema Frames
             if (verdictState === "PURGE") {
-              shutterProgressRef.current = Math.min(1, shutterProgressRef.current + 0.08);
-              const dropH = h * 0.88 * shutterProgressRef.current;
+              const flicker = 0.06 + 0.05 * Math.sin(now * 0.027);
+              const glow = ctx.createLinearGradient(0, h * 0.55, 0, h);
+              glow.addColorStop(0, "rgba(249, 115, 22, 0)");
+              glow.addColorStop(1, `rgba(249, 115, 22, ${flicker.toFixed(3)})`);
+              ctx.fillStyle = glow;
+              ctx.fillRect(0, h * 0.55, w, h * 0.45);
 
-              ctx.fillStyle = "#110908";
-              ctx.fillRect(0, 0, w, dropH);
-
-              // Corrugated horizontal blast-door ribs
-              ctx.strokeStyle = "rgba(42, 24, 20, 0.9)";
-              ctx.lineWidth = 2;
-              for (let ry = 18; ry < dropH; ry += 22) {
-                ctx.beginPath();
-                ctx.moveTo(0, ry);
-                ctx.lineTo(w, ry);
-                ctx.stroke();
-              }
-
-              const fire = ctx.createLinearGradient(0, h * 0.7, 0, h);
-              fire.addColorStop(0, "rgba(239, 68, 68, 0.82)");
-              fire.addColorStop(1, "rgba(245, 158, 11, 0.96)");
-              ctx.fillStyle = fire;
-              ctx.fillRect(0, h * 0.82, w, h * 0.18);
-
-              ctx.fillStyle = "rgba(254, 215, 170, 0.88)";
+              ctx.fillStyle = "rgba(254, 215, 170, 0.78)";
               for (const e of embers) {
                 e.y -= e.vy;
-                if (e.y < 0.55) {
-                  e.y = 0.98;
-                  e.x = Math.random();
+                e.x += e.vx;
+                if (e.y < 0.48) {
+                  e.y = 0.96;
+                  e.x = 0.2 + Math.random() * 0.6;
                 }
                 ctx.beginPath();
                 ctx.arc(e.x * w, e.y * h, e.r, 0, Math.PI * 2);
                 ctx.fill();
               }
 
+              const bannerW = Math.min(w - 32, 390);
+              ctx.fillStyle = "rgba(15, 7, 6, 0.78)";
+              ctx.fillRect((w - bannerW) / 2, h - 38, bannerW, 24);
+              ctx.strokeStyle = "rgba(248, 113, 113, 0.65)";
+              ctx.lineWidth = 1;
+              ctx.strokeRect((w - bannerW) / 2, h - 38, bannerW, 24);
               ctx.fillStyle = "#fecaca";
-              ctx.font = "bold 13px monospace";
+              ctx.font = "bold 11px monospace";
               ctx.textAlign = "center";
-              ctx.fillText("CHAMBER PURGED · 1,100°C THERMAL STERILIZATION", w / 2, h * 0.46);
+              ctx.fillText("CHAMBER PURGED · 1,100°C THERMAL STERILIZATION", w / 2, h - 22);
             } else if (verdictState === "ADMIT") {
-              ctx.fillStyle = "rgba(16, 185, 129, 0.16)";
-              ctx.fillRect(0, 0, w, h);
-
-              const steam = ctx.createRadialGradient(w * 0.82, h * 0.65, 12, w * 0.7, h * 0.6, w * 0.55);
-              steam.addColorStop(0, "rgba(236, 253, 245, 0.42)");
-              steam.addColorStop(1, "rgba(16, 185, 129, 0)");
-              ctx.fillStyle = steam;
-              ctx.fillRect(0, 0, w, h);
-
+              const bannerW = Math.min(w - 32, 360);
+              ctx.fillStyle = "rgba(5, 20, 16, 0.76)";
+              ctx.fillRect((w - bannerW) / 2, h - 38, bannerW, 24);
+              ctx.strokeStyle = "rgba(52, 211, 153, 0.65)";
+              ctx.lineWidth = 1;
+              ctx.strokeRect((w - bannerW) / 2, h - 38, bannerW, 24);
               ctx.fillStyle = "#a7f3d0";
-              ctx.font = "bold 13px monospace";
+              ctx.font = "bold 11px monospace";
               ctx.textAlign = "center";
-              ctx.fillText("INNER AIRLOCK UNSEALED · SUBJECT ADMITTED", w / 2, h * 0.48);
+              ctx.fillText("INNER AIRLOCK UNSEALED · SUBJECT ADMITTED", w / 2, h - 22);
             }
 
-            // Corner camera overlay badge
-            ctx.fillStyle = "rgba(8, 15, 20, 0.68)";
-            ctx.fillRect(12, 12, 168, 20);
-            ctx.fillStyle = idleVideoReady ? "#34d399" : "#f59e0b";
+            // Top-left surveillance camera REC telemetry badge
+            const recBlink = Math.floor(now / 700) % 2 === 0;
+            const streamActive = idleVideoReady || reactionVideoReady;
+            ctx.fillStyle = "rgba(6, 12, 16, 0.66)";
+            ctx.fillRect(12, 12, 186, 20);
+            ctx.fillStyle = streamActive ? "#34d399" : recBlink ? "#ef4444" : "#7f1d1d";
+            ctx.beginPath();
+            ctx.arc(21, 22, 3.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = streamActive ? "#a7f3d0" : "#e2e8f0";
             ctx.font = "10px monospace";
             ctx.textAlign = "left";
             ctx.fillText(
-              idleVideoReady ? "● I2V LOOP ACTIVE" : "● PROC-CAM · ZERO-LIP",
-              18,
+              streamActive ? "CAM-01 // LIVE I2V STREAM" : "CAM-01 // 35MM AI LIVE",
+              30,
               25
             );
-
-            ctx.strokeStyle = "rgba(10, 17, 22, 0.94)";
-            ctx.lineWidth = 12;
-            ctx.strokeRect(0, 0, w, h);
           }
         }
       }
@@ -338,38 +352,47 @@ export function ViewportCanvas({
 
     rafId = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafId);
-  }, [bpm, clipState, idleVideoReady, photoVisible, verdictState, visitor.night]);
+  }, [activeState, bpm, idleVideoReady, reactionVideoReady, verdictState, visitor.night]);
 
   const idleCandidates = getVideoClipCandidates(visitor.id, "idle");
   const activeReactionCandidates =
-    clipState !== "idle" ? getVideoClipCandidates(visitor.id, clipState) : [];
-  const breathPeriodSec = (60 / Math.max(55, Math.min(150, bpm)) * 2.2).toFixed(2);
+    activeState !== "idle" ? getVideoClipCandidates(visitor.id, activeState) : [];
+  const breathPeriodSec = ((60 / Math.max(55, Math.min(150, bpm))) * 2.2).toFixed(2);
+  const reactionPhotoOverlaySrc = activeReactionFrameSrc ?? retainedReactionSrc ?? idleFrameSrc;
+  const showReactionPhoto = activeState !== "idle" && !reactionVideoReady;
 
   return (
-    <div className="viewport-frame" id="quarantine-viewport" data-clip-state={clipState}>
+    <div className="viewport-frame" id="quarantine-viewport" data-clip-state={activeState}>
       <div
-        className={`viewport-media-stage clip-${clipState} ${thermalActive ? "mode-thermal" : ""}`}
+        className={`viewport-media-stage clip-${activeState} ${thermalActive ? "mode-thermal" : ""}`}
         style={{ ["--breath-period" as string]: `${breathPeriodSec}s` }}
       >
-        {visitor.portraitUrl ? (
-          <img
-            src={visitor.portraitUrl}
-            alt={visitor.name.en}
-            className="viewport-photo"
-            style={{ display: photoVisible && !idleVideoReady ? "block" : "none" }}
-            onLoad={() => setPhotoVisible(true)}
-            onError={() => setPhotoVisible(false)}
-          />
-        ) : null}
+        <img
+          key={`${visitor.id}-idle-photo`}
+          src={idleFrameSrc}
+          alt={visitor.name.en}
+          className="viewport-photo base-photo-layer"
+          decoding="async"
+        />
+
+        <img
+          key={`${visitor.id}-reaction-photo`}
+          src={reactionPhotoOverlaySrc}
+          alt={`${visitor.name.en} (${activeState})`}
+          className={`viewport-photo reaction-photo-layer ${showReactionPhoto ? "is-visible" : ""}`}
+          decoding="async"
+        />
 
         <video
-          key={`${visitor.id}-idle`}
+          key={`${visitor.id}-idle-video`}
+          ref={idleVideoRef}
           className="viewport-video"
           style={{ opacity: idleVideoReady ? 1 : 0 }}
           muted
           loop
           playsInline
           autoPlay
+          onLoadedData={() => setIdleVideoReady(true)}
           onCanPlay={() => setIdleVideoReady(true)}
           onError={() => setIdleVideoReady(false)}
         >
@@ -378,18 +401,19 @@ export function ViewportCanvas({
           ))}
         </video>
 
-        {clipState !== "idle" ? (
+        {activeState !== "idle" ? (
           <video
-            key={`${visitor.id}-${clipState}`}
+            key={`${visitor.id}-${activeState}-video`}
             ref={reactionVideoRef}
             className="viewport-video reaction-layer"
             style={{ opacity: reactionVideoReady ? 1 : 0 }}
             muted
             playsInline
             autoPlay
+            onLoadedData={() => setReactionVideoReady(true)}
             onCanPlay={() => setReactionVideoReady(true)}
             onEnded={() => {
-              if (clipState !== "admit" && clipState !== "purge") {
+              if (activeState !== "admit" && activeState !== "purge") {
                 onClipComplete?.();
               }
             }}

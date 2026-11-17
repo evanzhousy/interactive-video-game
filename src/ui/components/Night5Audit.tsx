@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { playBoothSfx, speakIntercomLine, stopIntercomVoice } from "../../game/audio.js";
 import { tl } from "../../game/i18n.js";
+import { getNight5FrameSrc } from "../../game/media.js";
 import {
   ENDINGS,
   SHIFT_EXCUSES,
@@ -41,7 +42,6 @@ export function Night5Audit({
   const [endingKey, setEndingKey] = useState<EndingId | null>(null);
   const [finalAction, setFinalAction] = useState<"NONE" | "PURGE" | "ADMIT" | "STEP_OUT">("NONE");
   const [newBadges, setNewBadges] = useState<AchievementId[]>([]);
-  const [photoLoaded, setPhotoLoaded] = useState(false);
 
   const audit = evaluateNight5Audit(baseline, history);
   const matchingIntake = intakeAnswers.find((a) => a.sig === baseline.sig);
@@ -59,6 +59,13 @@ export function Night5Audit({
   )}`;
 
   useEffect(() => {
+    if (typeof Image !== "undefined") {
+      for (const action of ["NONE", "PURGE", "ADMIT", "STEP_OUT"] as const) {
+        const img = new Image();
+        img.src = getNight5FrameSrc(action);
+      }
+    }
+
     speakIntercomLine({
       visitorId: "V-01",
       locale: lang,
@@ -83,6 +90,8 @@ export function Night5Audit({
     setNewBadges(unlocked);
   };
 
+  const verdictFrameSrc = getNight5FrameSrc(finalAction);
+
   return (
     <section className="panel" id="night5-panel">
       <div className="viewport-header">
@@ -101,18 +110,20 @@ export function Night5Audit({
               GATE CAM 01 // SUBJECT: OPERATOR #09 [FACIAL MATCH 99.98%]
             </div>
             <div className="viewport-frame n5-doppelganger-frame" id="night5-viewport">
-              <div
-                className={`viewport-media-stage ${
-                  finalAction === "STEP_OUT" ? "n5-whiteout" : ""
-                }`}
-              >
+              <div className="viewport-media-stage">
                 <img
                   src="./portraits/operator09.jpg"
                   alt="Operator #09 Doppelgänger outside Gate 0"
-                  className="viewport-photo"
-                  style={{ display: photoLoaded ? "block" : "none" }}
-                  onLoad={() => setPhotoLoaded(true)}
-                  onError={() => setPhotoLoaded(false)}
+                  className="viewport-photo base-photo-layer"
+                  decoding="async"
+                />
+                <img
+                  src={verdictFrameSrc}
+                  alt={`Gate 0 Night 5 (${finalAction})`}
+                  className={`viewport-photo reaction-photo-layer ${
+                    finalAction !== "NONE" ? "is-visible" : ""
+                  }`}
+                  decoding="async"
                 />
               </div>
               <div className="viewport-scanlines" aria-hidden="true" />

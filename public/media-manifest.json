@@ -16,31 +16,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/elena.jpg",
+      "referenceEndFrame": "public/portraits/elena.jpg",
+      "targetMp4": "public/videos/elena/idle.mp4",
       "targetWebm": "public/videos/elena/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-01",
       "slug": "elena",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/elena.jpg",
+      "referenceEndFrame": "public/portraits/reactions/elena_flinch.jpg",
+      "targetMp4": "public/videos/elena/flinch.mp4",
       "targetWebm": "public/videos/elena/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-01",
       "slug": "elena",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/elena.jpg",
+      "referenceEndFrame": "public/portraits/reactions/elena_lean_in.jpg",
+      "targetMp4": "public/videos/elena/lean_in.mp4",
       "targetWebm": "public/videos/elena/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-01",
@@ -49,9 +55,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/elena.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/elena/admit.mp4",
       "targetWebm": "public/videos/elena/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-01",
@@ -60,9 +68,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/elena.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/elena/purge.mp4",
       "targetWebm": "public/videos/elena/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Elena Vance (Chief Surgeon · Sector B). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-02",
@@ -71,31 +81,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/leo.jpg",
+      "referenceEndFrame": "public/portraits/leo.jpg",
+      "targetMp4": "public/videos/leo/idle.mp4",
       "targetWebm": "public/videos/leo/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-02",
       "slug": "leo",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/leo.jpg",
+      "referenceEndFrame": "public/portraits/reactions/leo_flinch.jpg",
+      "targetMp4": "public/videos/leo/flinch.mp4",
       "targetWebm": "public/videos/leo/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-02",
       "slug": "leo",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/leo.jpg",
+      "referenceEndFrame": "public/portraits/reactions/leo_lean_in.jpg",
+      "targetMp4": "public/videos/leo/lean_in.mp4",
       "targetWebm": "public/videos/leo/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-02",
@@ -104,9 +120,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/leo.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/leo/admit.mp4",
       "targetWebm": "public/videos/leo/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-02",
@@ -115,9 +133,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/leo.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/leo/purge.mp4",
       "targetWebm": "public/videos/leo/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Leo Sato (Apprentice Mechanic · Secret Mender). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-03",
@@ -126,31 +146,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/arthur.jpg",
+      "referenceEndFrame": "public/portraits/arthur.jpg",
+      "targetMp4": "public/videos/arthur/idle.mp4",
       "targetWebm": "public/videos/arthur/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-03",
       "slug": "arthur",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/arthur.jpg",
+      "referenceEndFrame": "public/portraits/reactions/arthur_flinch.jpg",
+      "targetMp4": "public/videos/arthur/flinch.mp4",
       "targetWebm": "public/videos/arthur/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-03",
       "slug": "arthur",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/arthur.jpg",
+      "referenceEndFrame": "public/portraits/reactions/arthur_lean_in.jpg",
+      "targetMp4": "public/videos/arthur/lean_in.mp4",
       "targetWebm": "public/videos/arthur/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-03",
@@ -159,9 +185,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/arthur.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/arthur/admit.mp4",
       "targetWebm": "public/videos/arthur/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-03",
@@ -170,9 +198,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/arthur.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/arthur/purge.mp4",
       "targetWebm": "public/videos/arthur/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Arthur Sterling (Compliance Auditor · Clause Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-04",
@@ -181,31 +211,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/marcus.jpg",
+      "referenceEndFrame": "public/portraits/marcus.jpg",
+      "targetMp4": "public/videos/marcus/idle.mp4",
       "targetWebm": "public/videos/marcus/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-04",
       "slug": "marcus",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/marcus.jpg",
+      "referenceEndFrame": "public/portraits/reactions/marcus_flinch.jpg",
+      "targetMp4": "public/videos/marcus/flinch.mp4",
       "targetWebm": "public/videos/marcus/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-04",
       "slug": "marcus",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/marcus.jpg",
+      "referenceEndFrame": "public/portraits/reactions/marcus_lean_in.jpg",
+      "targetMp4": "public/videos/marcus/lean_in.mp4",
       "targetWebm": "public/videos/marcus/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-04",
@@ -214,9 +250,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/marcus.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/marcus/admit.mp4",
       "targetWebm": "public/videos/marcus/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-04",
@@ -225,9 +263,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/marcus.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/marcus/purge.mp4",
       "targetWebm": "public/videos/marcus/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Capt. Marcus Chen (Security Captain · Gruff Protector). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-05",
@@ -236,31 +276,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/ana.jpg",
+      "referenceEndFrame": "public/portraits/ana.jpg",
+      "targetMp4": "public/videos/ana/idle.mp4",
       "targetWebm": "public/videos/ana/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-05",
       "slug": "ana",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/ana.jpg",
+      "referenceEndFrame": "public/portraits/reactions/ana_flinch.jpg",
+      "targetMp4": "public/videos/ana/flinch.mp4",
       "targetWebm": "public/videos/ana/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-05",
       "slug": "ana",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/ana.jpg",
+      "referenceEndFrame": "public/portraits/reactions/ana_lean_in.jpg",
+      "targetMp4": "public/videos/ana/lean_in.mp4",
       "targetWebm": "public/videos/ana/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-05",
@@ -269,9 +315,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/ana.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/ana/admit.mp4",
       "targetWebm": "public/videos/ana/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-05",
@@ -280,9 +328,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/ana.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/ana/purge.mp4",
       "targetWebm": "public/videos/ana/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Ana Ribeiro (Saturation Diver · Unapologetic Realist). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-06",
@@ -291,31 +341,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/ingrid.jpg",
+      "referenceEndFrame": "public/portraits/ingrid.jpg",
+      "targetMp4": "public/videos/ingrid/idle.mp4",
       "targetWebm": "public/videos/ingrid/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-06",
       "slug": "ingrid",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/ingrid.jpg",
+      "referenceEndFrame": "public/portraits/reactions/ingrid_flinch.jpg",
+      "targetMp4": "public/videos/ingrid/flinch.mp4",
       "targetWebm": "public/videos/ingrid/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-06",
       "slug": "ingrid",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/ingrid.jpg",
+      "referenceEndFrame": "public/portraits/reactions/ingrid_lean_in.jpg",
+      "targetMp4": "public/videos/ingrid/lean_in.mp4",
       "targetWebm": "public/videos/ingrid/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-06",
@@ -324,9 +380,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/ingrid.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/ingrid/admit.mp4",
       "targetWebm": "public/videos/ingrid/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-06",
@@ -335,9 +393,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/ingrid.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/ingrid/purge.mp4",
       "targetWebm": "public/videos/ingrid/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Ingrid Solberg (Station Psychologist · Velvet Gaslighter). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-07",
@@ -346,31 +406,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/linmei.jpg",
+      "referenceEndFrame": "public/portraits/linmei.jpg",
+      "targetMp4": "public/videos/linmei/idle.mp4",
       "targetWebm": "public/videos/linmei/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-07",
       "slug": "linmei",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/linmei.jpg",
+      "referenceEndFrame": "public/portraits/reactions/linmei_flinch.jpg",
+      "targetMp4": "public/videos/linmei/flinch.mp4",
       "targetWebm": "public/videos/linmei/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-07",
       "slug": "linmei",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/linmei.jpg",
+      "referenceEndFrame": "public/portraits/reactions/linmei_lean_in.jpg",
+      "targetMp4": "public/videos/linmei/lean_in.mp4",
       "targetWebm": "public/videos/linmei/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-07",
@@ -379,9 +445,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/linmei.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/linmei/admit.mp4",
       "targetWebm": "public/videos/linmei/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-07",
@@ -390,9 +458,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/linmei.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/linmei/purge.mp4",
       "targetWebm": "public/videos/linmei/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Dr. Lin Mei (Cryo-Biologist · Silent Shield). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-08",
@@ -401,31 +471,37 @@
       "loop": true,
       "durationSec": 5,
       "firstFramePortrait": "public/portraits/hannah.jpg",
+      "referenceEndFrame": "public/portraits/hannah.jpg",
+      "targetMp4": "public/videos/hannah/idle.mp4",
       "targetWebm": "public/videos/hannah/idle.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Seamless loop: subtle shivering in heavy polar coat, rhythmic white cold breath misting the lower glass, guarded blinking, slight weight shift, waiting tensely for airlock clearance.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-08",
       "slug": "hannah",
       "state": "flinch",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/hannah.jpg",
+      "referenceEndFrame": "public/portraits/reactions/hannah_flinch.jpg",
+      "targetMp4": "public/videos/hannah/flinch.mp4",
       "targetWebm": "public/videos/hannah/flinch.webm",
       "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Involuntary micro-flinch at a sharp intercom question: pupils contract, eyes dart sideways toward the steel intercom speaker, jaw tightens with closed lips, cold breath catches briefly before regaining composure.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-08",
       "slug": "hannah",
       "state": "lean_in",
       "loop": false,
-      "durationSec": 3,
+      "durationSec": 4,
       "firstFramePortrait": "public/portraits/hannah.jpg",
+      "referenceEndFrame": "public/portraits/reactions/hannah_lean_in.jpg",
+      "targetMp4": "public/videos/hannah/lean_in.mp4",
       "targetWebm": "public/videos/hannah/lean_in.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted steel frame, brows furrow with impatience, heavier fogging breath across the glass, mouth remains closed.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Urgent lean-in toward the double-glazed window: gloved hand presses against the frosted glass pane, brows furrow with intensity, heavier fogging breath across the glass, mouth remains closed.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-08",
@@ -434,9 +510,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/hannah.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_admit.jpg",
+      "targetMp4": "public/videos/hannah/admit.mp4",
       "targetWebm": "public/videos/hannah/admit.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps toward the inner hatch.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Green inner airlock indicator illuminates across the glass; pressurized white cryo-decompression steam vents from the right bulkhead, shoulders drop in visible relief as subject steps out of frame through the unsealed inner hatch.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     },
     {
       "visitorId": "V-08",
@@ -445,9 +523,11 @@
       "loop": false,
       "durationSec": 4,
       "firstFramePortrait": "public/portraits/hannah.jpg",
+      "referenceEndFrame": "public/portraits/reactions/chamber_purge.jpg",
+      "targetMp4": "public/videos/hannah/purge.mp4",
       "targetWebm": "public/videos/hannah/purge.webm",
-      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace glow behind the seam.",
-      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, bright daylight, handheld shake, deformed hands, text watermark"
+      "prompt": "Fixed 35mm surveillance camera inside a dim Svalbard quarantine booth looking through thick frosted double-glazed blast glass at Hannah Weiss (Life-Support Tech · Scorched-Earth Whistleblower). Heavy snow blowing outside at -46°C, warm amber CRT reflection on glass, bolted steel PTT intercom box beside frame. Subject's mouth stays CLOSED (zero lip movement). Red thermal alarm strobes across the chamber; subject steps back in shock as a heavy corrugated steel blast shutter slams down over the exterior window, followed by intense 1,100°C orange furnace flames roaring behind the lower seam.",
+      "negativePrompt": "talking mouth movement, lip sync, open mouth speaking, camera pan, scene cut, cartoon, anime, 3d render, cgi, bright daylight, handheld shake, deformed hands, text watermark"
     }
   ],
   "voiceLines": [

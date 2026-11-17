@@ -2,8 +2,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { generateMediaManifest } from "../scripts/generate-media-pack.js";
+import { filterVideoSpecs, parseVideoCliArgs } from "../scripts/generate-videos.js";
 import { stripStageDirections } from "../src/game/audio.js";
-import { CLIP_STATES, buildVisitorVideoPrompts, getVisitorSlug } from "../src/game/media.js";
+import {
+  CLIP_STATES,
+  buildVisitorVideoPrompts,
+  getNight5FrameSrc,
+  getPhotorealFrameSrc,
+  getVisitorSlug
+} from "../src/game/media.js";
 import { ALL_VISITORS } from "../src/game/visitors/index.js";
 
 describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
@@ -15,7 +22,7 @@ describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
     );
   });
 
-  it("generates 40 zero-lip-sync I2V clip specs and complete trilingual voice manifests", () => {
+  it("ships all 28 photorealistic 35mm AI frames on disk and generates 40 start/end-anchored I2V specs", () => {
     const manifest = generateMediaManifest();
     expect(manifest.counts.visitors).toBe(8);
     expect(manifest.counts.videoClips).toBe(8 * CLIP_STATES.length);
@@ -25,13 +32,27 @@ describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
       const slug = getVisitorSlug(v.id);
       const prompts = buildVisitorVideoPrompts(v);
       expect(prompts).toHaveLength(5);
+
+      for (const state of CLIP_STATES) {
+        const uiRel = getPhotorealFrameSrc(v.id, state, v.portraitUrl).replace(/^\.\//, "public/");
+        const absFrame = path.resolve(process.cwd(), uiRel);
+        expect(fs.existsSync(absFrame)).toBe(true);
+        expect(fs.statSync(absFrame).size).toBeGreaterThan(40_000);
+      }
+
       for (const p of prompts) {
         expect(p.prompt).toContain("mouth stays CLOSED");
         expect(p.negativePrompt).toContain("lip sync");
         expect(p.firstFramePortrait).toBe(`public/portraits/${slug}.jpg`);
-        const diskPortrait = path.resolve(process.cwd(), p.firstFramePortrait);
-        expect(fs.existsSync(diskPortrait)).toBe(true);
+        expect(p.targetMp4).toBe(`public/videos/${slug}/${p.state}.mp4`);
+        expect(fs.existsSync(path.resolve(process.cwd(), p.firstFramePortrait))).toBe(true);
+        expect(fs.existsSync(path.resolve(process.cwd(), p.referenceEndFrame))).toBe(true);
       }
+    }
+
+    for (const action of ["NONE", "PURGE", "ADMIT", "STEP_OUT"] as const) {
+      const n5Rel = getNight5FrameSrc(action).replace(/^\.\//, "public/");
+      expect(fs.existsSync(path.resolve(process.cwd(), n5Rel))).toBe(true);
     }
 
     for (const line of manifest.voiceLines) {
@@ -39,5 +60,27 @@ describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
       expect(line.spokenText.startsWith("（")).toBe(false);
       expect(line.spokenText.startsWith("(")).toBe(false);
     }
+  });
+
+  it("parses I2V video generator CLI flags and filters clip specs accurately", () => {
+    const manifest = generateMediaManifest();
+    const opts = parseVideoCliArgs([
+      "--provider",
+      "veo",
+      "--visitor",
+      "V-01",
+      "--state",
+      "flinch",
+      "--with-end-frame",
+      "--dry-run"
+    ]);
+    expect(opts.provider).toBe("veo");
+    expect(opts.withEndFrame).toBe(true);
+    expect(opts.dryRun).toBe(true);
+
+    const filtered = filterVideoSpecs(manifest.videoClips, opts);
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0]?.slug).toBe("elena");
+    expect(filtered[0]?.referenceEndFrame).toBe("public/portraits/reactions/elena_flinch.jpg");
   });
 });

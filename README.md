@@ -19,12 +19,27 @@ Requires **Node.js 24+** and **pnpm**:
 
 ```bash
 pnpm install
-pnpm dev             # Start local Vite dev server (includes /api/rephrase middleware)
 pnpm media:manifest  # Export 40 I2V video prompts + 264 trilingual voice scripts -> public/media-manifest.json
+pnpm media:videos -- --dry-run  # Preview 40 live-action I2V clips (Veo / Kling / Runway)
+pnpm media:videos    # Batch-render H.264 1280x720 .mp4 live-action clips -> public/videos/{slug}/*.mp4
 pnpm media:tts       # Optional: batch-render studio .mp3 intercom voices (requires TTS_API_KEY)
 pnpm test            # Run hermetic Vitest suite (Ordamor v6 + Stance + Flash + Media + UI)
 pnpm build           # tsc --noEmit && vitest run && vite build -> dist/
 ```
+
+---
+
+## AI Photorealistic Live-Action Pipeline (`35mm Keyframes` + `I2V Video Models`)
+
+Instead of uncanny 3D character meshes, Gate 0 uses a **two-tier AI live-action surveillance architecture** matching `ordamor-live-2036.mp4` (`1280×720 H.264 30fps`, zero-lip-sync intercom framing):
+
+1. **Built-in 28 Photorealistic 35mm Cinema Frames (Zero-Key Instant Play)**:
+   - `public/portraits/{slug}.jpg`: 8 survivor `idle` blast-window portraits + Night 5 `operator09.jpg`.
+   - `public/portraits/reactions/{slug}_{flinch,lean_in}.jpg`: 16 actor-consistent image-to-image reaction shots that crossfade dynamically when probes hit contradictions or trigger urgent lean-ins.
+   - `public/portraits/reactions/chamber_{purge,admit,whiteout}.jpg`: 3 photorealistic chamber shots (`1,100°C` blast-shutter sterilization, green cryo-steam airlock clearance, and `-46°C` Arctic whiteout).
+2. **Full Motion I2V Video Stream (`pnpm media:videos`)**:
+   - Configure `GEMINI_API_KEY` (**Google Veo 3**), `FAL_KEY` (**Kling 2.0 / Wan 2.1**), or `RUNWAYML_API_SECRET` (**Runway Gen-4 Turbo**) in `.env.local` and run `pnpm media:videos` (or filter e.g. `pnpm media:videos -- --visitor V-01 --state idle --with-end-frame`).
+   - Whenever `public/videos/{slug}/{idle,flinch,lean_in,admit,purge}.mp4` is present, `ViewportCanvas` automatically upgrades from 35mm keyframe crossfades to continuous `<video>` streams.
 
 ---
 
