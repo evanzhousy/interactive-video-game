@@ -1,3 +1,18 @@
+import "./agent-bridge.js";
+import { Button } from "@ui-sdk/react/button";
+import { Meter, MeterIndicator, MeterTrack } from "@ui-sdk/react/meter";
+import { OverlayHost } from "@ui-sdk/react/overlays";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectItemIndicator,
+  SelectTrigger,
+  SelectValue
+} from "@ui-sdk/react/select";
+import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
+import { Toggle } from "@ui-sdk/react/toggle";
+import { Tooltip, TooltipContent, TooltipShortcut, TooltipTrigger } from "@ui-sdk/react/tooltip";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   playBoothSfx,
@@ -56,6 +71,7 @@ import {
 import { CompendiumModal } from "./components/CompendiumModal.js";
 import { CrisisModal, DemoCliffhangerModal } from "./components/CrisisModal.js";
 import { FlashConfigDrawer } from "./components/FlashConfigDrawer.js";
+import { CheckIcon, ChevronDownIcon } from "./components/Icons.js";
 import { IntakeModal } from "./components/IntakeModal.js";
 import { IntercomPanel, type TranscriptLine } from "./components/IntercomPanel.js";
 import { Night5Audit } from "./components/Night5Audit.js";
@@ -490,40 +506,83 @@ export function App() {
     [currentRoll, flashConfig, isRephrasing, lang, sfx, turnsLeft, verdictState, visitor, voice]
   );
 
-  // Desktop Steam / Keyboard Tactical Shortcuts (1-5 probes, S strobe, T thermal, [/] dossier tabs)
-  useEffect(() => {
-    if (stage !== "booth" || compendiumOpen) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+  // Desktop Steam / Keyboard Tactical Shortcuts via @ui-sdk/react/shortcuts
+  const boothShortcutsEnabled = stage === "booth" && !compendiumOpen;
+  const probeKeys = Object.keys(visitor.probes) as ProbeKey[];
+  const cycleDossierTab = (delta: -1 | 1) => {
+    const order: DossierTab[] = ["baseline", "verdict", "inspector"];
+    setActiveTab((cur) => {
+      const i = order.indexOf(cur);
+      return order[(i + delta + order.length) % order.length]!;
+    });
+  };
 
-      if (e.key >= "1" && e.key <= "5") {
-        const keys = Object.keys(visitor.probes) as ProbeKey[];
-        const picked = keys[Number(e.key) - 1];
-        if (picked) {
-          e.preventDefault();
-          void handleAskProbe(picked);
-        }
-      } else if (e.key === "s" || e.key === "S") {
-        e.preventDefault();
-        handleTriggerSensor("strobe");
-      } else if (e.key === "t" || e.key === "T") {
-        e.preventDefault();
-        handleTriggerSensor("thermal");
-      } else if (e.key === "[" || e.key === "]") {
-        e.preventDefault();
-        const order: DossierTab[] = ["baseline", "verdict", "inspector"];
-        setActiveTab((cur) => {
-          const i = order.indexOf(cur);
-          const delta = e.key === "]" ? 1 : -1;
-          return order[(i + delta + order.length) % order.length]!;
-        });
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [compendiumOpen, handleAskProbe, handleTriggerSensor, stage, visitor.probes]);
+  useShortcut("1", () => {
+    if (probeKeys[0]) void handleAskProbe(probeKeys[0]);
+  }, { when: () => boothShortcutsEnabled && Boolean(probeKeys[0]), description: "Tactical Probe 1" });
+  useShortcut("2", () => {
+    if (probeKeys[1]) void handleAskProbe(probeKeys[1]);
+  }, { when: () => boothShortcutsEnabled && Boolean(probeKeys[1]), description: "Tactical Probe 2" });
+  useShortcut("3", () => {
+    if (probeKeys[2]) void handleAskProbe(probeKeys[2]);
+  }, { when: () => boothShortcutsEnabled && Boolean(probeKeys[2]), description: "Tactical Probe 3" });
+  useShortcut("4", () => {
+    if (probeKeys[3]) void handleAskProbe(probeKeys[3]);
+  }, { when: () => boothShortcutsEnabled && Boolean(probeKeys[3]), description: "Tactical Probe 4" });
+  useShortcut("5", () => {
+    if (probeKeys[4]) void handleAskProbe(probeKeys[4]);
+  }, { when: () => boothShortcutsEnabled && Boolean(probeKeys[4]), description: "Tactical Probe 5" });
+  useShortcut("s", () => handleTriggerSensor("strobe"), {
+    when: () => boothShortcutsEnabled,
+    description: "Pupil Strobe"
+  });
+  useShortcut("t", () => handleTriggerSensor("thermal"), {
+    when: () => boothShortcutsEnabled,
+    description: "Neural Thermal"
+  });
+  useShortcut("[", () => cycleDossierTab(-1), {
+    when: () => boothShortcutsEnabled,
+    description: "Previous Dossier Tab"
+  });
+  useShortcut("]", () => cycleDossierTab(1), {
+    when: () => boothShortcutsEnabled,
+    description: "Next Dossier Tab"
+  });
+
+  const strobeHint = useShortcutHint("s");
+  const thermalHint = useShortcutHint("t");
+
+  const campaignModeItems: Array<{ value: CampaignMode; label: string }> = [
+    {
+      value: "full",
+      label: tl({ zh: "完整战役 (8人)", en: "Full Shift (8)", ja: "本編 (8名)" }, lang)
+    },
+    {
+      value: "daily",
+      label: tl(
+        {
+          zh: `今日排班 (${dailySeed})`,
+          en: `Daily Shift (${dailySeed})`,
+          ja: `日替わり当直 (${dailySeed})`
+        },
+        lang
+      )
+    },
+    {
+      value: "demo",
+      label: tl({ zh: "试玩版 (N0–N2)", en: "Demo (N0–N2)", ja: "体験版 (N0–N2)" }, lang)
+    },
+    {
+      value: "slice",
+      label: tl({ zh: "速通切片 (3人)", en: "Quick Slice (3)", ja: "短縮版 (3名)" }, lang)
+    }
+  ];
+
+  const langItems: Array<{ value: Locale; label: string }> = [
+    { value: "zh", label: "简体中文" },
+    { value: "en", label: "English" },
+    { value: "ja", label: "日本語" }
+  ];
 
   const handleVerdict = (decision: "ADMIT" | "PURGE") => {
     if (verdictState !== "NONE" || isRephrasing) return;
@@ -665,6 +724,7 @@ export function App() {
 
   return (
     <div className="booth-shell">
+      <OverlayHost />
       <header className="topbar">
         <div className="topbar-brand">
           <h1 className="topbar-title">QUARANTINE GATE 0 : 2036</h1>
@@ -691,66 +751,60 @@ export function App() {
             ))}
           </div>
 
-          <select
-            id="campaign-mode-select"
-            aria-label="Campaign Mode"
-            className="ctrl-select"
+          <Select<CampaignMode>
+            items={campaignModeItems}
             value={campaignMode}
-            onChange={(e) => handleSwitchCampaignMode(e.target.value as CampaignMode)}
+            onValueChange={(next) => {
+              if (next) handleSwitchCampaignMode(next);
+            }}
           >
-            <option value="full">
-              {tl({ zh: "完整战役 (8人)", en: "Full Shift (8)", ja: "本編 (8名)" }, lang)}
-            </option>
-            <option value="daily">
-              {tl(
-                {
-                  zh: `今日排班 (${dailySeed})`,
-                  en: `Daily Shift (${dailySeed})`,
-                  ja: `日替わり当直 (${dailySeed})`
-                },
-                lang
-              )}
-            </option>
-            <option value="demo">
-              {tl(
-                {
-                  zh: "试玩版 (N0–N2)",
-                  en: "Demo (N0–N2)",
-                  ja: "体験版 (N0–N2)"
-                },
-                lang
-              )}
-            </option>
-            <option value="slice">
-              {tl({ zh: "速通切片 (3人)", en: "Quick Slice (3)", ja: "短縮版 (3名)" }, lang)}
-            </option>
-          </select>
+            <SelectTrigger
+              id="campaign-mode-select"
+              aria-label="Campaign Mode"
+              className="ctrl-select"
+            >
+              <SelectValue />
+              <ChevronDownIcon />
+            </SelectTrigger>
+            <SelectContent>
+              {campaignModeItems.map((item) => (
+                <SelectItem
+                  key={item.value}
+                  value={item.value}
+                  label={item.label}
+                  data-mode={item.value}
+                >
+                  {item.label}
+                  <SelectItemIndicator>
+                    <CheckIcon />
+                  </SelectItemIndicator>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <button type="button" className="ctrl-btn" onClick={() => startNewShift()}>
+          <Button className="ctrl-btn" onClick={() => startNewShift()}>
             {tl(UI_STRINGS.reroll, lang)}
-          </button>
+          </Button>
 
-          <button
+          <Button
             id="btn-compendium"
-            type="button"
             className={`ctrl-btn ${compendiumOpen ? "amber" : ""}`}
             onClick={() => setCompendiumOpen((o) => !o)}
           >
             🏆 {tl({ zh: "图鉴", en: "Archive", ja: "図鑑" }, lang)} (
             {compendium.unlockedEndings.length}/7)
-          </button>
+          </Button>
 
-          <button
+          <Button
             id="btn-flash-toggle"
-            type="button"
             className={`ctrl-btn ${flashConfig.enabled ? "amber" : ""}`}
             onClick={() => setFlashDrawerOpen((o) => !o)}
           >
             ⚡ Flash: {flashConfig.enabled ? "ON" : "OFF"}
-          </button>
+          </Button>
 
-          <button
-            type="button"
+          <Button
             className="ctrl-btn amber"
             onClick={() => {
               stopIntercomVoice();
@@ -759,83 +813,128 @@ export function App() {
             }}
           >
             {tl(UI_STRINGS.night5Btn, lang)}
-          </button>
+          </Button>
 
-          <button
+          <Toggle
             id="btn-voice-toggle"
-            type="button"
+            pressed={voice}
             className="ctrl-btn"
-            onClick={() => {
-              setVoice((v) => {
-                if (v) stopIntercomVoice();
-                return !v;
-              });
+            onPressedChange={(next) => {
+              if (!next) stopIntercomVoice();
+              setVoice(next);
             }}
           >
             {voice ? "🎙️ VOICE: ON" : "🎙️ VOICE: OFF"}
-          </button>
+          </Toggle>
 
-          <button
-            id="btn-ambience-toggle"
-            type="button"
-            className="ctrl-btn"
-            title="-46°C Blizzard & Hull Stress Ambience"
-            onClick={() => setAmbience((a) => !a)}
-          >
-            {ambience ? "🌨️ AMB: ON" : "🌨️ AMB: OFF"}
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Toggle
+                  id="btn-ambience-toggle"
+                  pressed={ambience}
+                  className="ctrl-btn"
+                  onPressedChange={setAmbience}
+                />
+              }
+            >
+              {ambience ? "🌨️ AMB: ON" : "🌨️ AMB: OFF"}
+            </TooltipTrigger>
+            <TooltipContent>
+              {tl(
+                {
+                  zh: "-46°C 极地暴风雪与钢壳结构啸叫环境音",
+                  en: "-46°C Blizzard & Hull Stress Ambience",
+                  ja: "-46°C 吹雪と船殻ストレス環境音"
+                },
+                lang
+              )}
+            </TooltipContent>
+          </Tooltip>
 
-          <button type="button" className="ctrl-btn" onClick={() => setSfx((s) => !s)}>
+          <Toggle pressed={sfx} className="ctrl-btn" onPressedChange={setSfx}>
             {sfx ? "SFX: ON" : "SFX: OFF"}
-          </button>
+          </Toggle>
 
-          <button
-            id="btn-help-toggle"
-            type="button"
-            className={`ctrl-btn ${!onboardingDismissed && visitor.id === "V-01" ? "amber" : ""}`}
-            title="Toggle Tactical Interrogation Guide"
-            onClick={() => {
-              const next = !onboardingDismissed;
-              setOnboardingDismissed(next);
-              saveOnboardingDismissed(next);
-            }}
-          >
-            ?
-          </button>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Toggle
+                  id="btn-help-toggle"
+                  pressed={!onboardingDismissed}
+                  aria-label={tl(
+                    {
+                      zh: "开关审讯战术教学",
+                      en: "Toggle Tactical Interrogation Guide",
+                      ja: "戦術尋問ガイド切替"
+                    },
+                    lang
+                  )}
+                  className={`ctrl-btn ${!onboardingDismissed && visitor.id === "V-01" ? "amber" : ""}`}
+                  onPressedChange={(pressed) => {
+                    const nextDismissed = !pressed;
+                    setOnboardingDismissed(nextDismissed);
+                    saveOnboardingDismissed(nextDismissed);
+                  }}
+                />
+              }
+            >
+              ?
+            </TooltipTrigger>
+            <TooltipContent>
+              {tl(
+                {
+                  zh: "开关审讯战术教学引导",
+                  en: "Toggle Tactical Interrogation Guide",
+                  ja: "戦術尋問ガイド切替"
+                },
+                lang
+              )}
+            </TooltipContent>
+          </Tooltip>
 
-          <select
-            id="lang-select"
-            aria-label="Language"
-            className="ctrl-select"
+          <Select<Locale>
+            items={langItems}
             value={lang}
-            onChange={(e) => {
-              stopIntercomVoice();
-              setLang(e.target.value as Locale);
+            onValueChange={(next) => {
+              if (next) {
+                stopIntercomVoice();
+                setLang(next);
+              }
             }}
           >
-            <option value="zh">简体中文</option>
-            <option value="en">English</option>
-            <option value="ja">日本語</option>
-          </select>
+            <SelectTrigger id="lang-select" aria-label="Language" className="ctrl-select">
+              <SelectValue />
+              <ChevronDownIcon />
+            </SelectTrigger>
+            <SelectContent>
+              {langItems.map((item) => (
+                <SelectItem key={item.value} value={item.value} label={item.label}>
+                  {item.label}
+                  <SelectItemIndicator>
+                    <CheckIcon />
+                  </SelectItemIndicator>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </header>
 
-      {flashDrawerOpen ? (
-        <FlashConfigDrawer
-          lang={lang}
-          config={flashConfig}
-          onChange={setFlashConfig}
-          onClose={() => setFlashDrawerOpen(false)}
-        />
-      ) : null}
+      <FlashConfigDrawer
+        open={flashDrawerOpen}
+        onOpenChange={setFlashDrawerOpen}
+        lang={lang}
+        config={flashConfig}
+        onChange={setFlashConfig}
+      />
 
-      {compendiumOpen ? (
-        <CompendiumModal
-          lang={lang}
-          compendium={compendium}
-          onClose={() => setCompendiumOpen(false)}
-        />
-      ) : null}
+      <CompendiumModal
+        open={compendiumOpen}
+        onOpenChange={setCompendiumOpen}
+        lang={lang}
+        compendium={compendium}
+      />
 
       <main>
         {stage === "intake" ? (
@@ -903,20 +1002,48 @@ export function App() {
                     <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
                       <span style={{ color: "var(--frost-cyan)" }}>{reaction}</span>
                       <span style={{ color: "var(--danger-purge)" }}>♥ {bpm} BPM</span>
-                      <span
-                        id="booth-fuel-pill"
-                        className={`fuel-pill ${fuelLeft === 0 ? "depleted" : fuelLeft <= 1 ? "low" : ""}`}
-                        title={tl(
-                          {
-                            zh: "岗亭供暖与高温净化燃料：每次净化消耗 1🔥，归零后触发低温降电 (1⚡)",
-                            en: "Furnace & Purge Fuel: Each PURGE costs 1🔥; 0 fuel triggers -46°C brownout (1⚡)",
-                            ja: "暖房・浄化燃料：焼却ごとに 1🔥 消費。ゼロで氷点下電圧低下 (1⚡)"
-                          },
+                      <Tooltip>
+                        <TooltipTrigger
+                          render={(triggerProps) => {
+                            const { type: _type, ...rest } = triggerProps as Record<string, unknown>;
+                            return (
+                              <span
+                                {...(rest as React.HTMLAttributes<HTMLSpanElement>)}
+                                id="booth-fuel-pill"
+                                tabIndex={0}
+                                aria-label={`Furnace fuel: ${fuelLeft}`}
+                                className={`fuel-pill ${fuelLeft === 0 ? "depleted" : fuelLeft <= 1 ? "low" : ""}`}
+                              />
+                            );
+                          }}
+                        >
+                          🔥 {fuelLeft} FUEL
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {tl(
+                            {
+                              zh: "岗亭供暖与高温净化燃料：每次净化消耗 1🔥，归零后触发低温降电 (1⚡)",
+                              en: "Furnace & Purge Fuel: Each PURGE costs 1🔥; 0 fuel triggers -46°C brownout (1⚡)",
+                              ja: "暖房・浄化燃料：焼却ごとに 1🔥 消費。ゼロで氷点下電圧低下 (1⚡)"
+                            },
+                            lang
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                      <Meter
+                        className="hud-meter"
+                        value={powerLeft}
+                        min={0}
+                        max={Math.max(1, maxPower)}
+                        aria-label={tl(
+                          { zh: "传感器剩余电量", en: "Sensor power", ja: "センサー電力" },
                           lang
                         )}
                       >
-                        🔥 {fuelLeft} FUEL
-                      </span>
+                        <MeterTrack>
+                          <MeterIndicator />
+                        </MeterTrack>
+                      </Meter>
                       <span style={{ color: "var(--amber-crt)" }}>
                         ⚡ {powerLeft}/{maxPower} PWR
                       </span>
@@ -956,26 +1083,61 @@ export function App() {
 
                   <div className="sensor-bar">
                     <div style={{ display: "flex", gap: "8px" }}>
-                      <button
-                        id="btn-strobe"
-                        type="button"
-                        title="Shortcut: S"
-                        className="ctrl-btn"
-                        disabled={powerLeft <= 0 || verdictState !== "NONE"}
-                        onClick={() => handleTriggerSensor("strobe")}
-                      >
-                        {tl(UI_STRINGS.strobeBtn, lang)}
-                      </button>
-                      <button
-                        id="btn-thermal"
-                        type="button"
-                        title="Shortcut: T"
-                        className="ctrl-btn"
-                        disabled={powerLeft <= 0 || verdictState !== "NONE"}
-                        onClick={() => handleTriggerSensor("thermal")}
-                      >
-                        {tl(UI_STRINGS.thermalBtn, lang)}
-                      </button>
+                      <Tooltip shortcut="s">
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              id="btn-strobe"
+                              className="ctrl-btn"
+                              disabled={powerLeft <= 0 || verdictState !== "NONE"}
+                              focusableWhenDisabled
+                              aria-keyshortcuts={strobeHint.ariaKeyshortcuts}
+                              onClick={() => handleTriggerSensor("strobe")}
+                            />
+                          }
+                        >
+                          {tl(UI_STRINGS.strobeBtn, lang)}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {tl(
+                            {
+                              zh: "脉冲强光扫描瞳孔反射",
+                              en: "Strobe pupil photomotor scan",
+                              ja: "ストロボ瞳孔反応スキャン"
+                            },
+                            lang
+                          )}{" "}
+                          <TooltipShortcut />
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip shortcut="t">
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              id="btn-thermal"
+                              className="ctrl-btn"
+                              disabled={powerLeft <= 0 || verdictState !== "NONE"}
+                              focusableWhenDisabled
+                              aria-keyshortcuts={thermalHint.ariaKeyshortcuts}
+                              onClick={() => handleTriggerSensor("thermal")}
+                            />
+                          }
+                        >
+                          {tl(UI_STRINGS.thermalBtn, lang)}
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {tl(
+                            {
+                              zh: "FLIR 颈部神经端口红外热成像",
+                              en: "FLIR cervical neural port thermal scan",
+                              ja: "FLIR 頚部神経ポート赤外線スキャン"
+                            },
+                            lang
+                          )}{" "}
+                          <TooltipShortcut />
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                     <span className="zero-lip-caption">{tl(UI_STRINGS.zeroLipNote, lang)}</span>
                   </div>

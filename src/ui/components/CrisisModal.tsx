@@ -1,3 +1,4 @@
+import { Button } from "@ui-sdk/react/button";
 import { useEffect, useState } from "react";
 import { speakIntercomLine, stopIntercomVoice } from "../../game/audio.js";
 import type { CrisisOption, InterNightCrisis } from "../../game/crises.js";
@@ -68,16 +69,15 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
         {crisis.options.map((opt) => {
           const isSelected = picked?.id === opt.id;
           return (
-            <button
+            <Button
               key={opt.id}
-              type="button"
               data-crisis-option={opt.id}
               disabled={picked !== null}
               className={`option-card crisis-option-btn ${isSelected ? "selected" : ""}`}
               onClick={() => setPicked(opt)}
             >
               {tl(opt.label, lang)}
-            </button>
+            </Button>
           );
         })}
       </div>
@@ -87,9 +87,8 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.78rem", color: "var(--amber-crt)" }}>
             {tl(picked.consequenceNote, lang)}
           </div>
-          <button
+          <Button
             id="btn-crisis-continue"
-            type="button"
             className="ctrl-btn amber"
             style={{ marginTop: "10px", width: "100%", padding: "9px", fontWeight: 700 }}
             onClick={() => onResolveOption(picked)}
@@ -111,7 +110,7 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
               },
               lang
             )}
-          </button>
+          </Button>
         </div>
       ) : null}
     </section>
@@ -232,9 +231,8 @@ export function DemoCliffhangerModal({
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: "8px" }}>
-        <button
+        <Button
           id="btn-demo-continue-full"
-          type="button"
           className="ctrl-btn amber"
           style={{ padding: "10px", fontWeight: 700 }}
           onClick={onUpgradeToFullShift}
@@ -247,10 +245,9 @@ export function DemoCliffhangerModal({
             },
             lang
           )}
-        </button>
-        <button
+        </Button>
+        <Button
           id="btn-demo-restart"
-          type="button"
           className="ctrl-btn"
           style={{ padding: "10px" }}
           onClick={onRestartDemo}
@@ -263,7 +260,7 @@ export function DemoCliffhangerModal({
             },
             lang
           )}
-        </button>
+        </Button>
       </div>
     </section>
   );

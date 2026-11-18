@@ -1,7 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { Button } from "@ui-sdk/react/button";
+import { Checkbox, CheckboxIndicator } from "@ui-sdk/react/checkbox";
+import { Input, InputClear, InputGroup } from "@ui-sdk/react/input";
+import { Label } from "@ui-sdk/react/label";
+import {
+  ScrollArea,
+  ScrollAreaContent,
+  ScrollAreaScrollbar,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+  createScrollAreaController
+} from "@ui-sdk/react/scroll-area";
+import { toast } from "@ui-sdk/react/toast";
+import { useEffect, useState } from "react";
 import { playBoothSfx, speakIntercomLine, stopIntercomVoice } from "../../game/audio.js";
 import type { CrisisHistoryEntry } from "../../game/crises.js";
-import { REQUIRED_SUB_ROLES, SPECIALIST_LABELS } from "../../game/economy.js";
+import { SPECIALIST_LABELS } from "../../game/economy.js";
 import { tl } from "../../game/i18n.js";
 import {
   getNight5FrameSrc,
@@ -25,6 +38,7 @@ import {
 import { ACHIEVEMENTS, type AchievementId } from "../../game/storage.js";
 import type { EndingId, Locale, LocalizedText, ShiftHistoryEntry } from "../../game/types.js";
 import type { CampaignMode } from "../../game/visitors/index.js";
+import { CheckIcon, ClearIcon } from "./Icons.js";
 import { MindCrystalCanvas } from "./MindCrystalCanvas.js";
 
 interface Night5ChatItem {
@@ -77,7 +91,7 @@ export function Night5Audit({
   const [flinchActive, setFlinchActive] = useState(false);
   const [draft, setDraft] = useState("");
   const [copiedReport, setCopiedReport] = useState(false);
-  const logRef = useRef<HTMLDivElement | null>(null);
+  const [scrollController] = useState(() => createScrollAreaController());
 
   const audit = evaluateNight5Audit(baseline, history, undefined, crisisHistory, campaignMode);
   const probes = buildNight5Probes(baseline, history, crisisHistory);
@@ -121,10 +135,8 @@ export function Night5Audit({
   }, []);
 
   useEffect(() => {
-    if (logRef.current) {
-      logRef.current.scrollTop = logRef.current.scrollHeight;
-    }
-  }, [chatItems.length]);
+    scrollController.scrollToEnd({ behavior: "instant" });
+  }, [scrollController, chatItems.length]);
 
   const handleFireProbe = (probeId: Night5ProbeId, customQuestion?: string) => {
     if (n5TurnsLeft <= 0 || endingKey !== null) return;
@@ -195,15 +207,36 @@ export function Night5Audit({
       fuelLeft,
       lang
     });
+    setCopiedReport(true);
     try {
       if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
       }
-      setCopiedReport(true);
-      setTimeout(() => setCopiedReport(false), 2400);
     } catch {
-      setCopiedReport(true);
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch {
+        // ignore fallback error
+      }
     }
+    toast.success(
+      tl(
+        {
+          zh: "值班战报已复制到剪贴板",
+          en: "Shift report copied to clipboard",
+          ja: "戦績カードをコピーしました"
+        },
+        lang
+      )
+    );
+    setTimeout(() => setCopiedReport(false), 2400);
   };
 
   const verdictFrameSrc = getNight5FrameSrc(finalAction);
@@ -211,6 +244,14 @@ export function Night5Audit({
   const verdictVideoCandidates =
     finalAction !== "NONE" ? getNight5VideoCandidates(finalAction) : [];
   const showVerdictPhoto = finalAction !== "NONE" && !verdictVideoReady;
+  const n5AskPrompt = tl(
+    {
+      zh: "或自由输入拷问窗外的自己（如：第2夜那支血清去哪了？副站长的燃料呢？）...",
+      en: "Or type a question to your double (e.g. Where did Night 2's serum go? What about Holm's fuel?)...",
+      ja: "外の自分へ自由入力で問う（例：第2夜の血清はどうした？副所長の燃料は？）..."
+    },
+    lang
+  );
 
   return (
     <section className="panel" id="night5-panel">
@@ -218,9 +259,9 @@ export function Night5Audit({
         <span style={{ color: "var(--amber-crt)", fontWeight: 700 }}>
           NIGHT 5 // SELF-AUDIT · OPERATOR #09 DOPPELGÄNGER AT GATE 0
         </span>
-        <button type="button" className="ctrl-btn" onClick={onClose}>
+        <Button className="ctrl-btn" onClick={onClose}>
           {tl({ zh: "返回岗亭", en: "Back to Booth", ja: "ブースへ戻る" }, lang)}
-        </button>
+        </Button>
       </div>
 
       <div className="booth-grid">
@@ -376,7 +417,7 @@ export function Night5Audit({
                 ({audit.subReadiness.admittedHumans}/{audit.subReadiness.requiredCrewCount})
               </span>
               <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                {REQUIRED_SUB_ROLES.map((role) => {
+                {audit.subReadiness.checkedRoles.map((role) => {
                   const ok = audit.subReadiness.rolesPresent.includes(role);
                   return (
                     <span key={role} className={`role-pill ${ok ? "ok" : "missing"}`}>
@@ -405,87 +446,106 @@ export function Night5Audit({
               </span>
             </div>
 
-            <div className="intercom-log n5-log" id="n5-chat-log" ref={logRef}>
-              {chatItems.map((item, idx) => {
-                if (item.speaker === "player") {
-                  return (
-                    <div key={idx} className="msg-player">
-                      <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
-                        [OP #09 INSIDE]:{" "}
-                      </span>
-                      {tl(item.text, lang)}
-                    </div>
-                  );
-                }
-                if (item.speaker === "ordos") {
-                  return (
-                    <div
-                      key={idx}
-                      className={`msg-system ${item.exposed ? "n5-exposed-note" : ""}`}
-                    >
-                      {tl(item.text, lang)}
-                    </div>
-                  );
-                }
-                return (
-                  <div key={idx} className="msg-npc">
-                    <div className="msg-meta">
-                      <span>[OUTSIDE GLASS · #09 DOUBLE]</span>
-                      <span>FACIAL 99.98%</span>
-                    </div>
-                    <div>{tl(item.text, lang)}</div>
-                  </div>
-                );
-              })}
-            </div>
+            <ScrollArea controller={scrollController} stickToEnd type="auto">
+              <ScrollAreaViewport
+                className="intercom-log n5-log"
+                id="n5-chat-log"
+                role="log"
+                aria-label="Night 5 doppelgänger interrogation transcript"
+              >
+                <ScrollAreaContent style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {chatItems.map((item, idx) => {
+                    if (item.speaker === "player") {
+                      return (
+                        <div key={idx} className="msg-player">
+                          <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
+                            [OP #09 INSIDE]:{" "}
+                          </span>
+                          {tl(item.text, lang)}
+                        </div>
+                      );
+                    }
+                    if (item.speaker === "ordos") {
+                      return (
+                        <div
+                          key={idx}
+                          className={`msg-system ${item.exposed ? "n5-exposed-note" : ""}`}
+                        >
+                          {tl(item.text, lang)}
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={idx} className="msg-npc">
+                        <div className="msg-meta">
+                          <span>[OUTSIDE GLASS · #09 DOUBLE]</span>
+                          <span>FACIAL 99.98%</span>
+                        </div>
+                        <div>{tl(item.text, lang)}</div>
+                      </div>
+                    );
+                  })}
+                </ScrollAreaContent>
+              </ScrollAreaViewport>
+              <ScrollAreaScrollbar orientation="vertical">
+                <ScrollAreaThumb />
+              </ScrollAreaScrollbar>
+            </ScrollArea>
 
             <div className="probe-grid" style={{ marginTop: "7px" }}>
               {probes.map((p) => {
                 const alreadyUsed = usedProbes.includes(p.id);
                 return (
-                  <button
+                  <Button
                     key={p.id}
-                    type="button"
                     data-n5-probe={p.id}
                     disabled={n5TurnsLeft <= 0 || endingKey !== null || alreadyUsed}
                     className="probe-chip"
                     onClick={() => handleFireProbe(p.id)}
                   >
                     {tl(p.label, lang)}
-                  </button>
+                  </Button>
                 );
               })}
             </div>
 
             <form className="ask-form" id="n5-ask-form" onSubmit={handleCustomSubmit}>
-              <input
-                id="n5-ask-input"
-                type="text"
-                className="ask-input"
-                disabled={n5TurnsLeft <= 0 || endingKey !== null}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder={tl(
-                  {
-                    zh: "或自由输入拷问窗外的自己（如：第2夜那支血清去哪了？副站长的燃料呢？）...",
-                    en: "Or type a question to your double (e.g. Where did Night 2's serum go? What about Holm's fuel?)...",
-                    ja: "外の自分へ自由入力で問う（例：第2夜の血清はどうした？副所長の燃料は？）..."
-                  },
-                  lang
-                )}
-              />
-              <button
+              <Label htmlFor="n5-ask-input" className="visually-hidden">
+                {n5AskPrompt}
+              </Label>
+              <InputGroup className="ask-input-group">
+                <Input
+                  id="n5-ask-input"
+                  type="text"
+                  className="ask-input"
+                  disabled={n5TurnsLeft <= 0 || endingKey !== null}
+                  value={draft}
+                  onValueChange={setDraft}
+                  placeholder={n5AskPrompt}
+                />
+                <InputClear
+                  aria-label={tl(
+                    { zh: "清空提问", en: "Clear question", ja: "入力をクリア" },
+                    lang
+                  )}
+                >
+                  <ClearIcon />
+                </InputClear>
+              </InputGroup>
+              <Button
                 id="btn-n5-ptt-send"
                 type="submit"
                 disabled={n5TurnsLeft <= 0 || endingKey !== null}
                 className="ctrl-btn amber"
               >
                 {tl({ zh: "对讲质问", en: "PTT ASK", ja: "尋問送信" }, lang)}
-              </button>
+              </Button>
             </form>
           </div>
 
           <label
+            className="n5-confess-row"
+            htmlFor="n5-confess"
             style={{
               display: "flex",
               alignItems: "flex-start",
@@ -494,13 +554,16 @@ export function Night5Audit({
               cursor: "pointer"
             }}
           >
-            <input
+            <Checkbox
               id="n5-confess"
-              type="checkbox"
               checked={confess}
               disabled={endingKey !== null}
-              onChange={(e) => setConfess(e.target.checked)}
-            />
+              onCheckedChange={(checked) => setConfess(Boolean(checked))}
+            >
+              <CheckboxIndicator>
+                <CheckIcon />
+              </CheckboxIndicator>
+            </Checkbox>
             <span>
               {tl(
                 {
@@ -514,33 +577,30 @@ export function Night5Audit({
           </label>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-            <button
+            <Button
               id="btn-n5-purge"
-              type="button"
               disabled={endingKey !== null}
               className="lever-btn purge"
               onClick={() => triggerChoice("PURGE")}
             >
               {tl({ zh: "净化窗外替身", en: "Purge Double", ja: "外の影を焼却" }, lang)}
-            </button>
-            <button
+            </Button>
+            <Button
               id="btn-n5-admit"
-              type="button"
               disabled={endingKey !== null}
               className="lever-btn admit"
               onClick={() => triggerChoice("ADMIT")}
             >
               {tl({ zh: "放他进岗亭", en: "Admit Double", ja: "中へ入れる" }, lang)}
-            </button>
-            <button
+            </Button>
+            <Button
               id="btn-n5-step-out"
-              type="button"
               disabled={endingKey !== null}
               className="ctrl-btn"
               onClick={() => triggerChoice("STEP_OUT")}
             >
               {tl({ zh: "走出气闸让位", en: "Step Into Storm", ja: "外へ歩み出る" }, lang)}
-            </button>
+            </Button>
           </div>
 
           {endingKey ? (
@@ -585,9 +645,8 @@ export function Night5Audit({
               ) : null}
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "8px", marginTop: "12px" }}>
-                <button
+                <Button
                   id="btn-copy-report"
-                  type="button"
                   className="ctrl-btn"
                   style={{ padding: "9px", fontWeight: 600 }}
                   onClick={() => void handleCopyShiftReport()}
@@ -595,10 +654,9 @@ export function Night5Audit({
                   {copiedReport
                     ? tl({ zh: "✓ 战报已复制", en: "✓ Report Copied", ja: "✓ コピー完了" }, lang)
                     : tl({ zh: "📋 复制值班战报", en: "📋 Copy Shift Card", ja: "📋 戦績カードをコピー" }, lang)}
-                </button>
-                <button
+                </Button>
+                <Button
                   id="btn-play-again"
-                  type="button"
                   className="ctrl-btn amber"
                   style={{ padding: "9px", fontWeight: 700 }}
                   onClick={onStartNewRun}
@@ -611,7 +669,7 @@ export function Night5Audit({
                     },
                     lang
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           ) : null}

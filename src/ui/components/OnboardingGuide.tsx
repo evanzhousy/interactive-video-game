@@ -1,3 +1,5 @@
+import { Button } from "@ui-sdk/react/button";
+import { Progress, ProgressIndicator, ProgressTrack } from "@ui-sdk/react/progress";
 import { tl } from "../../game/i18n.js";
 import type { Locale } from "../../game/types.js";
 
@@ -65,18 +67,23 @@ export function OnboardingGuide({
 
   return (
     <div className="onboarding-callout" id="onboarding-guide" data-step={step}>
-      <div className="onboarding-main">
+      <div className="onboarding-main" style={{ flex: 1 }}>
         <span className="onboarding-badge">ORD-OS // {badgeText}</span>
         <span className="onboarding-copy">{bodyText}</span>
+        <Progress
+          className="hud-progress"
+          style={{ width: "120px", marginTop: 0 }}
+          value={Math.round((step / 3) * 100)}
+          aria-label={badgeText}
+        >
+          <ProgressTrack>
+            <ProgressIndicator />
+          </ProgressTrack>
+        </Progress>
       </div>
-      <button
-        id="btn-dismiss-onboarding"
-        type="button"
-        className="ctrl-btn"
-        onClick={onDismiss}
-      >
+      <Button id="btn-dismiss-onboarding" className="ctrl-btn" onClick={onDismiss}>
         {tl({ zh: "不再提示 ×", en: "Got It ×", ja: "閉じる ×" }, lang)}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@ui-sdk/core':
+        specifier: 0.1.0-beta.7
+        version: 0.1.0-beta.7
+      '@ui-sdk/react':
+        specifier: 0.1.0-beta.7
+        version: 0.1.0-beta.7(@types/react@19.3.0)(@ui-sdk/core@0.1.0-beta.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
         specifier: ^19.3.0
         version: 19.3.1
@@ -642,6 +648,20 @@ packages:
 
   '@types/ws@8.18.2':
     resolution: {integrity: sha512-67MQl+fpWKVTT1NYdnmo3U4sc/xPo/zQBncVnI74qmQa0z/b+1g6iYqNmGCPbxO+zz2aklb08a0oHfegiVd0/w==}
+
+  '@ui-sdk/core@0.1.0-beta.7':
+    resolution: {integrity: sha512-f6Dotk5kwwiH2BRT6THRrn/Lv7eoG6Y+TWboCl9rQ4fHw4h3OliOSHF4kl4PzJEgaLyWSQFczRMvGm+YCpn77Q==}
+
+  '@ui-sdk/react@0.1.0-beta.7':
+    resolution: {integrity: sha512-zC+0EvV4wj0VpowK56yqGJqZzKa4PbHogTlmsnzbsl19FTRovhLstuJEN2/RCUZwC/vpkDvTGOmFAych+wD5NA==}
+    peerDependencies:
+      '@types/react': '>=19.2.10'
+      '@ui-sdk/core': ^0.1.0-beta.7
+      react: '>=19'
+      react-dom: '>=19'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   '@vitejs/plugin-react@4.7.0':
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}
@@ -1421,6 +1441,16 @@ snapshots:
   '@types/ws@8.18.2':
     dependencies:
       '@types/node': 24.19.2
+
+  '@ui-sdk/core@0.1.0-beta.7': {}
+
+  '@ui-sdk/react@0.1.0-beta.7(@types/react@19.3.0)(@ui-sdk/core@0.1.0-beta.7)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@ui-sdk/core': 0.1.0-beta.7
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+    optionalDependencies:
+      '@types/react': 19.3.0
 
   '@vitejs/plugin-react@4.7.0(vite@6.4.6(@types/node@24.19.2)(tsx@4.21.0))':
     dependencies:

@@ -41,6 +41,7 @@ export function getSensorPowerBudget(fuelLeft: number, emergencyOverdraftUsed = 
 export interface SubmarineReadiness {
   admittedHumans: number;
   requiredCrewCount: number;
+  checkedRoles: SpecialistRole[];
   rolesPresent: SpecialistRole[];
   missingRoles: SpecialistRole[];
   launchReady: boolean;
@@ -48,30 +49,46 @@ export interface SubmarineReadiness {
 
 /**
  * Evaluates rescue submarine Nautilus-0 launch readiness (GDD §3.3):
- * - Full / Daily 8-visitor shift requires >= 3 admitted live humans (or all surviving humans if fewer)
- *   and coverage of core specialist roles (`doctor`, `mechanic`, `diver`) unless not yet encountered.
+ * - Full / Daily 8-visitor shift requires >= 3 admitted live humans and coverage of all 3 core
+ *   specialist roles (`doctor`, `mechanic`, `diver`), which `rollShift` guarantees exist as humans.
+ * - Demo / Quick Slice checks only the core specialist roles that actually spawned as live humans
+ *   in the shortened roster, avoiding impossible missing-role warnings.
  */
 export function evaluateSubmarineReadiness(
   history: readonly ShiftHistoryEntry[],
   mode: CampaignMode = "full"
 ): SubmarineReadiness {
-  const admittedHumanEntries = history.filter(
-    (h) => h.decision === "ADMIT" && !h.wasMimic
-  );
+  const realHumanEntries = history.filter((h) => !h.wasMimic);
+  const admittedHumanEntries = realHumanEntries.filter((h) => h.decision === "ADMIT");
+
   const rolesSet = new Set<SpecialistRole>();
   for (const entry of admittedHumanEntries) {
     const role = VISITOR_SPECIALIST_ROLES[entry.visitorId];
     if (role) rolesSet.add(role);
   }
 
-  const requiredCrewCount = mode === "slice" ? 1 : mode === "demo" ? 2 : 3;
-  const rolesToCheck: readonly SpecialistRole[] =
-    mode === "full" || mode === "daily" ? REQUIRED_SUB_ROLES : ["doctor"];
+  let rolesToCheck: SpecialistRole[];
+  let requiredCrewCount: number;
+
+  if (mode === "full" || mode === "daily") {
+    rolesToCheck = [...REQUIRED_SUB_ROLES];
+    requiredCrewCount = 3;
+  } else {
+    const spawnedCoreRoles = REQUIRED_SUB_ROLES.filter((role) =>
+      realHumanEntries.some((h) => VISITOR_SPECIALIST_ROLES[h.visitorId] === role)
+    );
+    rolesToCheck = spawnedCoreRoles.length > 0 ? spawnedCoreRoles : ["doctor"];
+    const baseTarget = mode === "slice" ? 1 : 2;
+    requiredCrewCount =
+      realHumanEntries.length > 0 ? Math.min(baseTarget, realHumanEntries.length) : baseTarget;
+  }
+
   const missingRoles = rolesToCheck.filter((r) => !rolesSet.has(r));
 
   return {
     admittedHumans: admittedHumanEntries.length,
     requiredCrewCount,
+    checkedRoles: rolesToCheck,
     rolesPresent: [...rolesSet],
     missingRoles,
     launchReady:

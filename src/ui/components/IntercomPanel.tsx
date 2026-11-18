@@ -1,4 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { Button } from "@ui-sdk/react/button";
+import { Input, InputClear, InputGroup } from "@ui-sdk/react/input";
+import { Label } from "@ui-sdk/react/label";
+import { Meter, MeterIndicator, MeterTrack } from "@ui-sdk/react/meter";
+import {
+  ScrollArea,
+  ScrollAreaContent,
+  ScrollAreaScrollbar,
+  ScrollAreaThumb,
+  ScrollAreaViewport,
+  createScrollAreaController
+} from "@ui-sdk/react/scroll-area";
+import { useEffect, useState } from "react";
 import { UI_STRINGS, tl } from "../../game/i18n.js";
 import {
   classifyQuestionIntent,
@@ -6,6 +18,7 @@ import {
   resolveVisitorProbeKey
 } from "../../game/intent.js";
 import type { Locale, LocalizedText, ProbeKey, VisitorSpec } from "../../game/types.js";
+import { ClearIcon } from "./Icons.js";
 
 export interface TranscriptLine {
   speaker: "player" | "npc" | "system";
@@ -40,7 +53,7 @@ export function IntercomPanel({
   const [pending, setPending] = useState<{ intent: ProbeKey | "off_axis"; text: string } | null>(
     null
   );
-  const logRef = useRef<HTMLDivElement | null>(null);
+  const [scrollController] = useState(() => createScrollAreaController());
 
   useEffect(() => {
     setDraft("");
@@ -48,10 +61,8 @@ export function IntercomPanel({
   }, [visitor.id]);
 
   useEffect(() => {
-    if (logRef.current) {
-      logRef.current.scrollTop = logRef.current.scrollHeight;
-    }
-  }, [transcript.length, isRephrasing]);
+    scrollController.scrollToEnd({ behavior: "instant" });
+  }, [scrollController, transcript.length, isRephrasing]);
 
   const askDisabled = turnsLeft <= 0 || verdictDone || isRephrasing;
 
@@ -68,44 +79,76 @@ export function IntercomPanel({
     <section className="panel" id="intercom-panel">
       <div className="viewport-header">
         <span>{tl(UI_STRINGS.intercomHeader, lang)}</span>
-        <span style={{ color: "var(--amber-crt)" }}>TURNS: {turnsLeft} / 4</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Meter
+            className="hud-meter"
+            value={turnsLeft}
+            min={0}
+            max={4}
+            aria-label={tl(
+              {
+                zh: "剩余审讯回合",
+                en: "Interrogation turns remaining",
+                ja: "残り尋問ターン"
+              },
+              lang
+            )}
+          >
+            <MeterTrack>
+              <MeterIndicator />
+            </MeterTrack>
+          </Meter>
+          <span style={{ color: "var(--amber-crt)" }}>TURNS: {turnsLeft} / 4</span>
+        </div>
       </div>
 
-      <div className="intercom-log" id="chat-log" ref={logRef}>
-        {transcript.map((item, i) => {
-          if (item.speaker === "system") {
-            return (
-              <div key={i} className="msg-system">
-                ORD-OS · {tl(item.text, lang)}
+      <ScrollArea controller={scrollController} stickToEnd type="auto">
+        <ScrollAreaViewport
+          className="intercom-log"
+          id="chat-log"
+          role="log"
+          aria-label="Intercom CH-01 transcript"
+        >
+          <ScrollAreaContent style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+            {transcript.map((item, i) => {
+              if (item.speaker === "system") {
+                return (
+                  <div key={i} className="msg-system">
+                    ORD-OS · {tl(item.text, lang)}
+                  </div>
+                );
+              }
+              if (item.speaker === "player") {
+                return (
+                  <div key={i} className="msg-player">
+                    <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
+                      [OP #09]:{" "}
+                    </span>
+                    {tl(item.text, lang)}
+                  </div>
+                );
+              }
+              return (
+                <div key={i} className="msg-npc">
+                  <div className="msg-meta">
+                    <span>[{visitor.id} INTERCOM]</span>
+                    <span>{item.meta ?? ""}</span>
+                  </div>
+                  <div>{tl(item.text, lang)}</div>
+                </div>
+              );
+            })}
+            {isRephrasing ? (
+              <div className="msg-system" id="flash-rephrasing-indicator">
+                {tl(UI_STRINGS.rephrasingNote, lang)}
               </div>
-            );
-          }
-          if (item.speaker === "player") {
-            return (
-              <div key={i} className="msg-player">
-                <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
-                  [OP #09]:{" "}
-                </span>
-                {tl(item.text, lang)}
-              </div>
-            );
-          }
-          return (
-            <div key={i} className="msg-npc">
-              <div className="msg-meta">
-                <span>[{visitor.id} INTERCOM]</span>
-                <span>{item.meta ?? ""}</span>
-              </div>
-              <div>{tl(item.text, lang)}</div>
-            </div>
-          );
-        })}
-        {isRephrasing ? (
-          <div className="msg-system" id="flash-rephrasing-indicator">
-            {tl(UI_STRINGS.rephrasingNote, lang)}
-          </div>
-        ) : null}
-      </div>
+            ) : null}
+          </ScrollAreaContent>
+        </ScrollAreaViewport>
+        <ScrollAreaScrollbar orientation="vertical">
+          <ScrollAreaThumb />
+        </ScrollAreaScrollbar>
+      </ScrollArea>
 
       <div style={{ marginTop: "9px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
         {tl(UI_STRINGS.probeHint, lang)}
@@ -114,33 +157,45 @@ export function IntercomPanel({
       <div className="probe-grid" id="probe-buttons">
         {(Object.entries(visitor.probes) as Array<[ProbeKey, NonNullable<VisitorSpec["probes"][ProbeKey]>]>).map(
           ([key, probe]) => (
-            <button
+            <Button
               key={key}
-              type="button"
               data-probe={key}
               disabled={askDisabled}
               className="probe-chip"
-              onClick={() => onAskProbe(key)}
+              onClick={() => void onAskProbe(key)}
             >
               {tl(probe.label, lang)}
-            </button>
+            </Button>
           )
         )}
       </div>
 
       <form className="ask-form" id="custom-ask-form" onSubmit={handleSubmit}>
-        <input
-          id="custom-ask-input"
-          type="text"
-          className="ask-input"
-          disabled={askDisabled}
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={tl(UI_STRINGS.placeholder, lang)}
-        />
-        <button id="btn-ptt-send" type="submit" disabled={askDisabled} className="ctrl-btn amber">
+        <Label htmlFor="custom-ask-input" className="visually-hidden">
+          {tl(UI_STRINGS.placeholder, lang)}
+        </Label>
+        <InputGroup className="ask-input-group">
+          <Input
+            id="custom-ask-input"
+            type="text"
+            className="ask-input"
+            disabled={askDisabled}
+            value={draft}
+            onValueChange={setDraft}
+            placeholder={tl(UI_STRINGS.placeholder, lang)}
+          />
+          <InputClear
+            aria-label={tl(
+              { zh: "清空提问", en: "Clear question", ja: "入力をクリア" },
+              lang
+            )}
+          >
+            <ClearIcon />
+          </InputClear>
+        </InputGroup>
+        <Button id="btn-ptt-send" type="submit" disabled={askDisabled} className="ctrl-btn amber">
           {tl(UI_STRINGS.pttSend, lang)}
-        </button>
+        </Button>
       </form>
 
       {pending ? (
@@ -150,49 +205,41 @@ export function IntercomPanel({
             {previewQuestionAxis(visitor, pending.intent, lang)}】
           </span>
           <div style={{ display: "flex", gap: "6px" }}>
-            <button
+            <Button
               id="btn-ask-confirm"
-              type="button"
               className="ctrl-btn amber"
               onClick={() => {
-                onAskProbe(pending.intent, pending.text);
+                void onAskProbe(pending.intent, pending.text);
                 setPending(null);
                 setDraft("");
               }}
             >
               {tl({ zh: "确认发送", en: "Confirm", ja: "送信確定" }, lang)}
-            </button>
-            <button
-              id="btn-ask-cancel"
-              type="button"
-              className="ctrl-btn"
-              onClick={() => setPending(null)}
-            >
+            </Button>
+            <Button id="btn-ask-cancel" className="ctrl-btn" onClick={() => setPending(null)}>
               {tl({ zh: "重改措辞", en: "Edit", ja: "修正" }, lang)}
-            </button>
+            </Button>
           </div>
         </div>
       ) : null}
 
       <div className="verdict-levers">
-        <button
+        <Button
           id="btn-admit"
-          type="button"
           disabled={verdictDone}
           className="lever-btn admit"
           onClick={() => onExecuteVerdict("ADMIT")}
         >
           {tl(UI_STRINGS.admitBtn, lang)}
-        </button>
-        <button
+        </Button>
+        <Button
           id="btn-purge"
-          type="button"
           disabled={verdictDone}
           className="lever-btn purge"
           onClick={() => onExecuteVerdict("PURGE")}
         >
           {tl(UI_STRINGS.purgeBtn, lang)} {fuelLeft > 0 ? "(-1🔥)" : "(⚡ OVERDRAFT)"}
-        </button>
+        </Button>
       </div>
     </section>
   );

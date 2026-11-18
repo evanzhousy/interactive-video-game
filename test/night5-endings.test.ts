@@ -109,6 +109,18 @@ describe("Night 5 Self-Audit & 7 Endings Matrix", () => {
     expect(undercrewed.launchReady).toBe(false);
     expect(undercrewed.missingRoles).toEqual(["mechanic", "diver"]);
 
+    // Quick Slice with sole human V-04 (Diver) and two mimics (V-01, V-07) marks submarine launchReady when V-04 is saved
+    const sliceSoleHuman = evaluateSubmarineReadiness(
+      [
+        { visitorId: "V-01", decision: "PURGE", wasMimic: true, excuse: SHIFT_EXCUSES[0]! },
+        { visitorId: "V-04", decision: "ADMIT", wasMimic: false, excuse: SHIFT_EXCUSES[0]! },
+        { visitorId: "V-07", decision: "PURGE", wasMimic: true, excuse: SHIFT_EXCUSES[0]! }
+      ],
+      "slice"
+    );
+    expect(sliceSoleHuman.checkedRoles).toEqual(["diver"]);
+    expect(sliceSoleHuman.launchReady).toBe(true);
+
     // Verify 25 seeded full shifts always preserve >=1 real human in Medical, Mechanic, and Diver
     for (let s = 0; s < 25; s++) {
       const rolls = rollShift(ALL_VISITORS, createSeededRng(`test-seed-${s}`));

@@ -3,6 +3,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../src/ui/App.js";
+import { uiAgent } from "../src/ui/agent-bridge.js";
 
 describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Flash + Compendium)", () => {
   const originalFetch = globalThis.fetch;
@@ -75,14 +76,24 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
     expect(baseImg.getAttribute("src")).toBe("./portraits/elena.jpg");
     expect(document.getElementById("onboarding-guide")?.getAttribute("data-step")).toBe("1");
     expect(document.getElementById("btn-ambience-toggle")?.textContent).toContain("AMB: ON");
+    expect(document.querySelector('[data-slot="tabs-list"][role="tablist"]')).not.toBeNull();
+    expect(document.querySelector('[data-slot="scroll-area-viewport"][role="log"]')).not.toBeNull();
+
+    const agentSnap = uiAgent.snapshot();
+    const snapJson = JSON.stringify(agentSnap);
+    expect(agentSnap.some((c) => c.component === "select")).toBe(true);
+    expect(agentSnap.some((c) => c.component === "tabs")).toBe(true);
+    expect(agentSnap.some((c) => c.component === "toggle")).toBe(true);
+    expect(snapJson).not.toContain("isMimic");
+    expect(snapJson).not.toContain("defectMode");
 
     await act(async () => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "t", bubbles: true }));
+      document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "t", bubbles: true }));
     });
     expect(document.querySelector(".viewport-media-stage.mode-thermal")).not.toBeNull();
 
     await act(async () => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "1", bubbles: true }));
+      document.body.dispatchEvent(new KeyboardEvent("keydown", { key: "1", bubbles: true }));
     });
     expect(document.getElementById("onboarding-guide")?.getAttribute("data-step")).toBe("2");
 
@@ -228,6 +239,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
     // Night 5 Self-Audit Climax: Interrogate Doppelgänger first to expose Night 2 SAY/DO contradiction!
     expect(document.getElementById("night5-panel")).not.toBeNull();
     expect(document.getElementById("night5-viewport")).not.toBeNull();
+    expect(document.querySelector('[data-slot="checkbox"][role="checkbox"]')).not.toBeNull();
     expect(document.querySelector("#night5-viewport video source")?.getAttribute("src")).toBe(
       "./videos/operator09/idle.mp4"
     );
@@ -252,6 +264,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       (document.getElementById("btn-compendium") as HTMLButtonElement).click();
     });
     expect(document.getElementById("compendium-modal")).not.toBeNull();
+    expect(document.querySelector('[data-slot="dialog-content"]#compendium-modal')).not.toBeNull();
 
     await act(async () => {
       root.unmount();
@@ -266,11 +279,12 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       root.render(<App />);
     });
 
-    // Switch campaign mode to Steam Demo (4 visitors, 3🔥 fuel)
+    // Switch campaign mode to Steam Demo (4 visitors, 3🔥 fuel) via @ui-sdk/react/select
     await act(async () => {
-      const modeSelect = document.getElementById("campaign-mode-select") as HTMLSelectElement;
-      modeSelect.value = "demo";
-      modeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+      (document.getElementById("campaign-mode-select") as HTMLButtonElement).click();
+    });
+    await act(async () => {
+      (document.querySelector('[data-mode="demo"]') as HTMLElement).click();
     });
 
     for (let i = 0; i < 3; i++) {

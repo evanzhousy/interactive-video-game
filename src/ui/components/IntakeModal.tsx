@@ -1,3 +1,5 @@
+import { Button } from "@ui-sdk/react/button";
+import { Progress, ProgressIndicator, ProgressTrack } from "@ui-sdk/react/progress";
 import { useState } from "react";
 import { VALUE_I18N, tl } from "../../game/i18n.js";
 import {
@@ -20,14 +22,27 @@ export function IntakeModal({ lang, onComplete }: Props) {
   const step = answers.length;
   const done = step >= INTAKE_QUESTIONS.length;
   const baseline = done ? computePlayerProfile(answers) : null;
+  const pct = Math.round((step / INTAKE_QUESTIONS.length) * 100);
 
   return (
     <section className="panel modal-stage" id="intake-panel">
       <div className="section-kicker">
         ORD-OS // NIGHT 0 · OPERATOR #09 PSYCHOLOGICAL BASELINE INTAKE
       </div>
+      <Progress
+        className="hud-progress"
+        value={pct}
+        aria-label={tl(
+          { zh: "入职心理基线测验进度", en: "Baseline intake progress", ja: "入所時ベースライン進捗" },
+          lang
+        )}
+      >
+        <ProgressTrack>
+          <ProgressIndicator />
+        </ProgressTrack>
+      </Progress>
       {!done ? (
-        <div>
+        <div style={{ marginTop: "10px" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--amber-crt)" }}>
             QUESTION {step + 1} / {INTAKE_QUESTIONS.length}
           </div>
@@ -36,20 +51,19 @@ export function IntakeModal({ lang, onComplete }: Props) {
           </p>
           <div>
             {INTAKE_QUESTIONS[step]!.options.map((opt, idx) => (
-              <button
+              <Button
                 key={idx}
-                type="button"
                 className="option-card"
                 onClick={() => setAnswers((prev) => [...prev, opt])}
               >
                 {tl(opt.text, lang)}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
       ) : (
         baseline && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px" }}>
             <div className="dossier-section" style={{ marginBottom: 0 }}>
               <div className="section-kicker">OPERATOR #09 SELF-REPORTED BASELINE (SAY)</div>
               <div style={{ fontSize: "0.86rem" }}>
@@ -69,15 +83,21 @@ export function IntakeModal({ lang, onComplete }: Props) {
                 lang
               )}
             </p>
-            <button
+            <Button
               id="btn-start-shift"
-              type="button"
               className="ctrl-btn amber"
               style={{ padding: "10px", fontWeight: 700 }}
               onClick={() => onComplete(baseline, answers)}
             >
-              {tl({ zh: "进入 0 号隔离岗亭 →", en: "Enter Quarantine Booth 0 →", ja: "第0検疫ブースへ入る →" }, lang)}
-            </button>
+              {tl(
+                {
+                  zh: "进入 0 号隔离岗亭 →",
+                  en: "Enter Quarantine Booth 0 →",
+                  ja: "第0検疫ブースへ入る →"
+                },
+                lang
+              )}
+            </Button>
           </div>
         )
       )}

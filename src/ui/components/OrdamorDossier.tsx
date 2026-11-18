@@ -1,3 +1,6 @@
+import { Button } from "@ui-sdk/react/button";
+import { Tabs, TabsIndicator, TabsList, TabsPanel, TabsTab } from "@ui-sdk/react/tabs";
+import { Toggle } from "@ui-sdk/react/toggle";
 import { SPECIALIST_LABELS, VISITOR_SPECIALIST_ROLES } from "../../game/economy.js";
 import { UI_STRINGS, VALUE_I18N, tl } from "../../game/i18n.js";
 import { SHIFT_EXCUSES } from "../../game/night5.js";
@@ -132,321 +135,336 @@ export function OrdamorDossier({
 
   return (
     <aside className="panel" id="ordamor-dossier">
-      <div className="tab-strip">
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "baseline" ? "active" : ""}`}
-          onClick={() => onSelectTab("baseline")}
+      <Tabs
+        value={activeTab}
+        onValueChange={(next) => {
+          if (next) onSelectTab(next as DossierTab);
+        }}
+      >
+        <TabsList
+          className="tab-strip"
+          aria-label={tl(
+            {
+              zh: "ORD-OS 法医档案页签",
+              en: "ORD-OS Forensic Dossier",
+              ja: "ORD-OS 法医カルテ"
+            },
+            lang
+          )}
         >
-          {tl(UI_STRINGS.tabBaseline, lang)}
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "verdict" ? "active" : ""}`}
-          onClick={() => onSelectTab("verdict")}
-        >
-          {tl(UI_STRINGS.tabVerdict, lang)}
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === "inspector" ? "active" : ""}`}
-          onClick={() => onSelectTab("inspector")}
-        >
-          {tl(UI_STRINGS.tabInspector, lang)}
-        </button>
-      </div>
+          <TabsTab value="baseline" className={`tab-btn ${activeTab === "baseline" ? "active" : ""}`}>
+            {tl(UI_STRINGS.tabBaseline, lang)}
+          </TabsTab>
+          <TabsTab value="verdict" className={`tab-btn ${activeTab === "verdict" ? "active" : ""}`}>
+            {tl(UI_STRINGS.tabVerdict, lang)}
+          </TabsTab>
+          <TabsTab
+            value="inspector"
+            className={`tab-btn ${activeTab === "inspector" ? "active" : ""}`}
+          >
+            {tl(UI_STRINGS.tabInspector, lang)}
+          </TabsTab>
+          <TabsIndicator className="tab-indicator" />
+        </TabsList>
 
-      {activeTab === "baseline" ? (
-        <div>
-          <div className="dossier-section">
-            <div className="section-kicker">
-              NIGHT {visitor.night} // FORENSIC LENS · SCHEMA v{visitor.profile.schemaVersion}
-            </div>
-            <div style={{ fontSize: "1.02rem", fontWeight: 700 }}>{tl(visitor.name, lang)}</div>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "0.78rem",
-                color: "var(--text-secondary)",
-                marginBottom: "8px"
-              }}
-            >
-              <span>{tl(visitor.role, lang)}</span>
-              {VISITOR_SPECIALIST_ROLES[visitor.id] ? (
-                <span className="role-pill" data-specialist={VISITOR_SPECIALIST_ROLES[visitor.id]}>
-                  ⚓ {tl(SPECIALIST_LABELS[VISITOR_SPECIALIST_ROLES[visitor.id]!], lang)}
-                </span>
-              ) : null}
-            </div>
-
-            {gap ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <div className="pill-row" id="never-won-pills">
-                  <span style={{ color: "var(--text-muted)" }}>
-                    {tl(UI_STRINGS.neverWonLabel, lang)}
+        <TabsPanel value="baseline">
+          <div className="tab-panel-body">
+            <div className="dossier-section">
+              <div className="section-kicker">
+                NIGHT {visitor.night} // FORENSIC LENS · SCHEMA v{visitor.profile.schemaVersion}
+              </div>
+              <div style={{ fontSize: "1.02rem", fontWeight: 700 }}>{tl(visitor.name, lang)}</div>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: "8px",
+                  fontSize: "0.78rem",
+                  color: "var(--text-secondary)",
+                  marginBottom: "8px"
+                }}
+              >
+                <span>{tl(visitor.role, lang)}</span>
+                {VISITOR_SPECIALIST_ROLES[visitor.id] ? (
+                  <span className="role-pill" data-specialist={VISITOR_SPECIALIST_ROLES[visitor.id]}>
+                    ⚓ {tl(SPECIALIST_LABELS[VISITOR_SPECIALIST_ROLES[visitor.id]!], lang)}
                   </span>
-                  {gap.neverWon.map((tok) => (
-                    <span key={tok} className="value-pill never-won">
-                      {VALUE_I18N[tok][lang]}
-                    </span>
-                  ))}
-                </div>
-                {arcUnlocked ? (
-                  <div className="pill-row">
+                ) : null}
+              </div>
+
+              {gap ? (
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <div className="pill-row" id="never-won-pills">
                     <span style={{ color: "var(--text-muted)" }}>
-                      {tl(UI_STRINGS.silentLabel, lang)}
+                      {tl(UI_STRINGS.neverWonLabel, lang)}
                     </span>
-                    {gap.silent.map((tok) => (
-                      <span key={tok} className="value-pill silent">
+                    {gap.neverWon.map((tok) => (
+                      <span key={tok} className="value-pill never-won">
                         {VALUE_I18N[tok][lang]}
                       </span>
                     ))}
                   </div>
+                  {arcUnlocked ? (
+                    <div className="pill-row">
+                      <span style={{ color: "var(--text-muted)" }}>
+                        {tl(UI_STRINGS.silentLabel, lang)}
+                      </span>
+                      {gap.silent.map((tok) => (
+                        <span key={tok} className="value-pill silent">
+                          {VALUE_I18N[tok][lang]}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+
+            {arcUnlocked ? (
+              <div className="dossier-section" id="arc-box">
+                <div className="section-kicker">{tl(UI_STRINGS.arcCaption, lang)}</div>
+                <MindCrystalCanvas
+                  id="ordamor-arc-canvas"
+                  orderings={chordArcs}
+                  neverWon={gap?.neverWon ?? []}
+                  lang={lang}
+                />
+                <div>
+                  {visitor.profile.valueOrderings.slice(0, 2).map((o) => {
+                    const loser = otherValue(o.pair, o.winner);
+                    return (
+                      <div key={o.id} className="ordering-row">
+                        <span>
+                          <strong style={{ color: "var(--amber-crt)" }}>
+                            {VALUE_I18N[o.winner][lang]}
+                          </strong>{" "}
+                          &gt; {VALUE_I18N[loser][lang]} ({o.id} · {o.confidence.toFixed(2)})
+                        </span>
+                        <span style={{ color: "var(--text-muted)" }}>{o.evidence.join(" · ")}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="locked-notice" id="arc-locked">
+                {tl(
+                  {
+                    zh: "🔒 心智晶体弧线将于第 2 夜解锁（第 1 夜请直接对比下方客观事实记录 o-N 与嘴上标榜的言行差）。",
+                    en: "🔒 MindCrystal arcs unlock on Night 2 (on Night 1, contrast the SAY pills above directly against Observations o-N below).",
+                    ja: "🔒 心智結晶アークは第2夜で解禁（第1夜は上の建前と下の客観記録 o-N を直接比較せよ）。"
+                  },
+                  lang
+                )}
+              </div>
+            )}
+
+            {dispUnlocked ? (
+              <div className="dossier-section" id="disp-box">
+                <div className="section-kicker">{tl(UI_STRINGS.dispHeader, lang)}</div>
+                <div style={{ fontWeight: 700, color: "var(--amber-crt)", fontSize: "0.86rem" }}>
+                  {tl(visitor.disposalTitle, lang)}
+                </div>
+                <p style={{ fontSize: "0.79rem", color: "var(--text-secondary)", margin: "5px 0" }}>
+                  {tl(visitor.disposalSummary, lang)}
+                </p>
+                {primaryOrderingNeed ? (
+                  <div
+                    id="disposal-requires-tag"
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.74rem",
+                      padding: "5px 8px",
+                      borderRadius: "5px",
+                      background: "var(--amber-soft)",
+                      color: "var(--amber-crt)"
+                    }}
+                  >
+                    disposalRequires: {tl(visitor.disposalRequiresLocalized, lang)}
+                  </div>
                 ) : null}
               </div>
-            ) : null}
-          </div>
+            ) : (
+              <div className="locked-notice" id="disp-locked">
+                {tl(
+                  {
+                    zh: "🔒 处置签名与 Boggart 退路前提 (disposalRequires) 将于第 4 夜高阶拟态体解锁。",
+                    en: "🔒 Disposal Signature & Boggart Precondition (disposalRequires) unlock on Night 4.",
+                    ja: "🔒 処置署名および退路前提条件 (disposalRequires) は第4夜で解禁。"
+                  },
+                  lang
+                )}
+              </div>
+            )}
 
-          {arcUnlocked ? (
-            <div className="dossier-section" id="arc-box">
-              <div className="section-kicker">{tl(UI_STRINGS.arcCaption, lang)}</div>
-              <MindCrystalCanvas
-                id="ordamor-arc-canvas"
-                orderings={chordArcs}
-                neverWon={gap?.neverWon ?? []}
-                lang={lang}
-              />
-              <div>
-                {visitor.profile.valueOrderings.slice(0, 2).map((o) => {
-                  const loser = otherValue(o.pair, o.winner);
+            <div className="dossier-section" style={{ marginBottom: 0 }}>
+              <div className="section-kicker">{tl(UI_STRINGS.evHeader, lang)}</div>
+              <div id="ord-evidence-list">
+                {visitor.evidenceCards.map((ev) => {
+                  const raw = tl(ev.text, lang);
+                  const kw = ev.kw ? tl(ev.kw, lang) : "";
+                  const idx = kw ? raw.indexOf(kw) : -1;
                   return (
-                    <div key={o.id} className="ordering-row">
-                      <span>
-                        <strong style={{ color: "var(--amber-crt)" }}>
-                          {VALUE_I18N[o.winner][lang]}
-                        </strong>{" "}
-                        &gt; {VALUE_I18N[loser][lang]} ({o.id} · {o.confidence.toFixed(2)})
+                    <div
+                      key={ev.id}
+                      className="evidence-card"
+                      style={{ opacity: ev.type === "say" ? 0.82 : 1 }}
+                    >
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontWeight: 700,
+                          color: ev.type === "say" ? "var(--text-muted)" : "var(--amber-crt)",
+                          marginRight: "6px"
+                        }}
+                      >
+                        {ev.type === "say" ? "[SAY]" : `[${ev.id}]`}
                       </span>
-                      <span style={{ color: "var(--text-muted)" }}>{o.evidence.join(" · ")}</span>
+                      {idx >= 0 ? (
+                        <>
+                          {raw.slice(0, idx)}
+                          <mark>{kw}</mark>
+                          {raw.slice(idx + kw.length)}
+                        </>
+                      ) : (
+                        raw
+                      )}
                     </div>
                   );
                 })}
               </div>
             </div>
-          ) : (
-            <div className="locked-notice" id="arc-locked">
-              {tl(
-                {
-                  zh: "🔒 心智晶体弧线将于第 2 夜解锁（第 1 夜请直接对比下方客观事实记录 o-N 与嘴上标榜的言行差）。",
-                  en: "🔒 MindCrystal arcs unlock on Night 2 (on Night 1, contrast the SAY pills above directly against Observations o-N below).",
-                  ja: "🔒 心智結晶アークは第2夜で解禁（第1夜は上の建前と下の客観記録 o-N を直接比較せよ）。"
-                },
-                lang
-              )}
-            </div>
-          )}
+          </div>
+        </TabsPanel>
 
-          {dispUnlocked ? (
-            <div className="dossier-section" id="disp-box">
-              <div className="section-kicker">{tl(UI_STRINGS.dispHeader, lang)}</div>
-              <div style={{ fontWeight: 700, color: "var(--amber-crt)", fontSize: "0.86rem" }}>
-                {tl(visitor.disposalTitle, lang)}
+        <TabsPanel value="verdict">
+          <div className="tab-panel-body">
+            {!verdictDone ? (
+              <div className="locked-notice">
+                {tl(
+                  {
+                    zh: "尚未拉下气闸或净化闸。完成审讯裁决后在此查看心智晶体叠图复盘并签署值班日志。",
+                    en: "Make an ADMIT or PURGE decision first to inspect the MindCrystal overlay and sign your shift log.",
+                    ja: "通過または焼却の判定を下すと、ここに比較アークと勤務日誌が表示される。"
+                  },
+                  lang
+                )}
               </div>
-              <p style={{ fontSize: "0.79rem", color: "var(--text-secondary)", margin: "5px 0" }}>
-                {tl(visitor.disposalSummary, lang)}
-              </p>
-              {primaryOrderingNeed ? (
-                <div
-                  id="disposal-requires-tag"
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.74rem",
-                    padding: "5px 8px",
-                    borderRadius: "5px",
-                    background: "var(--amber-soft)",
-                    color: "var(--amber-crt)"
-                  }}
-                >
-                  disposalRequires: {tl(visitor.disposalRequiresLocalized, lang)}
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <div className="locked-notice" id="disp-locked">
-              {tl(
-                {
-                  zh: "🔒 处置签名与 Boggart 退路前提 (disposalRequires) 将于第 4 夜高阶拟态体解锁。",
-                  en: "🔒 Disposal Signature & Boggart Precondition (disposalRequires) unlock on Night 4.",
-                  ja: "🔒 処置署名および退路前提条件 (disposalRequires) は第4夜で解禁。"
-                },
-                lang
-              )}
-            </div>
-          )}
-
-          <div className="dossier-section" style={{ marginBottom: 0 }}>
-            <div className="section-kicker">{tl(UI_STRINGS.evHeader, lang)}</div>
-            <div id="ord-evidence-list">
-              {visitor.evidenceCards.map((ev) => {
-                const raw = tl(ev.text, lang);
-                const kw = ev.kw ? tl(ev.kw, lang) : "";
-                const idx = kw ? raw.indexOf(kw) : -1;
-                return (
+            ) : (
+              <div>
+                <div className="dossier-section">
                   <div
-                    key={ev.id}
-                    className="evidence-card"
-                    style={{ opacity: ev.type === "say" ? 0.82 : 1 }}
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontWeight: 700,
+                      color: verdictCorrect ? "var(--safe-admit)" : "var(--danger-purge)"
+                    }}
                   >
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontWeight: 700,
-                        color: ev.type === "say" ? "var(--text-muted)" : "var(--amber-crt)",
-                        marginRight: "6px"
-                      }}
-                    >
-                      {ev.type === "say" ? "[SAY]" : `[${ev.id}]`}
-                    </span>
-                    {idx >= 0 ? (
-                      <>
-                        {raw.slice(0, idx)}
-                        <mark>{kw}</mark>
-                        {raw.slice(idx + kw.length)}
-                      </>
-                    ) : (
-                      raw
+                    {verdictCorrect ? "AUDIT VERIFIED · CORRECT CALL" : "FATAL MISJUDGEMENT · CREW LOSS"}
+                  </div>
+                  <div style={{ fontSize: "0.8rem", marginTop: "4px" }}>
+                    {tl(DEFECT_EXPLANATIONS[roll.defectMode], lang)}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.72rem",
+                      color: "var(--text-muted)",
+                      marginTop: "6px"
+                    }}
+                  >
+                    DECISION: {verdictState} · QUESTIONS USED: {turnsUsed}/4 · OFF-AXIS: {offAxisCount}
+                  </div>
+                </div>
+
+                <div className="dossier-section">
+                  <div className="section-kicker">BASELINE CHORDS vs LIVE SUBJECT STANCE</div>
+                  <MindCrystalCanvas
+                    id="verdict-diff-canvas"
+                    orderings={chordArcs}
+                    neverWon={gap?.neverWon ?? []}
+                    overlays={verdictOverlays}
+                    lang={lang}
+                  />
+                </div>
+
+                <div className="dossier-section" id="shift-log-box">
+                  <div className="section-kicker">
+                    {tl(
+                      {
+                        zh: "签署今晚值班日志（不标价值标签 · 你的开脱措辞将作为外部证据进入 ORD-OS）：",
+                        en: "SIGN SHIFT LOG (Unlabeled — your justification style is recorded as ORD-OS evidence):",
+                        ja: "今夜の勤務日誌に署名（言い訳の型がORD-OSの証拠として記録される）："
+                      },
+                      lang
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      ) : null}
+                  {SHIFT_EXCUSES.map((ex, i) => (
+                    <Button
+                      key={ex.id}
+                      disabled={logSigned}
+                      className="option-card"
+                      onClick={() => onSignShiftLog(i)}
+                    >
+                      {tl(ex.label, lang)}
+                    </Button>
+                  ))}
 
-      {activeTab === "verdict" ? (
-        <div>
-          {!verdictDone ? (
-            <div className="locked-notice">
-              {tl(
-                {
-                  zh: "尚未拉下气闸或净化闸。完成审讯裁决后在此查看心智晶体叠图复盘并签署值班日志。",
-                  en: "Make an ADMIT or PURGE decision first to inspect the MindCrystal overlay and sign your shift log.",
-                  ja: "通過または焼却の判定を下すと、ここに比較アークと勤務日誌が表示される。"
-                },
-                lang
-              )}
-            </div>
-          ) : (
-            <div>
-              <div className="dossier-section">
-                <div
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontWeight: 700,
-                    color: verdictCorrect ? "var(--safe-admit)" : "var(--danger-purge)"
-                  }}
-                >
-                  {verdictCorrect ? "AUDIT VERIFIED · CORRECT CALL" : "FATAL MISJUDGEMENT · CREW LOSS"}
-                </div>
-                <div style={{ fontSize: "0.8rem", marginTop: "4px" }}>
-                  {tl(DEFECT_EXPLANATIONS[roll.defectMode], lang)}
-                </div>
-                <div
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "0.72rem",
-                    color: "var(--text-muted)",
-                    marginTop: "6px"
-                  }}
-                >
-                  DECISION: {verdictState} · QUESTIONS USED: {turnsUsed}/4 · OFF-AXIS: {offAxisCount}
+                  {logSigned ? (
+                    <Button
+                      id="btn-next-visitor"
+                      className="ctrl-btn amber"
+                      style={{ width: "100%", marginTop: "10px", padding: "10px", fontWeight: 700 }}
+                      onClick={onNextVisitor}
+                    >
+                      {isLastVisitor
+                        ? tl(UI_STRINGS.finishShiftBtn, lang)
+                        : tl(UI_STRINGS.nextVisitorBtn, lang)}
+                    </Button>
+                  ) : null}
                 </div>
               </div>
-
-              <div className="dossier-section">
-                <div className="section-kicker">BASELINE CHORDS vs LIVE SUBJECT STANCE</div>
-                <MindCrystalCanvas
-                  id="verdict-diff-canvas"
-                  orderings={chordArcs}
-                  neverWon={gap?.neverWon ?? []}
-                  overlays={verdictOverlays}
-                  lang={lang}
-                />
-              </div>
-
-              <div className="dossier-section" id="shift-log-box">
-                <div className="section-kicker">
-                  {tl(
-                    {
-                      zh: "签署今晚值班日志（不标价值标签 · 你的开脱措辞将作为外部证据进入 ORD-OS）：",
-                      en: "SIGN SHIFT LOG (Unlabeled — your justification style is recorded as ORD-OS evidence):",
-                      ja: "今夜の勤務日誌に署名（言い訳の型がORD-OSの証拠として記録される）："
-                    },
-                    lang
-                  )}
-                </div>
-                {SHIFT_EXCUSES.map((ex, i) => (
-                  <button
-                    key={ex.id}
-                    type="button"
-                    disabled={logSigned}
-                    className="option-card"
-                    onClick={() => onSignShiftLog(i)}
-                  >
-                    {tl(ex.label, lang)}
-                  </button>
-                ))}
-
-                {logSigned ? (
-                  <button
-                    id="btn-next-visitor"
-                    type="button"
-                    className="ctrl-btn amber"
-                    style={{ width: "100%", marginTop: "10px", padding: "10px", fontWeight: 700 }}
-                    onClick={onNextVisitor}
-                  >
-                    {isLastVisitor
-                      ? tl(UI_STRINGS.finishShiftBtn, lang)
-                      : tl(UI_STRINGS.nextVisitorBtn, lang)}
-                  </button>
-                ) : null}
-              </div>
-            </div>
-          )}
-        </div>
-      ) : null}
-
-      {activeTab === "inspector" ? (
-        <div>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-            <span className="section-kicker" style={{ marginBottom: 0 }}>
-              5-STAGE DETERMINISTIC STANCE + ZERO-LEAKAGE FLASH PIPELINE
-            </span>
-            <button type="button" className="ctrl-btn" onClick={onToggleSpoiler}>
-              {spoilerOpen ? "Hide Hidden Roll" : "Reveal Hidden Roll"}
-            </button>
-          </div>
-          <pre className="code-inspector" id="inspector-json">
-            {JSON.stringify(
-              {
-                active_visitor_id: visitor.id,
-                ordamor_schema_version: visitor.profile.schemaVersion,
-                engine_only_hidden_roll:
-                  spoilerOpen || verdictDone
-                    ? roll
-                    : { isMimic: "REDACTED_UNTIL_VERDICT", defectMode: "REDACTED" },
-                last_turn_pipeline: redactedPipeline
-              },
-              null,
-              2
             )}
-          </pre>
-        </div>
-      ) : null}
+          </div>
+        </TabsPanel>
+
+        <TabsPanel value="inspector">
+          <div className="tab-panel-body">
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+              <span className="section-kicker" style={{ marginBottom: 0 }}>
+                5-STAGE DETERMINISTIC STANCE + ZERO-LEAKAGE FLASH PIPELINE
+              </span>
+              <Toggle
+                pressed={spoilerOpen}
+                onPressedChange={() => onToggleSpoiler()}
+                className="ctrl-btn"
+              >
+                {spoilerOpen ? "Hide Hidden Roll" : "Reveal Hidden Roll"}
+              </Toggle>
+            </div>
+            <pre
+              className="code-inspector"
+              id="inspector-json"
+              data-agent-hidden={!spoilerOpen && !verdictDone ? "" : undefined}
+            >
+              {JSON.stringify(
+                {
+                  active_visitor_id: visitor.id,
+                  ordamor_schema_version: visitor.profile.schemaVersion,
+                  engine_only_hidden_roll:
+                    spoilerOpen || verdictDone
+                      ? roll
+                      : { isMimic: "REDACTED_UNTIL_VERDICT", defectMode: "REDACTED" },
+                  last_turn_pipeline: redactedPipeline
+                },
+                null,
+                2
+              )}
+            </pre>
+          </div>
+        </TabsPanel>
+      </Tabs>
     </aside>
   );
 }
