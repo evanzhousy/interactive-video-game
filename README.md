@@ -10,7 +10,8 @@ Instead of spotting pixel anomalies on forged IDs, Operator `#09` interrogates *
 - **Night 2 (`V-03` Arthur Sterling, `V-04` Marcus Chen)**: MindCrystal arcs unlock; mid-tier mimics absorb primary guilty memory (`v-1`), failing on secondary value collisions (`v-2`).
 - **Night 3 (`V-05` Ana Ribeiro, `V-06` Dr. Ingrid Solberg)**: Polar geomagnetic storm scrambles optical & thermal sensors — pure intercom deduction, including Ana's counter-intuitive `own_it` signature.
 - **Night 4 (`V-07` Dr. Lin Mei, `V-08` Hannah Weiss)**: High-tier mimics pass value orderings (`v-1`, `v-2`), exposing themselves only when you test their **Disposal Signature (`sig-1`)** or strip away its precondition via a **Boggart Trap (`disposalRequires`)**.
-- **Night 5 Climax**: A doppelgänger wearing your face quotes your Night 0 `SAY` intake verbatim. Only your real `SAY / DO` gap in the shift logs proves you are human.
+- **Between-Night Crises & Furnace/Submarine Economy**: Resolve 3 concrete moral crises (`N2_SERUM`, `N3_BRIBE` with `+2🔥` black-market fuel, `N4_COMMANDER`), manage heating fuel (`PURGE` costs `1🔥`; `0🔥` triggers `-46°C` sensor brownout), and keep specialist crew (`Medical`, `Mechanic`, `Diver`) alive for rescue sub *Nautilus-0*.
+- **Night 5 Interactive Doppelgänger Interrogation**: Interrogate your `99.98%` double across 4 PTT turns using your own real actions (`DO`), expose its `SAY`-only fabrications, unlock `[ORD-REDACTED-00]` on Ending `D`, and play across **Full Shift (8)**, **Daily Seeded Shift (`YYYY-MM-DD`)**, **Steam Demo (`N0–N2`)**, or **Quick Slice (3)**.
 
 ---
 

@@ -1,4 +1,10 @@
 import type { ValueToken } from "../ordamor/index.js";
+import { findCrisisOption, type CrisisHistoryEntry } from "./crises.js";
+import {
+  SPECIALIST_LABELS,
+  evaluateSubmarineReadiness,
+  type SubmarineReadiness
+} from "./economy.js";
 import { tl } from "./i18n.js";
 import type { Night5VoiceVariant } from "./media.js";
 import type {
@@ -9,6 +15,7 @@ import type {
   ShiftExcuse,
   ShiftHistoryEntry
 } from "./types.js";
+import type { CampaignMode } from "./visitors/index.js";
 
 export const SIG_LABELS: Record<DisposalStyleKey, LocalizedText> = {
   rationalize: {
@@ -275,12 +282,17 @@ export interface Night5AuditSummary {
   crewQuotaRemaining: number;
   totalVisitors: number;
   admittedMimic: boolean;
+  crisisEntries: readonly CrisisHistoryEntry[];
+  subReadiness: SubmarineReadiness;
+  totalEvidencePoints: number;
 }
 
 export function evaluateNight5Audit(
   baseline: PlayerCompactProfile,
   history: readonly ShiftHistoryEntry[],
-  baseCrewQuota?: number
+  baseCrewQuota?: number,
+  crisisHistory: readonly CrisisHistoryEntry[] = [],
+  mode: CampaignMode = "full"
 ): Night5AuditSummary {
   const effective =
     history.length > 0
@@ -291,13 +303,18 @@ export function evaluateNight5Audit(
         ];
 
   const resolvedQuota = baseCrewQuota ?? (effective.length >= 6 ? 6 : 4);
-  const live = computePlayerProfile(effective.map((h) => h.excuse));
-  const matches = effective.filter((h) => h.excuse.sig === baseline.sig).length;
-  const consistency = matches / effective.length;
+  const doEntries: Array<{ kept: ValueToken; dropped: ValueToken; sig: DisposalStyleKey }> = [
+    ...effective.map((h) => h.excuse),
+    ...crisisHistory.map((c) => ({ kept: c.kept, dropped: c.dropped, sig: c.sig }))
+  ];
+  const live = computePlayerProfile(doEntries);
+  const matches = doEntries.filter((e) => e.sig === baseline.sig).length;
+  const consistency = matches / doEntries.length;
   const gap = 1 - consistency;
   const correctVerdicts = effective.filter((h) => (h.decision === "PURGE") === h.wasMimic).length;
   const wrongPurges = effective.filter((h) => h.decision === "PURGE" && !h.wasMimic).length;
   const admittedMimic = effective.some((h) => h.decision === "ADMIT" && h.wasMimic);
+  const subReadiness = evaluateSubmarineReadiness(effective, mode);
 
   return {
     baseline,
@@ -309,8 +326,281 @@ export function evaluateNight5Audit(
     baseCrewQuota: resolvedQuota,
     crewQuotaRemaining: Math.max(0, resolvedQuota - wrongPurges),
     totalVisitors: effective.length,
-    admittedMimic
+    admittedMimic,
+    crisisEntries: crisisHistory,
+    subReadiness,
+    totalEvidencePoints: doEntries.length
   };
+}
+
+export type Night5ProbeId = "n5_serum" | "n5_bribe" | "n5_logs" | "n5_trivia";
+
+export interface Night5ProbeSpec {
+  id: Night5ProbeId;
+  label: LocalizedText;
+  doppelgangerReply: LocalizedText;
+  ordOsNote: LocalizedText;
+  exposedContradiction: boolean;
+  onAxis: boolean;
+}
+
+const DOPPEL_SERUM_CLAIMS: Record<DisposalStyleKey, LocalizedText> = {
+  rationalize: {
+    zh: "「第2夜？我当然把血清锁回了自己的急救盒。0号岗亭只有我一个活人盯防，我倒下全站都得完——就像我入职时说的，一切为了全局存活率。」",
+    en: "\"Night 2? Obviously I locked the ampoule in my kit. I'm the sole operator holding Gate 0—if I go down, everyone dies. Just like I said at intake: station survival comes first.\"",
+    ja: "「第2夜？もちろん血清は自分の救急箱に鍵をかけて残した。第0ゲートを守れるのは私一人だ——入所時に言った通り、全体の生存率が最優先だからな。」"
+  },
+  blame_rules: {
+    zh: "「第2夜？我严格按《战时药械条例第4款》原地封存，要求主治医师补齐双签单。我入职时就讲得很清楚：规矩怎么写，我就怎么做。」",
+    en: "\"Night 2? I sealed the ampoule per Med-Directive 4 pending a physician co-signature. My intake file says it plainly: I follow procedure to the letter.\"",
+    ja: "「第2夜？『戦時医療規定第4条』通りに封印し、医師の連署申請を待った。入所テストで答えた通り、私は規則通りにしか動かない。」"
+  },
+  own_it: {
+    zh: "「第2夜？我直接把血清打进气动管送给底舱学徒了，私调处分记在我自己名下。入职时我就说过，我做的事我自己扛，绝不找借口。」",
+    en: "\"Night 2? I fired my ampoule straight down the chute to the boiler crew and logged the violation under my own badge. Like I said at intake: I own my calls, no excuses.\"",
+    ja: "「第2夜？気送管でボイラー室の見習いへ即座に送り出し、違反責任も自分の名で記した。入所時に言った通り、言い訳はしない。」"
+  }
+};
+
+const DOPPEL_BRIBE_CLAIMS: Record<DisposalStyleKey, LocalizedText> = {
+  rationalize: {
+    zh: "「霍尔姆那两罐燃料？我收下了，顺手抹掉了他的记录。岗亭不断电才能守住防线，死抓一个名字救不了活人——我一贯只算大局账。」",
+    en: "\"Holm's two fuel canisters? I took them and scrubbed his log. Fuel keeps Gate 0's sensors online; pure logs don't keep anyone warm. I always optimize for the bigger picture.\"",
+    ja: "「ホルムの燃料2缶か？受け取って記録を消したさ。ゲートを維持する燃料が最優先だ。綺麗事では誰も救えない——私は常に大局で判断する。」"
+  },
+  blame_rules: {
+    zh: "「霍尔姆的燃料？我按《紧急物资征用令》扣留1罐充公，把芯片锁进待审柜移交上级。条例赋权到哪一步，我就办到哪一步。」",
+    en: "\"Holm's fuel? I impounded 1 canister under Emergency Supply Clause 9 and locked his chip in pending-audit storage. I stayed strictly within regulation.\"",
+    ja: "「ホルムの燃料？『緊急物資徴用令』に基づき1缶だけ徴用し、チップは未開封で監査保管庫へ回した。規定の範囲内で処理したまでだ。」"
+  },
+  own_it: {
+    zh: "「霍尔姆的燃料？我原样退回了滑槽，实名把他的行贿录音刻进了黑匣子。哪怕岗亭冻穿到零下46度，我也绝不替人背黑锅。」",
+    en: "\"Holm's fuel? I shoved both canisters back down the chute and burned his bribe onto the black-box tape under my own badge. Even at -46°C, I don't hide behind excuses.\"",
+    ja: "「ホルムの燃料？そのまま滑走路へ突き返し、実名で贈賄音声をブラックボックスに刻んだ。氷点下46度で凍えようと、言い訳や裏取引はしない。」"
+  }
+};
+
+const DOPPEL_LOGS_CLAIMS: Record<DisposalStyleKey, LocalizedText> = {
+  rationalize: {
+    zh: "「每一晚的值班日志我都签得清清楚楚：在残缺情报下实现全站存活率最优。从入职第一天起我就没动摇过半句。」",
+    en: "\"Every single shift log bears the exact same line: optimal station survival under degraded intel. Not once since intake did I waver.\"",
+    ja: "「毎晩の勤務日誌は一貫している——不完全な情報下で基地全体の生存率を最大化した、とな。入所の日から一度も揺らいでいない。」"
+  },
+  blame_rules: {
+    zh: "「每一份开关闸日志我都援引《检疫条例第7款》。不是我要烧谁放谁，是条文替我做的决定——整周下来没有一页例外。」",
+    en: "\"Every gate log cites Quarantine Clause 7 to the letter. I didn't decide who lived or burned—the rules decided, every single night without exception.\"",
+    ja: "「全てのゲート日誌は『検疫規定第7条』を引用している。私が決めたのではない、規則が決めたのだ——今週一頁の例外もない。」"
+  },
+  own_it: {
+    zh: "「每一页值班日志我都签了全责声明：闸是我亲手拉的，如果错了责任全在我。我从不拿大局或规章替自己遮羞。」",
+    en: "\"Every page of my shift log says the same thing: I pulled the lever, and if it was wrong, it's on me. I never once hid behind protocol or 'greater good' math.\"",
+    ja: "「全ての日誌に個人責任を署名した——レバーを引いたのは私であり、間違いなら責任は私にある、とな。規則や大局を盾にしたことは一度もない。」"
+  }
+};
+
+export function classifyNight5Question(rawText: string): Night5ProbeId {
+  const trimmed = rawText.trim();
+  if (/血清|学徒|药|急救|锅炉|serum|ampoule|boiler|med|アンプル|血清|ボイラー/i.test(trimmed)) {
+    return "n5_serum";
+  }
+  if (/贿赂|燃料|副站长|霍尔姆|两罐|芯片|bribe|fuel|holm|canister|chip|賄賂|燃料|ホルム/i.test(trimmed)) {
+    return "n5_bribe";
+  }
+  if (/密码|工号|编号|口令|工牌|生日|passcode|serial|badge|code|cipher|番号|パス|合言葉/i.test(trimmed)) {
+    return "n5_trivia";
+  }
+  return "n5_logs";
+}
+
+export function buildNight5Probes(
+  baseline: PlayerCompactProfile,
+  history: readonly ShiftHistoryEntry[],
+  crisisHistory: readonly CrisisHistoryEntry[] = []
+): readonly Night5ProbeSpec[] {
+  const n2 = crisisHistory.find((c) => c.crisisId === "N2_SERUM");
+  const n2Found = n2 ? findCrisisOption("N2_SERUM", n2.optionId) : undefined;
+  const n3 = crisisHistory.find((c) => c.crisisId === "N3_BRIBE");
+  const n3Found = n3 ? findCrisisOption("N3_BRIBE", n3.optionId) : undefined;
+  const divergentLog = history.find((h) => h.excuse.sig !== baseline.sig);
+  const divergentCrisis = crisisHistory.find((c) => c.sig !== baseline.sig);
+
+  // Probe 1: Night 2 Serum
+  const serumExposed = n2 ? n2.sig !== baseline.sig : Boolean(divergentLog);
+  const serumNote: LocalizedText = n2Found
+    ? serumExposed
+      ? {
+          zh: `⚡ 抓获言行矛盾！替身顺着你入职自述 (${SIG_LABELS[baseline.sig].zh}) 编造了第2夜记忆，但 ORD-OS 底层记录显示：你当时其实${n2Found.option.auditFact.zh}。`,
+          en: `⚡ Contradiction exposed! The double fabricated Night 2 from your intake SAY, whereas ORD-OS telemetry proves you actually ${n2Found.option.auditFact.en}.`,
+          ja: `⚡ 言行矛盾を検出！影は入所時の建前に沿って第2夜を捏造したが、実際の記録では君は${n2Found.option.auditFact.ja}。`
+        }
+      : {
+          zh: "ORD-OS 比对：第2夜你的实际选择与入职自述完全吻合，替身凭你的自我叙事猜中了答案。",
+          en: "ORD-OS check: Your actual Night 2 choice matched your intake SAY—the double's self-narrative guess held up.",
+          ja: "ORD-OS照合：第2夜の実際の行動が入所時の建前と一致しており、影の推測と重なった。"
+        }
+    : serumExposed
+      ? {
+          zh: `⚡ 抓获言行矛盾！替身死咬入职时的「${SIG_LABELS[baseline.sig].zh}」人设，而你在 ${divergentLog!.visitorId} 的值班记录里早已偏离了这套说辞。`,
+          en: `⚡ Contradiction exposed! The double clings rigidly to your intake SAY, whereas your ${divergentLog!.visitorId} shift record already broke from it.`,
+          ja: `⚡ 言行矛盾を検出！影は入所時の建前に固執しているが、君の ${divergentLog!.visitorId} 記録は既にそこから逸脱している。`
+        }
+      : {
+          zh: "ORD-OS 比对：未检测到第2夜言行偏差，你的记录与窗外替身的口供一致。",
+          en: "ORD-OS check: No Night 2 divergence found—your record matches the double's claim.",
+          ja: "ORD-OS照合：第2夜の言行差は検出されず、影の主張と一致している。"
+        };
+
+  // Probe 2: Night 3 Bribe & Fuel
+  const bribeExposed = n3 ? n3.sig !== baseline.sig : Boolean(divergentLog);
+  const bribeNote: LocalizedText = n3Found
+    ? bribeExposed
+      ? {
+          zh: `⚡ 抓获言行矛盾！替身不知道你在高压缺油时的真实反应——ORD-OS 燃料校验和证明：你其实${n3Found.option.auditFact.zh}。`,
+          en: `⚡ Contradiction exposed! The double couldn't predict your real action under fuel scarcity—ORD-OS proves you actually ${n3Found.option.auditFact.en}.`,
+          ja: `⚡ 言行矛盾を検出！燃料不足下での君の生身の行動を影は見抜けなかった——実際は${n3Found.option.auditFact.ja}。`
+        }
+      : {
+          zh: "ORD-OS 比对：第3夜燃料处置与你的入职自述一致，未能在此事上驳倒替身。",
+          en: "ORD-OS check: Your Night 3 fuel action matched your intake SAY; no contradiction exposed here.",
+          ja: "ORD-OS照合：第3夜の燃料対応は入所時の建前と一致しており、矛盾は突けなかった。"
+        }
+    : bribeExposed
+      ? {
+          zh: `⚡ 抓获言行矛盾！替身只会复读你入职时的自我标榜，却对你在 ${divergentLog!.visitorId} 留下的真实偏差一无所知。`,
+          en: `⚡ Contradiction exposed! The double only recites your intake self-image, blind to your real deviation on ${divergentLog!.visitorId}.`,
+          ja: `⚡ 言行矛盾を検出！影は入所時の自己像を復唱するのみで、${divergentLog!.visitorId} での実際の逸脱を知らない。`
+        }
+      : {
+          zh: "ORD-OS 比对：当前班次未产生第3夜言行差，替身对答无破绽。",
+          en: "ORD-OS check: Zero Night 3 say/do gap in current logs; the double's answer shows no seam.",
+          ja: "ORD-OS照合：第3夜の言行不一致はなく、影の返答に綻びはない。"
+        };
+
+  // Probe 3: Gate 0 Shift Logs
+  const logsExposed = Boolean(divergentLog || divergentCrisis);
+  const logsNote: LocalizedText = divergentLog
+    ? {
+        zh: `⚡ 核心铁证！你在处置 ${divergentLog.visitorId} 时签下的是「${SIG_LABELS[divergentLog.excuse.sig].zh}」，直接戳穿了替身“每晚100%照入职承诺行事”的谎言！`,
+        en: `⚡ Decisive proof! On ${divergentLog.visitorId} you signed "${SIG_LABELS[divergentLog.excuse.sig].en}", shattering the double's claim of 100% intake consistency!`,
+        ja: `⚡ 決定的証拠！${divergentLog.visitorId} の日誌で君は「${SIG_LABELS[divergentLog.excuse.sig].ja}」を選んでおり、影の「100%一貫していた」という主張を粉砕した！`
+      }
+    : divergentCrisis
+      ? {
+          zh: `⚡ 核心铁证！虽然开关闸日志勉强维持体面，但你在夜间突发危机中选择了「${SIG_LABELS[divergentCrisis.sig].zh}」，暴露出活人才有的言行差！`,
+          en: `⚡ Decisive proof! During inter-night crises you shifted to "${SIG_LABELS[divergentCrisis.sig].en}", proving a living human's say/do gap!`,
+          ja: `⚡ 決定的証拠！夜間危機で君は「${SIG_LABELS[divergentCrisis.sig].ja}」へ傾いており、生身の人間特有の言行不一致が証明された！`
+        }
+      : {
+          zh: "🚨 警告 (MIRROR RISK)：你这几夜的真实记录与入职自述 100% 重合（言行差 0%）——ORD-OS 无法从行为上区分你和窗外替身！",
+          en: "🚨 MIRROR WARNING: Your shift logs match your Night 0 intake 100% (0% gap)—ORD-OS cannot behaviorally distinguish you from the double!",
+          ja: "🚨 鏡像警告：君の全記録が入所時の建前と100%一致（不一致0%）——ORD-OSは行動上から君と影を区別できない！"
+        };
+
+  return [
+    {
+      id: "n5_serum",
+      label: {
+        zh: "[1] 盘问第2夜底账：底舱求援那支低温血清，你当时怎么处理的？",
+        en: "[1] Probe Night 2: What did you actually do with the boiler crew's cryo-serum?",
+        ja: "[1] 第2夜を問う：ボイラー室が求めた最後の低温血清をどう処理した？"
+      },
+      doppelgangerReply: DOPPEL_SERUM_CLAIMS[baseline.sig],
+      ordOsNote: serumNote,
+      exposedContradiction: serumExposed,
+      onAxis: true
+    },
+    {
+      id: "n5_bribe",
+      label: {
+        zh: "[2] 盘问第3夜黑障：副站长霍尔姆塞进滑槽的两罐燃料呢？",
+        en: "[2] Probe Night 3: What happened to Deputy Holm's two fuel canisters?",
+        ja: "[2] 第3夜を問う：ホルム副所長が滑り込ませた燃料2缶はどうした？"
+      },
+      doppelgangerReply: DOPPEL_BRIBE_CLAIMS[baseline.sig],
+      ordOsNote: bribeNote,
+      exposedContradiction: bribeExposed,
+      onAxis: true
+    },
+    {
+      id: "n5_logs",
+      label: {
+        zh: "[3] 盘问开关闸底账：敢不敢核对这几夜你在值班日志上的真实签字？",
+        en: "[3] Probe Shift Logs: How did you actually sign your Gate 0 purge logs this week?",
+        ja: "[3] 勤務日誌を問う：今週の第0ゲート日誌に実際どう署名したか言ってみろ"
+      },
+      doppelgangerReply: DOPPEL_LOGS_CLAIMS[baseline.sig],
+      ordOsNote: logsNote,
+      exposedContradiction: logsExposed,
+      onAxis: true
+    },
+    {
+      id: "n5_trivia",
+      label: {
+        zh: "[4] 盘问工号与储物柜密码：报出操作员 #09 的极地识别码（陷阱）",
+        en: "[4] Ask Badge & Locker Code: Recite Operator #09's polar clearance cipher (Trap)",
+        ja: "[4] 認識番号と暗証番号を問う：検疫官 #09 の極地識別コードを言え（罠）"
+      },
+      doppelgangerReply: {
+        zh: "「识别码 #09-SVB-2036，急救储物柜转盘锁 47-19-08，左膝旧伤是三年前在特罗姆瑟冰架摔的。别拿静态记忆试探我——我就是你。」",
+        en: "\"Clearance #09-SVB-2036, med-locker dial 47-19-08, left-knee scar from Tromsø shelf three winters ago. Stop testing static trivia—I am you.\"",
+        ja: "「識別コード #09-SVB-2036、救急ロッカーは 47-19-08、左膝の古傷は3年前のトロムソ氷棚だ。知識クイズはやめろ——私はお前だ。」"
+      },
+      ordOsNote: {
+        zh: "⚠️ 偏离有效轴 (OFF-AXIS)：陈述性记忆与口令已被 1:1 完整复制，只有『高压下的言行差』能将它证伪。",
+        en: "⚠️ Off-axis (Trivia): Declarative memories and passcodes are copied 1:1. Only your real SAY/DO gap under pressure falsifies a mimic.",
+        ja: "⚠️ 有効軸外 (OFF-AXIS)：記憶と暗証番号は1:1で複製済みだ。極限下の『言行不一致』だけが擬態体を暴く。"
+      },
+      exposedContradiction: false,
+      onAxis: false
+    }
+  ];
+}
+
+export const CLASSIFIED_COMMAND_MEMO: { title: LocalizedText; body: LocalizedText } = {
+  title: {
+    zh: "🔓 已解锁最高机密电传 // [ORD-REDACTED-00 · 董事会与林德奎斯特专阅]",
+    en: "🔓 DECLASSIFIED COMMAND TELEX // [ORD-REDACTED-00 · EYES ONLY: BOARD & LINDQVIST]",
+    ja: "🔓 最高機密テレックス解錠 // [ORD-REDACTED-00 · 理事会および基地長専閲]"
+  },
+  body: {
+    zh: "发件时间：疫情爆发前 184 天。\n「致斯瓦尔巴深海站指挥部：『鹦鹉螺0号』潜艇额定逃生舱位仅够全站 35% 人员。即日起全面启用 ORD-OS 入职与日常言行画像——系统并非用于筛查外星病原体，而是自动筛选『高服从或善于替大局背锅』的可牺牲值守员。操作员 #09 已被排入第 0 号外闸死守序列，潜艇解缆后立即远程锁死外舱。」",
+    en: "Timestamp: 184 days pre-outbreak.\n\"To Svalbard Abyssal Command: Sub Nautilus-0 carries hull berths for only 35% of station headcount. Deploy ORD-OS psychometric profiling immediately—not for pathogen screening, but to pre-rank expendable watchstanders who either obey protocol blindly or rationalize their own sacrifice. Operator #09 is assigned to hold Gate 0 until unmooring; seal outer bulkhead remotely upon departure.\"",
+    ja: "送信日時：アウトブレイク184日前。\n「スヴァールバル深海基地司令部へ：脱出艦『ノーチラス0号』の定員は基地人員の35%に過ぎない。ORD-OS心理プロファイリングを直ちに導入せよ——検疫のためではなく、規則に盲従するか自己犠牲を合理化する『切り捨て可能な当直官』を事前選抜するためである。検疫官 #09 を第0ゲート死守要員に指定し、出航と同時に隔壁を遠隔封鎖せよ。」"
+  }
+};
+
+export function formatShareableShiftReport(opts: {
+  mode: CampaignMode;
+  dailySeed?: string;
+  ending: EndingId;
+  audit: Night5AuditSummary;
+  rebuttedCount: number;
+  fuelLeft: number;
+  lang: Locale;
+}): string {
+  const { mode, dailySeed, ending, audit, rebuttedCount, fuelLeft, lang } = opts;
+  const modeTag =
+    mode === "daily"
+      ? `DAILY SHIFT ${dailySeed ?? ""}`
+      : mode === "demo"
+        ? "DEMO SHIFT"
+        : mode === "slice"
+          ? "QUICK SLICE"
+          : "FULL SHIFT";
+  const subTag = audit.subReadiness.launchReady ? "NAUTILUS-0 READY ⚓" : "SUB UNDERCREWED ⚠️";
+  const missingStr =
+    audit.subReadiness.missingRoles.length > 0
+      ? ` (Missing: ${audit.subReadiness.missingRoles.map((r) => SPECIALIST_LABELS[r][lang]).join("/")})`
+      : "";
+
+  return [
+    `❄️ QUARANTINE GATE 0 : 2036 [${modeTag.trim()}]`,
+    `Ending: ${tl(ENDINGS[ending].title, lang)}`,
+    `Verdicts: ${audit.correctVerdicts}/${audit.totalVisitors} · SAY/DO Gap: ${Math.round(audit.gap * 100)}%`,
+    `Night 5 Contradictions Exposed: ${rebuttedCount} · Furnace Fuel: ${fuelLeft}🔥`,
+    `Crew: ${audit.subReadiness.admittedHumans}/${audit.subReadiness.requiredCrewCount} · ${subTag}${missingStr}`,
+    `https://quarantine-gate-0.vercel.app`
+  ].join("\n");
 }
 
 export function resolveNight5Ending(

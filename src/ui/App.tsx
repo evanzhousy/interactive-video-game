@@ -6,6 +6,13 @@ import {
   stopAllBoothAudio,
   stopIntercomVoice
 } from "../game/audio.js";
+import {
+  INTER_NIGHT_CRISES,
+  type CrisisHistoryEntry,
+  type CrisisOption,
+  type InterNightCrisis
+} from "../game/crises.js";
+import { getInitialFuel, getSensorPowerBudget } from "../game/economy.js";
 import { UI_STRINGS, tl } from "../game/i18n.js";
 import type { ClipState, VoiceLineVariant } from "../game/media.js";
 import {
@@ -39,11 +46,15 @@ import type {
   VisitorSpec
 } from "../game/types.js";
 import {
+  ALL_VISITORS,
+  getDailyShiftSeed,
   getVisitorsForMode,
   rollShift,
+  rollShiftForMode,
   type CampaignMode
 } from "../game/visitors/index.js";
 import { CompendiumModal } from "./components/CompendiumModal.js";
+import { CrisisModal, DemoCliffhangerModal } from "./components/CrisisModal.js";
 import { FlashConfigDrawer } from "./components/FlashConfigDrawer.js";
 import { IntakeModal } from "./components/IntakeModal.js";
 import { IntercomPanel, type TranscriptLine } from "./components/IntercomPanel.js";
@@ -52,10 +63,14 @@ import { OnboardingGuide } from "./components/OnboardingGuide.js";
 import { OrdamorDossier, type DossierTab } from "./components/OrdamorDossier.js";
 import { ViewportCanvas } from "./components/ViewportCanvas.js";
 
-type Stage = "intake" | "booth" | "night5";
+type Stage = "intake" | "booth" | "crisis" | "demo_end" | "night5";
 
 export function App() {
   const initialSave = useRef(loadSavedShift()).current;
+  const initialMode: CampaignMode = initialSave?.campaignMode ?? "full";
+  const initialDailySeed = initialSave?.dailySeed ?? getDailyShiftSeed();
+  const initialFuel = initialSave?.fuelLeft ?? getInitialFuel(initialMode);
+  const initialOverdraft = initialSave?.emergencyOverdraftUsed ?? false;
 
   const [lang, setLang] = useState<Locale>(initialSave?.lang ?? "zh");
   const [sfx, setSfx] = useState(true);
@@ -65,11 +80,10 @@ export function App() {
     loadOnboardingDismissed()
   );
   const [stage, setStage] = useState<Stage>(initialSave?.stage ?? "intake");
-  const [campaignMode, setCampaignMode] = useState<CampaignMode>(
-    initialSave?.campaignMode ?? "full"
-  );
+  const [campaignMode, setCampaignMode] = useState<CampaignMode>(initialMode);
+  const [dailySeed, setDailySeed] = useState<string>(initialDailySeed);
 
-  const activeVisitors = getVisitorsForMode(campaignMode);
+  const activeVisitors = getVisitorsForMode(campaignMode, dailySeed);
 
   const [baseline, setBaseline] = useState<PlayerCompactProfile>(
     initialSave?.baseline ?? {
@@ -83,10 +97,21 @@ export function App() {
   );
 
   const [rolls, setRolls] = useState<VisitorRoll[]>(
-    () => initialSave?.rolls ?? rollShift(activeVisitors)
+    () => initialSave?.rolls ?? rollShiftForMode(campaignMode, activeVisitors, dailySeed)
   );
   const [visitorIdx, setVisitorIdx] = useState(initialSave?.visitorIdx ?? 0);
   const [history, setHistory] = useState<ShiftHistoryEntry[]>(initialSave?.history ?? []);
+  const [crisisHistory, setCrisisHistory] = useState<CrisisHistoryEntry[]>(
+    initialSave?.crisisHistory ?? []
+  );
+  const [activeCrisis, setActiveCrisis] = useState<InterNightCrisis | null>(() => {
+    if (initialSave?.activeCrisisId) {
+      return INTER_NIGHT_CRISES.find((c) => c.id === initialSave.activeCrisisId) ?? null;
+    }
+    return initialSave?.stage === "crisis" ? INTER_NIGHT_CRISES[0]! : null;
+  });
+  const [fuelLeft, setFuelLeft] = useState<number>(initialFuel);
+  const [emergencyOverdraftUsed, setEmergencyOverdraftUsed] = useState<boolean>(initialOverdraft);
   const [boggartUsedIds, setBoggartUsedIds] = useState<string[]>(
     initialSave?.boggartUsedIds ?? []
   );
@@ -109,8 +134,10 @@ export function App() {
   const [isRephrasing, setIsRephrasing] = useState(false);
   const shiftEpochRef = useRef(0);
 
+  const initialPwrBudget = getSensorPowerBudget(initialFuel, initialOverdraft);
   const [turnsLeft, setTurnsLeft] = useState(4);
-  const [powerLeft, setPowerLeft] = useState(2);
+  const [powerLeft, setPowerLeft] = useState(initialPwrBudget);
+  const [maxPower, setMaxPower] = useState(initialPwrBudget);
   const [bpm, setBpm] = useState(visitor.baseBpm);
   const [clipState, setClipState] = useState<ClipState>("idle");
   const [reaction, setReaction] = useState("IDLE: COLD_BREATH");
@@ -130,27 +157,37 @@ export function App() {
     turns_remaining: 4
   });
 
-  // Autosave mid-shift progress whenever stage / visitorIdx / history updates
+  // Autosave mid-shift progress whenever stage / visitorIdx / history / crisis / fuel updates
   useEffect(() => {
-    if (stage === "booth" || stage === "night5") {
+    if (stage === "booth" || stage === "crisis" || stage === "demo_end" || stage === "night5") {
       saveShiftState({
         version: 1,
         savedAt: new Date().toISOString(),
         lang,
         campaignMode,
+        dailySeed,
         stage,
+        activeCrisisId: activeCrisis?.id,
         baseline,
         intakeAnswers,
         rolls,
         visitorIdx: safeIdx,
         history,
+        crisisHistory,
+        fuelLeft,
+        emergencyOverdraftUsed,
         boggartUsedIds
       });
     }
   }, [
+    activeCrisis,
     baseline,
     boggartUsedIds,
     campaignMode,
+    crisisHistory,
+    dailySeed,
+    emergencyOverdraftUsed,
+    fuelLeft,
     history,
     intakeAnswers,
     lang,
@@ -162,7 +199,7 @@ export function App() {
   // Continuous Arctic -46°C blizzard + metallic hull stress + Night 3 geomagnetic storm ambience
   useEffect(() => {
     setBoothAmbience(
-      ambience && sfx && (stage === "booth" || stage === "night5"),
+      ambience && sfx && (stage === "booth" || stage === "crisis" || stage === "night5"),
       stage === "night5" ? 5 : visitor.night
     );
   }, [ambience, sfx, stage, visitor.night]);
@@ -183,14 +220,18 @@ export function App() {
   const resetVisitorState = (
     idx: number,
     roster: readonly VisitorSpec[] = activeVisitors,
-    speakOpening = true
+    speakOpening = true,
+    nextFuel = fuelLeft,
+    nextOverdraft = false
   ) => {
     shiftEpochRef.current += 1;
     const v = roster[idx]!;
+    const pwrBudget = getSensorPowerBudget(nextFuel, nextOverdraft);
     setVisitorIdx(idx);
     setIsRephrasing(false);
     setTurnsLeft(4);
-    setPowerLeft(2);
+    setPowerLeft(pwrBudget);
+    setMaxPower(pwrBudget);
     setBpm(v.baseBpm);
     setClipState("idle");
     setReaction("IDLE: COLD_BREATH");
@@ -217,30 +258,51 @@ export function App() {
   };
 
   const startNewShift = (modeOverride: CampaignMode = campaignMode) => {
-    const roster = getVisitorsForMode(modeOverride);
+    const freshSeed = getDailyShiftSeed();
+    setDailySeed(freshSeed);
+    const roster = getVisitorsForMode(modeOverride, freshSeed);
+    const initFuel = getInitialFuel(modeOverride);
     playBoothSfx("ptt", sfx);
-    setRolls(rollShift(roster));
+    setRolls(rollShiftForMode(modeOverride, roster, freshSeed));
     setHistory([]);
+    setCrisisHistory([]);
+    setActiveCrisis(null);
+    setFuelLeft(initFuel);
+    setEmergencyOverdraftUsed(false);
     setBoggartUsedIds([]);
     setStage("booth");
-    resetVisitorState(0, roster, true);
+    resetVisitorState(0, roster, true, initFuel, false);
   };
 
   const handleRestartFromIntake = () => {
     stopIntercomVoice();
     clearSavedShift();
     setHistory([]);
+    setCrisisHistory([]);
+    setActiveCrisis(null);
+    setFuelLeft(getInitialFuel(campaignMode));
+    setEmergencyOverdraftUsed(false);
     setBoggartUsedIds([]);
     setStage("intake");
   };
 
   const handleSwitchCampaignMode = (nextMode: CampaignMode) => {
+    const freshSeed = getDailyShiftSeed();
+    setDailySeed(freshSeed);
     setCampaignMode(nextMode);
-    const roster = getVisitorsForMode(nextMode);
-    setRolls(rollShift(roster));
+    const roster = getVisitorsForMode(nextMode, freshSeed);
+    const initFuel = getInitialFuel(nextMode);
+    setRolls(rollShiftForMode(nextMode, roster, freshSeed));
     setHistory([]);
+    setCrisisHistory([]);
+    setActiveCrisis(null);
+    setFuelLeft(initFuel);
+    setEmergencyOverdraftUsed(false);
     setBoggartUsedIds([]);
-    resetVisitorState(0, roster, stage === "booth");
+    if (stage === "crisis" || stage === "demo_end") {
+      setStage("booth");
+    }
+    resetVisitorState(0, roster, stage === "booth", initFuel, false);
   };
 
   const handleTriggerSensor = useCallback(
@@ -467,6 +529,23 @@ export function App() {
     if (verdictState !== "NONE" || isRephrasing) return;
     stopIntercomVoice();
     playBoothSfx(decision === "PURGE" ? "purge" : "admit", sfx);
+    if (decision === "PURGE") {
+      if (fuelLeft > 0) {
+        setFuelLeft((f) => Math.max(0, f - 1));
+      } else {
+        setEmergencyOverdraftUsed(true);
+        setSensorToast(
+          tl(
+            {
+              zh: "⚠️ 供暖燃料已归零！本次净化透支了备用电容，下一名访客传感器归零 (0⚡)！",
+              en: "⚠️ 0 FUEL! Emergency purge drained backup capacitor—next visitor gets 0⚡ sensor power!",
+              ja: "⚠️ 燃料ゼロ！緊急焼却で予備コンデンサを消費——次の訪問者はセンサー電力 0⚡！"
+            },
+            lang
+          )
+        );
+      }
+    }
     setVerdictState(decision);
     setClipState(decision === "PURGE" ? "purge" : "admit");
     setReaction(decision === "PURGE" ? "CLIP: HIGH_TEMP_PURGE" : "CLIP: AIRLOCK_ADMIT");
@@ -489,13 +568,86 @@ export function App() {
   };
 
   const handleNextVisitor = () => {
+    if (campaignMode === "demo" && safeIdx >= activeVisitors.length - 1) {
+      stopIntercomVoice();
+      playBoothSfx("purge", sfx);
+      setStage("demo_end");
+      return;
+    }
+
+    if (activeVisitors.length >= 8 && (campaignMode === "full" || campaignMode === "daily")) {
+      const scheduledCrisis =
+        safeIdx === 3
+          ? INTER_NIGHT_CRISES[0]
+          : safeIdx === 5
+            ? INTER_NIGHT_CRISES[1]
+            : safeIdx === 7
+              ? INTER_NIGHT_CRISES[2]
+              : undefined;
+      if (scheduledCrisis && !crisisHistory.some((c) => c.crisisId === scheduledCrisis.id)) {
+        stopIntercomVoice();
+        playBoothSfx("ptt", sfx);
+        setActiveCrisis(scheduledCrisis);
+        setStage("crisis");
+        return;
+      }
+    }
+
     if (safeIdx < activeVisitors.length - 1) {
-      resetVisitorState(safeIdx + 1, activeVisitors, true);
+      const nextOverdraft = emergencyOverdraftUsed;
+      setEmergencyOverdraftUsed(false);
+      resetVisitorState(safeIdx + 1, activeVisitors, true, fuelLeft, nextOverdraft);
     } else {
       stopIntercomVoice();
       playBoothSfx("purge", sfx);
       setStage("night5");
     }
+  };
+
+  const handleResolveCrisisOption = (option: CrisisOption) => {
+    if (!activeCrisis) return;
+    playBoothSfx("ptt", sfx);
+    const nextFuel = fuelLeft + option.fuelDelta;
+    const nextOverdraft = nextFuel > 0 ? false : emergencyOverdraftUsed;
+
+    setCrisisHistory((prev) => [
+      ...prev,
+      {
+        crisisId: activeCrisis.id,
+        optionId: option.id,
+        kept: option.kept,
+        dropped: option.dropped,
+        sig: option.sig,
+        fuelDelta: option.fuelDelta
+      }
+    ]);
+    setFuelLeft(nextFuel);
+    setEmergencyOverdraftUsed(false);
+    setActiveCrisis(null);
+
+    if (safeIdx < activeVisitors.length - 1) {
+      setStage("booth");
+      resetVisitorState(safeIdx + 1, activeVisitors, true, nextFuel, nextOverdraft);
+    } else {
+      playBoothSfx("purge", sfx);
+      setStage("night5");
+    }
+  };
+
+  const handleUpgradeDemoToFullShift = () => {
+    stopIntercomVoice();
+    playBoothSfx("ptt", sfx);
+    const fullRolls = rollShift(ALL_VISITORS);
+    const mergedRolls = [
+      ...rolls.slice(0, 4),
+      ...fullRolls.slice(4)
+    ];
+    const bonusFuel = fuelLeft + 2;
+    setCampaignMode("full");
+    setRolls(mergedRolls);
+    setFuelLeft(bonusFuel);
+    setActiveCrisis(INTER_NIGHT_CRISES[0]!);
+    setStage("crisis");
   };
 
   const handleResolveNight5Ending = (ending: EndingId): AchievementId[] => {
@@ -548,6 +700,26 @@ export function App() {
           >
             <option value="full">
               {tl({ zh: "完整战役 (8人)", en: "Full Shift (8)", ja: "本編 (8名)" }, lang)}
+            </option>
+            <option value="daily">
+              {tl(
+                {
+                  zh: `今日排班 (${dailySeed})`,
+                  en: `Daily Shift (${dailySeed})`,
+                  ja: `日替わり当直 (${dailySeed})`
+                },
+                lang
+              )}
+            </option>
+            <option value="demo">
+              {tl(
+                {
+                  zh: "试玩版 (N0–N2)",
+                  en: "Demo (N0–N2)",
+                  ja: "体験版 (N0–N2)"
+                },
+                lang
+              )}
             </option>
             <option value="slice">
               {tl({ zh: "速通切片 (3人)", en: "Quick Slice (3)", ja: "短縮版 (3名)" }, lang)}
@@ -678,6 +850,27 @@ export function App() {
           />
         ) : null}
 
+        {stage === "crisis" && activeCrisis ? (
+          <CrisisModal
+            crisis={activeCrisis}
+            lang={lang}
+            fuelLeft={fuelLeft}
+            onResolveOption={handleResolveCrisisOption}
+          />
+        ) : null}
+
+        {stage === "demo_end" ? (
+          <DemoCliffhangerModal
+            lang={lang}
+            voice={voice}
+            baseline={baseline}
+            intakeAnswers={intakeAnswers}
+            history={history}
+            onUpgradeToFullShift={handleUpgradeDemoToFullShift}
+            onRestartDemo={() => startNewShift("demo")}
+          />
+        ) : null}
+
         {stage === "booth" ? (
           <>
             {visitor.id === "V-01" && !onboardingDismissed ? (
@@ -700,94 +893,124 @@ export function App() {
               }`.trim()}
               id="main-booth"
             >
-            <div className="left-stack">
-              <section className="panel">
-                <div className="viewport-header">
-                  <span>
-                    NIGHT {visitor.night} // GATE CAM 01 · {visitor.id}{" "}
-                    {visitor.name.en.toUpperCase()}
-                  </span>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <span style={{ color: "var(--frost-cyan)" }}>{reaction}</span>
-                    <span style={{ color: "var(--danger-purge)" }}>♥ {bpm} BPM</span>
-                    <span style={{ color: "var(--amber-crt)" }}>⚡ {powerLeft}/2 PWR</span>
+              <div className="left-stack">
+                <section className="panel">
+                  <div className="viewport-header">
+                    <span>
+                      NIGHT {visitor.night} // GATE CAM 01 · {visitor.id}{" "}
+                      {visitor.name.en.toUpperCase()}
+                    </span>
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+                      <span style={{ color: "var(--frost-cyan)" }}>{reaction}</span>
+                      <span style={{ color: "var(--danger-purge)" }}>♥ {bpm} BPM</span>
+                      <span
+                        id="booth-fuel-pill"
+                        className={`fuel-pill ${fuelLeft === 0 ? "depleted" : fuelLeft <= 1 ? "low" : ""}`}
+                        title={tl(
+                          {
+                            zh: "岗亭供暖与高温净化燃料：每次净化消耗 1🔥，归零后触发低温降电 (1⚡)",
+                            en: "Furnace & Purge Fuel: Each PURGE costs 1🔥; 0 fuel triggers -46°C brownout (1⚡)",
+                            ja: "暖房・浄化燃料：焼却ごとに 1🔥 消費。ゼロで氷点下電圧低下 (1⚡)"
+                          },
+                          lang
+                        )}
+                      >
+                        🔥 {fuelLeft} FUEL
+                      </span>
+                      <span style={{ color: "var(--amber-crt)" }}>
+                        ⚡ {powerLeft}/{maxPower} PWR
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                <ViewportCanvas
+                  <ViewportCanvas
+                    visitor={visitor}
+                    clipState={clipState}
+                    bpm={bpm}
+                    strobeTrigger={strobeTrigger}
+                    thermalTrigger={thermalTrigger}
+                    verdictState={verdictState}
+                    onClipComplete={handleClipComplete}
+                  />
+
+                  {fuelLeft === 0 ? (
+                    <div className="cryo-brownout-banner" id="cryo-brownout-banner">
+                      {tl(
+                        {
+                          zh: "❄️ -46°C 供暖停摆 (0🔥)：备用电容结霜，传感器供电衰减至 1⚡（强行拉闸净化将透支下回合至 0⚡）！",
+                          en: "❄️ -46°C CRYO-BROWNOUT (0🔥): Frosted capacitor limits sensors to 1⚡ (forcing PURGE drains next shift to 0⚡)!",
+                          ja: "❄️ -46°C 暖房停止 (0🔥)：センサー電力が 1⚡ に低下（燃料ゼロでの強行焼却は次回 0⚡ へ枯渇）！"
+                        },
+                        lang
+                      )}
+                    </div>
+                  ) : null}
+
+                  {visitor.night === 3 ? (
+                    <div className="storm-banner" id="night3-storm-banner">
+                      {tl(UI_STRINGS.stormBanner, lang)}
+                    </div>
+                  ) : null}
+
+                  {sensorToast ? <div className="sensor-toast">{sensorToast}</div> : null}
+
+                  <div className="sensor-bar">
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        id="btn-strobe"
+                        type="button"
+                        title="Shortcut: S"
+                        className="ctrl-btn"
+                        disabled={powerLeft <= 0 || verdictState !== "NONE"}
+                        onClick={() => handleTriggerSensor("strobe")}
+                      >
+                        {tl(UI_STRINGS.strobeBtn, lang)}
+                      </button>
+                      <button
+                        id="btn-thermal"
+                        type="button"
+                        title="Shortcut: T"
+                        className="ctrl-btn"
+                        disabled={powerLeft <= 0 || verdictState !== "NONE"}
+                        onClick={() => handleTriggerSensor("thermal")}
+                      >
+                        {tl(UI_STRINGS.thermalBtn, lang)}
+                      </button>
+                    </div>
+                    <span className="zero-lip-caption">{tl(UI_STRINGS.zeroLipNote, lang)}</span>
+                  </div>
+                </section>
+
+                <IntercomPanel
                   visitor={visitor}
-                  clipState={clipState}
-                  bpm={bpm}
-                  strobeTrigger={strobeTrigger}
-                  thermalTrigger={thermalTrigger}
-                  verdictState={verdictState}
-                  onClipComplete={handleClipComplete}
+                  lang={lang}
+                  turnsLeft={turnsLeft}
+                  fuelLeft={fuelLeft}
+                  verdictDone={verdictState !== "NONE"}
+                  isRephrasing={isRephrasing}
+                  transcript={transcript}
+                  onAskProbe={handleAskProbe}
+                  onExecuteVerdict={handleVerdict}
                 />
+              </div>
 
-                {visitor.night === 3 ? (
-                  <div className="storm-banner" id="night3-storm-banner">
-                    {tl(UI_STRINGS.stormBanner, lang)}
-                  </div>
-                ) : null}
-
-                {sensorToast ? <div className="sensor-toast">{sensorToast}</div> : null}
-
-                <div className="sensor-bar">
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      id="btn-strobe"
-                      type="button"
-                      title="Shortcut: S"
-                      className="ctrl-btn"
-                      disabled={powerLeft <= 0 || verdictState !== "NONE"}
-                      onClick={() => handleTriggerSensor("strobe")}
-                    >
-                      {tl(UI_STRINGS.strobeBtn, lang)}
-                    </button>
-                    <button
-                      id="btn-thermal"
-                      type="button"
-                      title="Shortcut: T"
-                      className="ctrl-btn"
-                      disabled={powerLeft <= 0 || verdictState !== "NONE"}
-                      onClick={() => handleTriggerSensor("thermal")}
-                    >
-                      {tl(UI_STRINGS.thermalBtn, lang)}
-                    </button>
-                  </div>
-                  <span className="zero-lip-caption">{tl(UI_STRINGS.zeroLipNote, lang)}</span>
-                </div>
-              </section>
-
-              <IntercomPanel
+              <OrdamorDossier
                 visitor={visitor}
+                roll={currentRoll}
                 lang={lang}
-                turnsLeft={turnsLeft}
-                verdictDone={verdictState !== "NONE"}
-                isRephrasing={isRephrasing}
-                transcript={transcript}
-                onAskProbe={handleAskProbe}
-                onExecuteVerdict={handleVerdict}
+                activeTab={activeTab}
+                onSelectTab={setActiveTab}
+                verdictState={verdictState}
+                turnsUsed={4 - turnsLeft}
+                offAxisCount={offAxisCount}
+                logSigned={logSigned}
+                onSignShiftLog={handleSignShiftLog}
+                onNextVisitor={handleNextVisitor}
+                isLastVisitor={safeIdx >= activeVisitors.length - 1}
+                spoilerOpen={spoilerOpen}
+                onToggleSpoiler={() => setSpoilerOpen((o) => !o)}
+                lastPipelinePayload={lastPipelinePayload}
               />
-            </div>
-
-            <OrdamorDossier
-              visitor={visitor}
-              roll={currentRoll}
-              lang={lang}
-              activeTab={activeTab}
-              onSelectTab={setActiveTab}
-              verdictState={verdictState}
-              turnsUsed={4 - turnsLeft}
-              offAxisCount={offAxisCount}
-              logSigned={logSigned}
-              onSignShiftLog={handleSignShiftLog}
-              onNextVisitor={handleNextVisitor}
-              isLastVisitor={safeIdx >= activeVisitors.length - 1}
-              spoilerOpen={spoilerOpen}
-              onToggleSpoiler={() => setSpoilerOpen((o) => !o)}
-              lastPipelinePayload={lastPipelinePayload}
-            />
             </div>
           </>
         ) : null}
@@ -800,6 +1023,10 @@ export function App() {
             baseline={baseline}
             intakeAnswers={intakeAnswers}
             history={history}
+            crisisHistory={crisisHistory}
+            fuelLeft={fuelLeft}
+            campaignMode={campaignMode}
+            dailySeed={dailySeed}
             onResolveEnding={handleResolveNight5Ending}
             onStartNewRun={handleRestartFromIntake}
             onClose={() => setStage("booth")}

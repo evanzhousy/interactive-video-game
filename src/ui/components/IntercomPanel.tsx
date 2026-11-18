@@ -17,6 +17,7 @@ interface Props {
   visitor: VisitorSpec;
   lang: Locale;
   turnsLeft: number;
+  fuelLeft?: number;
   verdictDone: boolean;
   isRephrasing?: boolean;
   transcript: readonly TranscriptLine[];
@@ -28,6 +29,7 @@ export function IntercomPanel({
   visitor,
   lang,
   turnsLeft,
+  fuelLeft = 5,
   verdictDone,
   isRephrasing = false,
   transcript,
@@ -57,7 +59,7 @@ export function IntercomPanel({
     e.preventDefault();
     const val = draft.trim();
     if (!val || askDisabled) return;
-    const rawIntent = classifyQuestionIntent(val);
+    const rawIntent = classifyQuestionIntent(val, visitor);
     const resolved = resolveVisitorProbeKey(visitor, rawIntent);
     setPending({ intent: resolved, text: val });
   };
@@ -189,7 +191,7 @@ export function IntercomPanel({
           className="lever-btn purge"
           onClick={() => onExecuteVerdict("PURGE")}
         >
-          {tl(UI_STRINGS.purgeBtn, lang)}
+          {tl(UI_STRINGS.purgeBtn, lang)} {fuelLeft > 0 ? "(-1🔥)" : "(⚡ OVERDRAFT)"}
         </button>
       </div>
     </section>

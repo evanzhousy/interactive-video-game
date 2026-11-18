@@ -1,3 +1,4 @@
+import { SPECIALIST_LABELS, VISITOR_SPECIALIST_ROLES } from "../../game/economy.js";
 import { UI_STRINGS, VALUE_I18N, tl } from "../../game/i18n.js";
 import { SHIFT_EXCUSES } from "../../game/night5.js";
 import type {
@@ -162,8 +163,23 @@ export function OrdamorDossier({
               NIGHT {visitor.night} // FORENSIC LENS · SCHEMA v{visitor.profile.schemaVersion}
             </div>
             <div style={{ fontSize: "1.02rem", fontWeight: 700 }}>{tl(visitor.name, lang)}</div>
-            <div style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "8px" }}>
-              {tl(visitor.role, lang)}
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "0.78rem",
+                color: "var(--text-secondary)",
+                marginBottom: "8px"
+              }}
+            >
+              <span>{tl(visitor.role, lang)}</span>
+              {VISITOR_SPECIALIST_ROLES[visitor.id] ? (
+                <span className="role-pill" data-specialist={VISITOR_SPECIALIST_ROLES[visitor.id]}>
+                  ⚓ {tl(SPECIALIST_LABELS[VISITOR_SPECIALIST_ROLES[visitor.id]!], lang)}
+                </span>
+              ) : null}
             </div>
 
             {gap ? (

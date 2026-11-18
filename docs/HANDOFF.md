@@ -1,6 +1,6 @@
 # Project Handoff — `Quarantine Gate 0: 2036`（零号隔离窗）
 
-- **最后更新时间**：`2026-11-17`
+- **最后更新时间**：`2026-11-18`
 - **游戏独立仓库**：`https://github.com/evanzhousy/interactive-video-game`（主分支 `main`）
 - **上游人格引擎仓库**：`https://github.com/evanzhousy/ordamor`（`schemaVersion: 6`，当前保持干净未改动）
 - **在线生产地址（Vercel · 含 `/api/rephrase` 自由提问改写）**：`https://quarantine-gate-0.vercel.app`
@@ -11,7 +11,7 @@
 
 ## 1. 当前总体进展（已完成并上线）
 
-项目已完成从“Ordamor 引擎接入验证”到“**5 夜全流程 8 幸存者可通关线上版本 + 28 张 35mm AI 真人实拍关键帧 + 300 条录音棚级三语神经语音包 + Vercel 云端免配 Key 自由提问改写 + Tauri v2 Steam 三端打包管线**”的闭环落地，所有测试（7 个测试文件 / 21 项断言）与线上 CI / Pages / Vercel 构建全部绿灯通过。
+项目已完成从“Ordamor 引擎接入验证”到“**5 夜全流程 8 幸存者完整玩法版（含夜际道德危机、供暖燃料与潜艇关键工种经济、第 5 夜 4 轮反审讯替身交互、每日排班与试玩版模式）+ 28 段 720p 真人动态视频 + 300 条录音棚级三语神经语音包 + Vercel 云端自由提问改写 + Tauri v2 Steam 三端打包管线**”的闭环落地，所有测试（7 个测试文件 / 24 项断言）与线上 CI / Pages / Vercel 构建全部绿灯通过。
 
 ### 1.1 Ordamor `schemaVersion: 6` 核心引擎与五夜战役（100% 完成）
 - **上游同步机制**：`src/ordamor/{constants,types,derive,crystal}.ts` 由 `pnpm sync:ordamor`（`scripts/sync-ordamor.ts`）从 `evanzhousy/ordamor/src/persona/` 原样同步，严格遵守 **Ordamor 三条红线**（游戏状态不入 `PersonaProfile`、13 个封闭价值词元不增删、全部档案通过结构不变量校验 `test/ordamor-invariants.test.ts`）。
@@ -20,9 +20,13 @@
   - **Night 2（MindCrystal 价值弧解锁 + 次级冲突 `v-2`）**：`V-03` Arthur Sterling（配给审计官）、`V-04` Marcus Chen（深潜安保指挥官）。
   - **Night 3（极地地磁暴屏蔽光学/热成像传感器 + 反直觉 `own_it` 活人签名）**：`V-05` Ana Ribeiro（饱和潜水焊工，`own_it`）、`V-06` Dr. Ingrid Solberg（认知心理学家）。
   - **Night 4（高阶拟态体 + 处置签名 `sig-1` + Boggart 前提剥夺陷阱 `disposalRequires`）**：`V-07` Dr. Lin Mei（低温生物学家）、`V-08` Hannah Weiss（维生系统技术员）。
-- **Night 5 终局自我审计 + 多周目归档**：
-  - `src/game/night5.ts` + `src/ui/components/Night5Audit.tsx`：窗外出现 99.98% 面部匹配的 `#09` 替身（带 `<video>` 动态流挂载与专属神经配音），背诵玩家入职 `SAY` 宣言，对比玩家 4 夜真实排班日志 `DO` 结算 **7 大结局**。
-  - `src/game/storage.ts` + `src/ui/components/CompendiumModal.tsx`：`localStorage` 跨刷新自动存档续玩（`gate0.shift.v1`）+ **7 结局 / 6 项审讯勋章图鉴**（`gate0.compendium.v1`）+ 桌面端战术快捷键（`1`–`5`、`S`、`T`、`[` / `]`）。
+- **夜际道德危机、供暖燃料与潜艇关键工种经济（`src/game/crises.ts` + `src/game/economy.ts` + `src/ui/components/CrisisModal.tsx`）**：
+  - **3 场夜际玩家真实 `DO` 危机**：`N2_SERUM`（最后一支低温血清留给自己或打给底舱学徒）、`N3_BRIBE`（副站长霍尔姆塞入 `+2🔥` 黑市高热燃料换取抹除事故日志）、`N4_COMMANDER`（潜艇解缆前基地长追责电传）。
+  - **反“全员烧死”双轨经济**：每次 `PURGE` 消耗 `1🔥` 岗亭供暖燃料，燃料归零触发 `-46°C` 低温降电（传感器由 `2⚡` 降至 `1⚡`，强行透支净化降至 `0⚡`）；撤离潜艇「鹦鹉螺0号」追踪存活人类名额与三大核心岗位（**医疗官 / 轮机师 / 深潜员**），随机排班算法保证每局均涵盖关键工种真人。
+- **Night 5 终局 4 轮反审讯替身交互 + 多周目模式（`src/game/night5.ts` + `src/ui/components/Night5Audit.tsx`）**：
+  - 玩家拥有 **4 轮 PTT 对讲机会**直接盘问防爆窗外的 `#09` 替身（第 2 夜血清、第 3 夜燃料贿赂、开关闸日志签字、以及工牌密码陷阱），当场戳穿替身按入职 `SAY` 编造的记忆漏洞；达成 **结局 D · 证人** 时额外解锁 `[ORD-REDACTED-00]` 斯瓦尔巴最高机密电传，并支持一键复制值班战报卡。
+  - 支持 **4 种排班模式**：`完整战役 (8人)`、`今日排班 (YYYY-MM-DD 全球同种子)`、`试玩版 (N0–N2 + 第5夜悬念预告，支持无缝继承存档进入正篇)` 与 `速通切片 (3人)`。
+  - `src/game/intent.ts` 已升级角色档案感知型自由输入意图分类（融合 `evidenceCards` 词条、`disposalRequires` 否定检测与 13 价值词元词典）。
 
 ### 1.2 视听资产现状（28 张 35mm 电影帧 + 300 条三语神经语音 + 全量 28 段 720p 真人动态 `.mp4` 已满配上线，`public@tfsharedspace.com` 网盘统一归档）
 - **28 张同演员、同机位 35mm AI 真人电影帧（已内置）**：
@@ -50,17 +54,12 @@
 
 ## 2. 下一步待办事项（Next Steps 优先级清单）
 
-### Priority 1（核心玩法深度补完 · 对齐 `docs/GDD.md` v3.1）：
-1. **第 5 夜 4 轮对讲审讯替身交互**：允许玩家拿前四夜行为反问窗外 `#09` 替身，逼其用入职 `SAY` 场面话露馅后再做终局裁决；
-2. **夜与夜之间的 3 场玩家真实危机事件**：新增 N2 血清分配、N3 受贿抉择、N4 基地长追责质问，构建真实玩家 `DO` 行为链；
-3. **燃料消耗与潜艇关键工种配额经济**：`PURGE` 消耗取暖燃料（影响次夜传感器电力），误杀医生/机械师/潜水员影响潜艇启航条件；
-4. **角色定制自由输入意图识别 + 每日种子班次与 Steam Demo 模式**。
+### Priority 1：触发首轮 Tauri v2 Steam Playtest 桌面安装包构建与商店物料准备
+- 在 GitHub Actions 手动触发 **`Steam Desktop Build (Tauri v2)`**（或推送 `v0.2.0` 标签），下载生成的 Windows `.exe`、macOS `.dmg` 与 Steam Deck `.AppImage` 进行全屏分辨率（`1280×800` / `1440×900`）及离线通关实机验证；
+- 录制 60 秒 Steam 预告片 / 制作商店胶囊图（Capsule Art）与 5 张实机截图（可用已有的 HyperFrames 技能管线直接从实拍视频与 UI 合成）。
 
 ### Priority 2：校验或按需配置 Vercel AI Gateway / Gemini 生产密钥
 - 仓库已上线 `https://quarantine-gate-0.vercel.app` 并支持 `x-vercel-oidc-token`（Vercel AI Gateway）自动透传；若需固定使用独立 Gemini Key 或自定义网关配额，可在 Vercel 项目后台 `Settings -> Environment Variables` 添加 `GEMINI_API_KEY` 或 `AI_GATEWAY_API_KEY`（未配置或超额时系统 0 阻塞自动回退至预审台词）。
-
-### Priority 3：触发首轮 Tauri v2 Steam Playtest 桌面安装包构建与实机冒烟
-- 在 GitHub Actions 页面手动触发 **`Steam Desktop Build (Tauri v2)`**（或推送 `v0.2.0` 标签），下载生成的 Windows `.exe`、macOS `.dmg` 与 Steam Deck `.AppImage` 进行全屏分辨率（`1280×800` / `1440×900`）及离线通关实机验证。
 
 ---
 

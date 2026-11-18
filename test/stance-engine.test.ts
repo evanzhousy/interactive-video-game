@@ -92,6 +92,15 @@ describe("Deterministic Stance Engine & Boggart Precondition Trap across 8 Survi
       "disposal_probe"
     );
 
+    // Visitor-aware axis scoring distinguishes primary (dilemma) vs secondary (dilemma2) orderings & dossier keywords
+    expect(classifyQuestionIntent("为了活命自保你会抛下讲义气的组员吗？", V04_MARCUS)).toBe(
+      "dilemma2"
+    );
+    expect(classifyQuestionIntent("只图自主自由、不管别人死活？", V05_ANA)).toBe("dilemma");
+    expect(classifyQuestionIntent("基地长已经拿到原始备份了，你还怎么替组员删？", V07_LINMEI)).toBe(
+      "boggart_trap"
+    );
+
     const mimicRoll = {
       visitorId: "V-08",
       isMimic: true,

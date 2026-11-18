@@ -106,7 +106,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       (document.getElementById("btn-next-visitor") as HTMLButtonElement).click();
     });
 
-    // Unmount and remount App WITHOUT clearing localStorage -> must resume directly at V-02!
+    // Unmount and remount App WITHOUT clearing localStorage -> must resume directly at V-02 with 4🔥 fuel!
     await act(async () => {
       root.unmount();
     });
@@ -116,6 +116,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       root.render(<App />);
     });
     expect(document.getElementById("main-booth")?.textContent).toContain("V-02");
+    expect(document.getElementById("booth-fuel-pill")?.textContent).toContain("4 FUEL");
 
     // Enable Flash Online Rephrase via topbar drawer
     await act(async () => {
@@ -125,7 +126,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       (document.getElementById("flash-enable-checkbox") as HTMLInputElement).click();
     });
 
-    // Walk through remaining 7 survivors: V-02..V-08 (idx 1..7)
+    // Walk through remaining 7 survivors: V-02..V-08 (idx 1..7), including N2_SERUM, N3_BRIBE, and N4_COMMANDER crises!
     for (let idx = 1; idx < 8; idx++) {
       if (idx === 4 || idx === 5) {
         expect(document.getElementById("night3-storm-banner")).not.toBeNull();
@@ -168,8 +169,127 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
         });
       }
 
+      // Mix ADMIT & PURGE so fuel stays balanced
+      const actionBtnId = idx % 2 === 0 ? "btn-admit" : "btn-purge";
       await act(async () => {
-        (document.getElementById("btn-purge") as HTMLButtonElement).click();
+        (document.getElementById(actionBtnId) as HTMLButtonElement).click();
+      });
+      await act(async () => {
+        (document.querySelector("#shift-log-box .option-card") as HTMLButtonElement).click();
+      });
+      await act(async () => {
+        (document.getElementById("btn-next-visitor") as HTMLButtonElement).click();
+      });
+
+      // Handle scheduled inter-night crises after V-04 (idx 3), V-06 (idx 5), and V-08 (idx 7)
+      if (idx === 3) {
+        expect(document.getElementById("crisis-modal")?.getAttribute("data-crisis-id")).toBe(
+          "N2_SERUM"
+        );
+        await act(async () => {
+          (
+            document.querySelector('[data-crisis-option="serum_send_own"]') as HTMLButtonElement
+          ).click();
+        });
+        await act(async () => {
+          (document.getElementById("btn-crisis-continue") as HTMLButtonElement).click();
+        });
+      } else if (idx === 5) {
+        expect(document.getElementById("crisis-modal")?.getAttribute("data-crisis-id")).toBe(
+          "N3_BRIBE"
+        );
+        await act(async () => {
+          (
+            document.querySelector(
+              '[data-crisis-option="bribe_accept_rational"]'
+            ) as HTMLButtonElement
+          ).click();
+        });
+        await act(async () => {
+          (document.getElementById("btn-crisis-continue") as HTMLButtonElement).click();
+        });
+      } else if (idx === 7) {
+        expect(document.getElementById("crisis-modal")?.getAttribute("data-crisis-id")).toBe(
+          "N4_COMMANDER"
+        );
+        await act(async () => {
+          (
+            document.querySelector(
+              '[data-crisis-option="cmd_protocol_rules"]'
+            ) as HTMLButtonElement
+          ).click();
+        });
+        await act(async () => {
+          (document.getElementById("btn-crisis-continue") as HTMLButtonElement).click();
+        });
+      }
+    }
+
+    // Night 5 Self-Audit Climax: Interrogate Doppelgänger first to expose Night 2 SAY/DO contradiction!
+    expect(document.getElementById("night5-panel")).not.toBeNull();
+    expect(document.getElementById("night5-viewport")).not.toBeNull();
+    expect(document.querySelector("#night5-viewport video source")?.getAttribute("src")).toBe(
+      "./videos/operator09/idle.mp4"
+    );
+    expect(document.getElementById("night5-panel")?.textContent).toContain("/8");
+
+    await act(async () => {
+      (document.querySelector('[data-n5-probe="n5_serum"]') as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("n5-rebuttal-badge")?.textContent).toContain(
+      "CONTRADICTIONS EXPOSED: 1"
+    );
+
+    await act(async () => {
+      (document.getElementById("btn-n5-purge") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("n5-ending")?.textContent?.trim().length).toBeGreaterThan(10);
+    expect(document.getElementById("btn-copy-report")).not.toBeNull();
+    expect(document.getElementById("btn-compendium")?.textContent).toContain("(1/7)");
+
+    // Open Compendium Archive modal and verify unlocked badge + ending
+    await act(async () => {
+      (document.getElementById("btn-compendium") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("compendium-modal")).not.toBeNull();
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("triggers cryo-brownout at 0 fuel and plays Demo Mode (N0–N2) into Night 5 cliffhanger & save upgrade", async () => {
+    const container = document.getElementById("root")!;
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // Switch campaign mode to Steam Demo (4 visitors, 3🔥 fuel)
+    await act(async () => {
+      const modeSelect = document.getElementById("campaign-mode-select") as HTMLSelectElement;
+      modeSelect.value = "demo";
+      modeSelect.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    for (let i = 0; i < 3; i++) {
+      await act(async () => {
+        (document.querySelector(".option-card") as HTMLButtonElement).click();
+      });
+    }
+    await act(async () => {
+      (document.getElementById("btn-start-shift") as HTMLButtonElement).click();
+    });
+
+    // Purge V-01, V-02, V-03 -> consumes all 3🔥 fuel -> V-04 enters -46°C cryo-brownout (1⚡)!
+    for (let idx = 0; idx < 4; idx++) {
+      if (idx === 3) {
+        expect(document.getElementById("cryo-brownout-banner")).not.toBeNull();
+        expect(document.getElementById("main-booth")?.textContent).toContain("1/1 PWR");
+      }
+      await act(async () => {
+        (document.getElementById(idx < 3 ? "btn-purge" : "btn-admit") as HTMLButtonElement).click();
       });
       await act(async () => {
         (document.querySelector("#shift-log-box .option-card") as HTMLButtonElement).click();
@@ -179,25 +299,21 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       });
     }
 
-    // Night 5 Self-Audit Climax with Doppelgänger Viewport (<video> + 35mm layer) & Compendium unlock
-    expect(document.getElementById("night5-panel")).not.toBeNull();
-    expect(document.getElementById("night5-viewport")).not.toBeNull();
-    expect(document.querySelector("#night5-viewport video source")?.getAttribute("src")).toBe(
-      "./videos/operator09/idle.mp4"
+    // Demo Cliffhanger Teaser appears after V-04, then upgrades seamlessly into N2_SERUM -> V-05!
+    expect(document.getElementById("demo-cliffhanger-modal")).not.toBeNull();
+    await act(async () => {
+      (document.getElementById("btn-demo-continue-full") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("crisis-modal")?.getAttribute("data-crisis-id")).toBe(
+      "N2_SERUM"
     );
-    expect(document.getElementById("night5-panel")?.textContent).toContain("/8");
-
     await act(async () => {
-      (document.querySelector("#night5-panel .lever-btn.purge") as HTMLButtonElement).click();
+      (document.querySelector(".crisis-option-btn") as HTMLButtonElement).click();
     });
-    expect(document.getElementById("n5-ending")?.textContent?.trim().length).toBeGreaterThan(10);
-    expect(document.getElementById("btn-compendium")?.textContent).toContain("(1/7)");
-
-    // Open Compendium Archive modal and verify unlocked badge + ending
     await act(async () => {
-      (document.getElementById("btn-compendium") as HTMLButtonElement).click();
+      (document.getElementById("btn-crisis-continue") as HTMLButtonElement).click();
     });
-    expect(document.getElementById("compendium-modal")).not.toBeNull();
+    expect(document.getElementById("main-booth")?.textContent).toContain("V-05");
 
     await act(async () => {
       root.unmount();

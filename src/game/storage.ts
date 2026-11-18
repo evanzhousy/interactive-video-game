@@ -1,3 +1,4 @@
+import type { CrisisHistoryEntry, CrisisId } from "./crises.js";
 import type { CampaignMode } from "./visitors/index.js";
 import type { IntakeOption, PlayerCompactProfile } from "./night5.js";
 import type {
@@ -184,12 +185,17 @@ export interface SavedShiftState {
   savedAt: string;
   lang: Locale;
   campaignMode: CampaignMode;
-  stage: "booth" | "night5";
+  dailySeed?: string;
+  stage: "booth" | "crisis" | "demo_end" | "night5";
+  activeCrisisId?: CrisisId;
   baseline: PlayerCompactProfile;
   intakeAnswers: IntakeOption[];
   rolls: VisitorRoll[];
   visitorIdx: number;
   history: ShiftHistoryEntry[];
+  crisisHistory?: CrisisHistoryEntry[];
+  fuelLeft?: number;
+  emergencyOverdraftUsed?: boolean;
   boggartUsedIds: string[];
 }
 
@@ -223,9 +229,14 @@ export function loadSavedShift(): SavedShiftState | null {
     const raw = store.getItem(SHIFT_SAVE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<SavedShiftState>;
+    const validStage =
+      parsed.stage === "booth" ||
+      parsed.stage === "crisis" ||
+      parsed.stage === "demo_end" ||
+      parsed.stage === "night5";
     if (
       parsed.version !== 1 ||
-      (parsed.stage !== "booth" && parsed.stage !== "night5") ||
+      !validStage ||
       !Array.isArray(parsed.rolls) ||
       !Array.isArray(parsed.history) ||
       typeof parsed.visitorIdx !== "number" ||
@@ -233,17 +244,28 @@ export function loadSavedShift(): SavedShiftState | null {
     ) {
       return null;
     }
+    const resolvedMode: CampaignMode =
+      parsed.campaignMode === "slice" ||
+      parsed.campaignMode === "demo" ||
+      parsed.campaignMode === "daily"
+        ? parsed.campaignMode
+        : "full";
     return {
       version: 1,
       savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : "",
       lang: parsed.lang === "en" || parsed.lang === "ja" ? parsed.lang : "zh",
-      campaignMode: parsed.campaignMode === "slice" ? "slice" : "full",
-      stage: parsed.stage,
+      campaignMode: resolvedMode,
+      dailySeed: typeof parsed.dailySeed === "string" ? parsed.dailySeed : undefined,
+      stage: parsed.stage!,
+      activeCrisisId: parsed.activeCrisisId,
       baseline: parsed.baseline,
       intakeAnswers: Array.isArray(parsed.intakeAnswers) ? parsed.intakeAnswers : [],
       rolls: parsed.rolls,
       visitorIdx: parsed.visitorIdx,
       history: parsed.history,
+      crisisHistory: Array.isArray(parsed.crisisHistory) ? parsed.crisisHistory : [],
+      fuelLeft: typeof parsed.fuelLeft === "number" ? parsed.fuelLeft : undefined,
+      emergencyOverdraftUsed: Boolean(parsed.emergencyOverdraftUsed),
       boggartUsedIds: Array.isArray(parsed.boggartUsedIds) ? parsed.boggartUsedIds : []
     };
   } catch {
@@ -338,8 +360,12 @@ export function recordRunCompletion(opts: {
     afterAch.add("COLD_TRUTH_ANA");
   }
 
-  // ZERO_ERROR_WITNESS: Ending D in 8-visitor full campaign
-  if (opts.ending === "D" && opts.campaignMode === "full" && opts.history.length >= 8) {
+  // ZERO_ERROR_WITNESS: Ending D in 8-visitor full/daily campaign
+  if (
+    opts.ending === "D" &&
+    (opts.campaignMode === "full" || opts.campaignMode === "daily") &&
+    opts.history.length >= 8
+  ) {
     afterAch.add("ZERO_ERROR_WITNESS");
   }
 
