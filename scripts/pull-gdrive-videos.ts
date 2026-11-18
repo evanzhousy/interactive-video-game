@@ -8,9 +8,19 @@ interface DriveEntry {
   mimeType: string;
 }
 
+const DEFAULT_DRIVE_ACCOUNT = "public@tfsharedspace.com";
+
+function gdriveEnv(): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    AGY_ACCOUNT: process.env.AGY_ACCOUNT || DEFAULT_DRIVE_ACCOUNT
+  };
+}
+
 function gdriveJson(args: string[]): unknown {
   const out = execFileSync("gdrive", [...args, "--json"], {
     encoding: "utf8",
+    env: gdriveEnv(),
     maxBuffer: 16 * 1024 * 1024
   });
   return JSON.parse(out);
@@ -37,6 +47,7 @@ function syncFolderRecursive(folderId: string, localDir: string): number {
     } else if (entry.name.endsWith(".mp4") || entry.name.endsWith(".webm")) {
       const outFile = path.join(localDir, entry.name);
       execFileSync("gdrive", ["readonly", "download", entry.id, "--out", outFile], {
+        env: gdriveEnv(),
         stdio: "inherit"
       });
       console.log(`✓ Downloaded ${path.relative(process.cwd(), outFile)}`);

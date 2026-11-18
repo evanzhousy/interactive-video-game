@@ -24,20 +24,20 @@
   - `src/game/night5.ts` + `src/ui/components/Night5Audit.tsx`：窗外出现 99.98% 面部匹配的 `#09` 替身（带 `<video>` 动态流挂载与专属神经配音），背诵玩家入职 `SAY` 宣言，对比玩家 4 夜真实排班日志 `DO` 结算 **7 大结局**。
   - `src/game/storage.ts` + `src/ui/components/CompendiumModal.tsx`：`localStorage` 跨刷新自动存档续玩（`gate0.shift.v1`）+ **7 结局 / 6 项审讯勋章图鉴**（`gate0.compendium.v1`）+ 桌面端战术快捷键（`1`–`5`、`S`、`T`、`[` / `]`）。
 
-### 1.2 视听资产现状（28 张 35mm 电影帧 + 300 条三语神经语音 + 16 段 720p 真人动态 `.mp4` 已上线，双 Google Drive 资产库已同步）
+### 1.2 视听资产现状（28 张 35mm 电影帧 + 300 条三语神经语音 + 全量 28 段 720p 真人动态 `.mp4` 已满配上线，`public@tfsharedspace.com` 网盘统一归档）
 - **28 张同演员、同机位 35mm AI 真人电影帧（已内置）**：
   - `public/portraits/{elena,leo,arthur,marcus,ana,ingrid,linmei,hannah,operator09}.jpg`（9 张底片）+ `public/portraits/reactions/{slug}_{flinch,lean_in}.jpg`（16 张微表情反应帧）+ `public/portraits/reactions/chamber_{purge,admit,whiteout}.jpg`（3 张实景结局帧）。
 - **300 条三语对讲机录音棚级神经语音包（✅ 已全量落盘 `public/audio/{zh,en,ja}/`）**：
   - 覆盖 8 名幸存者全部探针分支（264 条）+ 第 5 夜 `operator09` 替身全部入职宣言镜像变体（36 条），经 `scripts/synthesize-edge-tts.py` 按角色国籍/性别/语速分轨演绎并由 `ffmpeg` 统一母带处理（`300–3500Hz` 对讲滤波 + `-16 LUFS` 响度对齐，`24kHz 48kbps` 共 `16 MB`）。
   - `src/game/audio.ts` 已同步加入可选的 **`-46°C` 极地超低频暴风雪底噪 + 潜艇/前哨站金属舱壁热胀冷缩应力呻吟声**（顶部栏 `🌨️ AMB: ON/OFF` 独立开关）。
-- **零 API 扣费的 Google AI Studio 网页端动态视频渲染器（`scripts/render-aistudio-web.mjs`）与 16 段 `1280×720` `.mp4` 已上线（全战役 100% 启用 `CAM-01 // LIVE I2V STREAM`）**：
-  - 通过 `ego-browser` 驱动 `public@tfsharedspace.com` 账号下的 AI Studio 网页版 `Gemini Omni 1.2 Flash` + `Gemini Omni 1.1 Flash` 自动梯队（强制校验 `"No API key selected"` 确保 `$0` API 额度消耗），已完成 **16 段实机监控 `.mp4`** 渲染并合入 `public/videos/`：
-    - **全员 9/9 待机呼吸流（100% 覆盖第 1–5 夜全部角色）**：`{elena,leo,arthur,marcus,ana,ingrid,linmei,hannah,operator09}/idle.mp4`；
-    - **第 1 夜全套反应动作（100% 覆盖）**：`elena/{flinch,lean_in}.mp4` + `leo/{flinch,lean_in}.mp4`；
-    - **全角色与第 5 夜共享实景处决/放行/暴风雪动态流（100% 覆盖）**：`chamber/{admit,purge,whiteout}.mp4`。
-  - **双 Google Drive 云端资产归档已同步**：
-    - `public@tfsharedspace.com` 网盘：`quarantine-gate-0-videos`（`1sB2OSIXVflmYK2aJ4MkkKYMv_UeL2c9l`）与 `quarantine-gate-0-assets`（`1Jld4N9lhQO9HEp5hLRNuiZdmm26oMeLg`）；
-    - `evanzhousyforward@gmail.com` 网盘（5 TB 存储）：`My Drive/quarantine-gate-0-assets/`（`https://drive.google.com/drive/u/1/folders/1LMtTlhmflgoIHmaQmG3JvFsw_D6BKUNT`）。
+- **全量 28 段 `1280×720` 真人动态 `.mp4` 已 100% 满配上线（`$0` API 扣费渲染）**：
+  - 通过 `scripts/render-aistudio-web.mjs` 驱动 `public@tfsharedspace.com` 账号下的 AI Studio 网页版 `Gemini Omni 1.2 Flash` + `Gemini Omni 1.1 Flash`（强制校验 `"No API key selected"` 确保 `$0` API 额度消耗）：
+    - **全员 9/9 待机呼吸流**：`{elena,leo,arthur,marcus,ana,ingrid,linmei,hannah,operator09}/idle.mp4`；
+    - **全员 16/16 审讯微表情反应流**：`{elena,leo,arthur,marcus,ana,ingrid,linmei,hannah}/{flinch,lean_in}.mp4`；
+    - **全角色与第 5 夜共享实景处决/放行/暴风雪动态流（3/3）**：`chamber/{admit,purge,whiteout}.mp4`。
+- **Google Drive 云端资产归档（统一绑定 `public@tfsharedspace.com` · 20 TB）**：
+  - `quarantine-gate-0-videos`（ID: `1sB2OSIXVflmYK2aJ4MkkKYMv_UeL2c9l`）：按角色子目录存放全套 `.mp4`，可通过 `pnpm media:pull-drive` 拉回或 `pnpm media:push-drive` 幂等推送更新；
+  - `quarantine-gate-0-assets`（ID: `1Jld4N9lhQO9HEp5hLRNuiZdmm26oMeLg`）：存放 `quarantine-gate-0-full-assets.zip` 全量打包备份（视频 + 底片 + 三语配音 + `media-manifest.json`）。
 
 ### 1.3 在线 Flash 自由提问改写与三端发行管线（✅ 已全部打通）
 - **Vercel 生产部署与 GitHub Pages 跨域共享**：
@@ -50,12 +50,11 @@
 
 ## 2. 下一步待办事项（Next Steps 优先级清单）
 
-### Priority 1（可选增量）：AI Studio 每日免费网页配额刷新后补齐 `V-03`~`V-08` 的 12 段 `flinch` / `lean_in` 动态反应流
-目前第 1–5 夜全体 9 名角色的 `idle.mp4` 待机流、第 1 夜全套反应流及全员 `admit`/`purge`/`whiteout` 结局流均已上线（`V-03`~`V-08` 在提问瞬间自动平滑叠化 35mm 同演员微表情关键帧）。待太平洋时间午夜 AI Studio 网页端每日免费额度重置后，直接运行：
-```bash
-ego-browser nodejs < scripts/render-aistudio-web.mjs
-```
-脚本会自动跳过已落盘的 16 段视频，依次通过 `Gemini Omni 1.2 Flash` -> `Gemini Omni 1.1 Flash`（`$0` API 扣费）一口气补完最后 12 段微表情片段。
+### Priority 1（核心玩法深度补完 · 对齐 `docs/GDD.md` v3.1）：
+1. **第 5 夜 4 轮对讲审讯替身交互**：允许玩家拿前四夜行为反问窗外 `#09` 替身，逼其用入职 `SAY` 场面话露馅后再做终局裁决；
+2. **夜与夜之间的 3 场玩家真实危机事件**：新增 N2 血清分配、N3 受贿抉择、N4 基地长追责质问，构建真实玩家 `DO` 行为链；
+3. **燃料消耗与潜艇关键工种配额经济**：`PURGE` 消耗取暖燃料（影响次夜传感器电力），误杀医生/机械师/潜水员影响潜艇启航条件；
+4. **角色定制自由输入意图识别 + 每日种子班次与 Steam Demo 模式**。
 
 ### Priority 2：校验或按需配置 Vercel AI Gateway / Gemini 生产密钥
 - 仓库已上线 `https://quarantine-gate-0.vercel.app` 并支持 `x-vercel-oidc-token`（Vercel AI Gateway）自动透传；若需固定使用独立 Gemini Key 或自定义网关配额，可在 Vercel 项目后台 `Settings -> Environment Variables` 添加 `GEMINI_API_KEY` 或 `AI_GATEWAY_API_KEY`（未配置或超额时系统 0 阻塞自动回退至预审台词）。

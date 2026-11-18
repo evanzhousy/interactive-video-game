@@ -71,23 +71,19 @@ describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
       expect(fs.existsSync(path.resolve(process.cwd(), n5Clip.referenceEndFrame))).toBe(true);
     }
 
-    // Verify all 16 rendered AI Studio 720p H.264 live-action MP4 clips on disk:
-    // - 9/9 idle streams across all 8 survivors + Night 5 OP-09
-    // - Full Night 1 reactions (Elena + Leo flinch & lean_in)
-    // - Shared chamber admit / purge / whiteout streams
+    // Verify all 28 rendered AI Studio 720p H.264 live-action MP4 clips on disk (100% full cast & chamber):
+    // - 8/8 survivors x (idle, flinch, lean_in) = 24 actor streams
+    // - Night 5 OP-09 idle stream = 1 doppelgänger stream
+    // - Shared chamber (admit, purge, whiteout) = 3 chamber streams
     const expectedRenderedVideos = [
-      "public/videos/elena/idle.mp4",
-      "public/videos/elena/flinch.mp4",
-      "public/videos/elena/lean_in.mp4",
-      "public/videos/leo/idle.mp4",
-      "public/videos/leo/flinch.mp4",
-      "public/videos/leo/lean_in.mp4",
-      "public/videos/arthur/idle.mp4",
-      "public/videos/marcus/idle.mp4",
-      "public/videos/ana/idle.mp4",
-      "public/videos/ingrid/idle.mp4",
-      "public/videos/linmei/idle.mp4",
-      "public/videos/hannah/idle.mp4",
+      ...ALL_VISITORS.flatMap((v) => {
+        const s = getVisitorSlug(v.id);
+        return [
+          `public/videos/${s}/idle.mp4`,
+          `public/videos/${s}/flinch.mp4`,
+          `public/videos/${s}/lean_in.mp4`
+        ];
+      }),
       "public/videos/operator09/idle.mp4",
       "public/videos/chamber/admit.mp4",
       "public/videos/chamber/purge.mp4",

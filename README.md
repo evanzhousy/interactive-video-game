@@ -95,7 +95,7 @@ FLASH_MODEL=google/gemini-3.8-flash
 ├── public/
 │   ├── audio/                    # 300 studio neural intercom MP3 lines (zh / en / ja + Night 5 OP-09)
 │   ├── portraits/                # 28 photorealistic 35mm AI cinema frames (idle + reactions + chamber)
-│   ├── videos/                   # 16 live-action 1280x720 H.264 MP4 streams (9/9 idle + N1 + chamber)
+│   ├── videos/                   # 28 live-action 1280x720 H.264 MP4 streams (100% full cast & chamber)
 │   └── media-manifest.json       # 40+3 I2V video prompts + 300 trilingual intercom voice lines
 ├── scripts/
 │   ├── sync-ordamor.ts           # Syncs pure-TS Persona Engine files from ../ordamor
@@ -103,7 +103,8 @@ FLASH_MODEL=google/gemini-3.8-flash
 │   ├── synthesize-edge-tts.py    # Character-cast trilingual neural TTS + FFmpeg radio mastering
 │   ├── render-aistudio-web.mjs   # Zero-API-credit AI Studio web UI video renderer via ego-browser
 │   ├── generate-videos.ts        # Batch-renders I2V .mp4 clips via Veo 3 / Kling 2.0 / Runway Gen-4
-│   └── pull-gdrive-videos.ts     # Syncs Colab-rendered .mp4 clips from Google Drive into public/videos/
+│   ├── pull-gdrive-videos.ts     # Syncs .mp4 clips from public@tfsharedspace.com Google Drive
+│   └── push-gdrive-assets.ts     # Idempotently syncs videos & full asset zip to public@tfsharedspace.com Drive
 ├── src/
 │   ├── ordamor/                  # Read-only synced upstream Ordamor v6 modules (Red Line 2)
 │   ├── game/                     # Deterministic client engine + 8 survivors + Flash + storage

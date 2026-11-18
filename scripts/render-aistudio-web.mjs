@@ -50,6 +50,7 @@ const task = !existing
     : existing.ownership === "agentDelegatedToUser"
       ? await takeOverTaskSpace(SPACE_ID)
       : await taskSpace(SPACE_ID);
+console.log("Active taskSpaceId:", task.spaceId);
 
 // Ensure tabs are adopted if needed after claim/takeOver
 let managedPages = await task.pages();
@@ -237,6 +238,20 @@ for (let idx = 0; idx < queue.length; idx++) {
 
     await p1.fill('loc=css:textarea[placeholder*="Start typing a prompt"]', fullPrompt);
     await p1.waitForTimeout(600);
+
+    // Wait until all uploaded image attachments finish processing and Run button is enabled
+    await p1
+      .waitForFunction(
+        () => {
+          const btn = [...document.querySelectorAll("button")].find(
+            (el) => el.innerText.includes("Run") && el.innerText.includes("keyboard_return")
+          );
+          return Boolean(btn && !btn.disabled);
+        },
+        undefined,
+        { timeout: 20000 }
+      )
+      .catch(() => {});
 
     // Re-verify "No API key selected" right before clicking Run
     const snapPreRun = await p1.snapshot();
