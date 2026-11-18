@@ -95,11 +95,13 @@ FLASH_MODEL=google/gemini-3.8-flash
 ├── public/
 │   ├── audio/                    # 300 studio neural intercom MP3 lines (zh / en / ja + Night 5 OP-09)
 │   ├── portraits/                # 28 photorealistic 35mm AI cinema frames (idle + reactions + chamber)
+│   ├── videos/                   # 16 live-action 1280x720 H.264 MP4 streams (9/9 idle + N1 + chamber)
 │   └── media-manifest.json       # 40+3 I2V video prompts + 300 trilingual intercom voice lines
 ├── scripts/
 │   ├── sync-ordamor.ts           # Syncs pure-TS Persona Engine files from ../ordamor
 │   ├── generate-media-pack.ts    # Exports media-manifest.json & runs Edge Neural / OpenAI TTS
 │   ├── synthesize-edge-tts.py    # Character-cast trilingual neural TTS + FFmpeg radio mastering
+│   ├── render-aistudio-web.mjs   # Zero-API-credit AI Studio web UI video renderer via ego-browser
 │   ├── generate-videos.ts        # Batch-renders I2V .mp4 clips via Veo 3 / Kling 2.0 / Runway Gen-4
 │   └── pull-gdrive-videos.ts     # Syncs Colab-rendered .mp4 clips from Google Drive into public/videos/
 ├── src/

@@ -71,12 +71,24 @@ describe("Interactive Video & Radio Intercom Media Pack Pipeline", () => {
       expect(fs.existsSync(path.resolve(process.cwd(), n5Clip.referenceEndFrame))).toBe(true);
     }
 
-    // Verify rendered AI Studio 720p H.264 live-action MP4 clips on disk (Elena full set + Leo idle + shared chamber admit/purge/whiteout)
+    // Verify all 16 rendered AI Studio 720p H.264 live-action MP4 clips on disk:
+    // - 9/9 idle streams across all 8 survivors + Night 5 OP-09
+    // - Full Night 1 reactions (Elena + Leo flinch & lean_in)
+    // - Shared chamber admit / purge / whiteout streams
     const expectedRenderedVideos = [
       "public/videos/elena/idle.mp4",
       "public/videos/elena/flinch.mp4",
       "public/videos/elena/lean_in.mp4",
       "public/videos/leo/idle.mp4",
+      "public/videos/leo/flinch.mp4",
+      "public/videos/leo/lean_in.mp4",
+      "public/videos/arthur/idle.mp4",
+      "public/videos/marcus/idle.mp4",
+      "public/videos/ana/idle.mp4",
+      "public/videos/ingrid/idle.mp4",
+      "public/videos/linmei/idle.mp4",
+      "public/videos/hannah/idle.mp4",
+      "public/videos/operator09/idle.mp4",
       "public/videos/chamber/admit.mp4",
       "public/videos/chamber/purge.mp4",
       "public/videos/chamber/whiteout.mp4"

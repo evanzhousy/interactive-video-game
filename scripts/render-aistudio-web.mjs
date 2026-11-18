@@ -51,11 +51,31 @@ const task = !existing
       ? await takeOverTaskSpace(SPACE_ID)
       : await taskSpace(SPACE_ID);
 
-const managedPages = await task.pages();
-const p1 =
+// Ensure tabs are adopted if needed after claim/takeOver
+let managedPages = await task.pages();
+const allTabs = await task.tabs();
+if (managedPages.length === 0 && allTabs.length > 0) {
+  for (const t of allTabs) {
+    if (!t.label) {
+      await task.adopt(t.page);
+    }
+  }
+  managedPages = await task.pages();
+}
+
+let p1 =
   managedPages.find((p) => p.label === "p1") ??
   managedPages[0] ??
-  (await task.adopt((await task.tabs())[0].page));
+  (await task.newPage());
+
+// Pick the AI Studio tab if multiple pages exist
+for (const p of managedPages) {
+  const u = await p.url().catch(() => "");
+  if (u.includes("aistudio.google.com")) {
+    p1 = p;
+    break;
+  }
+}
 
 function normalizeMp4(rawPath, outPath) {
   execFileSync(
@@ -89,6 +109,11 @@ function normalizeMp4(rawPath, outPath) {
   fsSync.unlinkSync(rawPath);
 }
 
+const MODEL_LADDER = job.modelName
+  ? [job.modelName]
+  : ["Gemini Omni 1.2 Flash", "Gemini Omni 1.1 Flash"];
+let activeModelIdx = 0;
+
 for (let idx = 0; idx < queue.length; idx++) {
   const spec = queue[idx];
   const outMp4 = path.join(REPO_ROOT, spec.targetMp4);
@@ -97,7 +122,9 @@ for (let idx = 0; idx < queue.length; idx++) {
   );
 
   let renderedOk = false;
-  for (let attempt = 1; attempt <= 2 && !renderedOk; attempt++) {
+  let hardStopReason = null;
+
+  for (let attempt = 1; attempt <= 3 && !renderedOk && !hardStopReason; attempt++) {
     await p1.goto("https://aistudio.google.com/prompts/new_chat", { timeout: 30000 });
     await p1.waitForLoadState("load");
     await p1.waitForSelector('loc=css:textarea[placeholder*="Start typing a prompt"]', {
@@ -112,6 +139,18 @@ for (let idx = 0; idx < queue.length; idx++) {
       throw new Error(
         "CRITICAL SAFETY STOP: 'No API key selected' is NOT active on AI Studio Playground! Aborting immediately so zero API credits are used."
       );
+    }
+
+    // Select active model from MODEL_LADDER (auto-cascades 1.2 -> 1.1 on daily quota limit)
+    const targetModel = MODEL_LADDER[activeModelIdx];
+    if (!snap0.includes(`text "${targetModel}"`)) {
+      const modMatch = snap0.match(/button \[ref=(\d+)\]\s+text "Gemini Omni [^"]+"/);
+      if (modMatch) {
+        await p1.click(`@${modMatch[1]}`, { label: "open video model selector" });
+        await p1.waitForTimeout(700);
+        await p1.click(`text="${targetModel}"`, { label: `select ${targetModel}` });
+        await p1.waitForTimeout(900);
+      }
     }
 
     // Configure Aspect Ratio = 16:9 if not already 16:9
@@ -191,7 +230,6 @@ for (let idx = 0; idx < queue.length; idx++) {
       await p1.waitForTimeout(1000);
     }
 
-    // Soften any clinical/violent trigger phrases ("blood", "furnace", "sterilization") into cinema-safe visual direction
     const cleanMotionPrompt = spec.prompt.replace(/sterilization|furnace/gi, "industrial forge");
     const fullPrompt = useTwoFrames
       ? `Start from the first 35mm cinema camera frame and smoothly transition to end on the second reference frame in a single unbroken fixed-camera shot: ${cleanMotionPrompt} Silent surveillance camera feed, zero spoken dialogue.`
@@ -219,7 +257,7 @@ for (let idx = 0; idx < queue.length; idx++) {
     });
 
     let blobB64 = null;
-    for (let poll = 0; poll < 42; poll++) {
+    for (let poll = 0; poll < 36; poll++) {
       await p1.waitForTimeout(4000);
       const res = await p1.evaluate(async () => {
         function findBlobVideos(root, acc = []) {
@@ -247,9 +285,16 @@ for (let idx = 0; idx < queue.length; idx++) {
           }
         }
         const bodyTxt = document.body.innerText;
-        const blocked = bodyTxt.includes("Request blocked due to prohibited content");
-        const readyText = bodyTxt.includes("Response ready.");
-        return { done: false, blocked, readyText };
+        if (bodyTxt.includes("verify-account") || bodyTxt.includes("must be verified")) {
+          return { done: false, fatal: "ACCOUNT_VERIFICATION_REQUIRED" };
+        }
+        if (/quota|rate limit|exceeded your|too many requests/i.test(bodyTxt)) {
+          return { done: false, fatal: "QUOTA_OR_RATE_LIMIT" };
+        }
+        if (bodyTxt.includes("Request blocked due to prohibited content")) {
+          return { done: false, blocked: true };
+        }
+        return { done: false };
       });
 
       if (res.done && res.b64) {
@@ -257,6 +302,18 @@ for (let idx = 0; idx < queue.length; idx++) {
         console.log(
           `  ✓ Blob video ready (${Math.round(res.bytes / 1024)} KB raw) on poll ${poll + 1}`
         );
+        break;
+      }
+      if (res.fatal) {
+        if (res.fatal === "QUOTA_OR_RATE_LIMIT" && activeModelIdx + 1 < MODEL_LADDER.length) {
+          activeModelIdx += 1;
+          console.log(
+            `  ↻ Daily quota reached on previous model; auto-switching to ${MODEL_LADDER[activeModelIdx]}!`
+          );
+          break;
+        }
+        hardStopReason = res.fatal;
+        console.error(`  ✗ Hard stop triggered: ${res.fatal}`);
         break;
       }
       if (res.blocked) {
@@ -274,6 +331,10 @@ for (let idx = 0; idx < queue.length; idx++) {
       console.log(`  ✓ Normalized & saved ${spec.targetMp4} (${kb} KB)`);
       renderedOk = true;
     }
+  }
+
+  if (hardStopReason) {
+    throw new Error(`Stopped batch due to ${hardStopReason} at ${spec.targetMp4}`);
   }
 
   if (!renderedOk) {
