@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          background: #050709;
+          overflow: hidden;
+          font-family: "IBM Plex Mono", monospace;
+          color: #f2f5f7;
+        }
+        .s07-bg {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse at 50% 45%, rgba(235, 168, 52, 0.11) 0%, #050709 72%);
+        }
+        .s07-stage {
+          position: absolute;
+          left: 260px;
+          top: 112px;
+          width: 1400px;
+          height: 736px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .s07-modal-wrap {
+          position: absolute;
+          width: 1260px;
+          border: 2px solid rgba(235, 168, 52, 0.55);
+          background: #070a0e;
+          box-shadow: 0 30px 90px rgba(0, 0, 0, 0.9);
+          overflow: hidden;
+        }
+        .s07-modal-img {
+          width: 1260px;
+          height: auto;
+          display: block;
+        }
+        .s07-lower-third {
+          position: absolute;
+          left: 192px;
+          top: 874px;
+          width: 1536px;
+          height: 92px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .s07-headline {
+          position: absolute;
+          font-family: "IBM Plex Sans", sans-serif;
+          font-size: 52px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          color: #f5c15d;
+          background: rgba(5, 7, 9, 0.94);
+          border-left: 6px solid #e04634;
+          border-right: 6px solid #e04634;
+          padding: 10px 38px;
+          opacity: 0;
+        }
+      </style>
+
+      <div id="root" data-composition-id="scene-07" data-width="1920" data-height="1080">
+        <div class="s07-bg"></div>
+
+        <div class="s07-stage">
+          <div id="s07-card-serum" class="s07-modal-wrap">
+            <img class="s07-modal-img" src="assets/ui/ui_07_crisis_serum_crop.png" alt="Night 2 Last Cryo-Serum Crisis" />
+          </div>
+          <div id="s07-card-bribe" class="s07-modal-wrap" style="opacity:0;">
+            <img class="s07-modal-img" src="assets/ui/ui_07_crisis_bribe_crop.png" alt="Night 3 Deputy Holm Fuel Offer Crisis" />
+          </div>
+        </div>
+
+        <div class="s07-lower-third">
+          <div id="s07-copy-1" class="s07-headline">KEEP THE LAST SERUM?</div>
+          <div id="s07-copy-2" class="s07-headline">OFFER: +2 FUEL. SCRUB THE LOG?</div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        // 0.0s - 2.5s: N2_SERUM crisp hold with subtle tension creep
+        tl.fromTo("#s07-card-serum", { scale: 0.98 }, { scale: 1.03, duration: 2.5, ease: "none" }, 0);
+        tl.fromTo("#s07-copy-1", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.16, ease: "power3.out" }, 0.12);
+        // 2.5s - 5.0s: Hard cut to N3_BRIBE (+2 FUEL offer)
+        tl.set("#s07-card-serum", { opacity: 0 }, 2.5);
+        tl.set("#s07-copy-1", { opacity: 0 }, 2.5);
+        tl.set("#s07-card-bribe", { opacity: 1 }, 2.5);
+        tl.fromTo("#s07-card-bribe", { scale: 0.98 }, { scale: 1.03, duration: 2.5, ease: "none" }, 2.5);
+        tl.fromTo("#s07-copy-2", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.16, ease: "power3.out" }, 2.58);
+        window.__timelines["scene-07"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

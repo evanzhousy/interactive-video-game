@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          background: #050709;
+          overflow: hidden;
+          font-family: "IBM Plex Mono", monospace;
+          color: #f2f5f7;
+        }
+        .s04-plate-wrap {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+        }
+        .s04-plate-img {
+          width: 1920px;
+          height: 1080px;
+          display: block;
+          object-fit: cover;
+        }
+        .s04-cam-shell {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background:
+            radial-gradient(ellipse at 50% 44%, rgba(235, 168, 52, 0.1) 0%, rgba(5, 7, 9, 0.96) 72%),
+            #050709;
+        }
+        .s04-bezel-frame {
+          position: absolute;
+          left: 312px;
+          top: 104px;
+          width: 1296px;
+          height: 736px;
+          border: 2px solid rgba(235, 168, 52, 0.48);
+          background: #090c10;
+          box-shadow:
+            0 0 0 8px #0b0f14,
+            0 0 0 9px rgba(158, 198, 212, 0.16),
+            0 24px 80px rgba(0, 0, 0, 0.85);
+        }
+        .s04-viewport {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          overflow: hidden;
+          background: transparent;
+          pointer-events: none;
+        }
+        .s04-vid {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1280px;
+          height: 720px;
+          object-fit: cover;
+        }
+        .s04-scanlines {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          background: repeating-linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(0, 0, 0, 0) 2px,
+            rgba(0, 0, 0, 0.22) 3px,
+            rgba(0, 0, 0, 0.22) 4px
+          );
+          pointer-events: none;
+        }
+        .s04-hud-top {
+          position: absolute;
+          left: 344px;
+          top: 132px;
+          width: 1232px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+        }
+        .s04-pill {
+          background: rgba(5, 7, 9, 0.84);
+          border: 1px solid rgba(235, 168, 52, 0.52);
+          color: #f5c15d;
+          padding: 6px 14px;
+        }
+        .s04-bpm-box {
+          background: rgba(24, 8, 8, 0.9);
+          border: 1px solid #e04634;
+          color: #ff8e80;
+          padding: 6px 16px;
+        }
+        .s04-levers-layer {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          overflow: hidden;
+          background: #050709;
+        }
+        .s04-levers-camera {
+          position: absolute;
+          inset: 0;
+          transform-origin: 30% 78%;
+        }
+        .s04-lower-third {
+          position: absolute;
+          left: 192px;
+          top: 874px;
+          width: 1536px;
+          height: 92px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .s04-headline {
+          font-family: "IBM Plex Sans", sans-serif;
+          font-size: 56px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          color: #f5c15d;
+          background: rgba(5, 7, 9, 0.94);
+          border-left: 6px solid #eba834;
+          border-right: 6px solid #eba834;
+          padding: 10px 42px;
+          opacity: 0;
+        }
+      </style>
+
+      <div id="root" data-composition-id="scene-04" data-width="1920" data-height="1080">
+        <!-- 0.0s - 2.5s: Live 1080p ORD-OS Axis Preview + MindCrystal amber chords -->
+        <div id="s04-axis-layer" class="s04-plate-wrap">
+          <div id="s04-axis-cam" style="width:1920px; height:1080px; transform-origin: 55% 65%;">
+            <img class="s04-plate-img" src="assets/ui/ui_04_axis_preview.png" alt="ORD-OS Axis Preview and Mind Crystal" />
+          </div>
+        </div>
+
+        <!-- 2.5s - 6.5s: Gate Cam 01 bezel + native 720p Marcus Lean In (4.0s exact) -->
+        <div id="s04-cam-shell" class="s04-cam-shell">
+          <div class="s04-bezel-frame"></div>
+        </div>
+
+        <div class="s04-viewport">
+          <video
+            id="s04-marcus-lean"
+            class="clip s04-vid"
+            src="assets/video/marcus_lean_in.mp4"
+            data-start="2.5"
+            data-duration="4.0"
+            data-track-index="2"
+            muted
+            playsinline
+          ></video>
+        </div>
+
+        <div id="s04-cam-hud" style="opacity:0; pointer-events:none;" data-layout-ignore>
+          <div class="s04-scanlines"></div>
+          <div class="s04-hud-top">
+            <div class="s04-pill">GATE CAM 01 // V-04 CAPT. MARCUS CHEN</div>
+            <div id="s04-bpm-88" class="s04-bpm-box">HEART RATE: 88 BPM</div>
+            <div id="s04-bpm-98" class="s04-bpm-box" style="position:absolute; right:0; opacity:0;">HEART RATE: 98 BPM (+10)</div>
+          </div>
+        </div>
+
+        <!-- 6.5s - 11.0s: Live 1080p Levers & Marcus Response Zoom -->
+        <div id="s04-levers-layer" class="s04-levers-layer">
+          <div id="s04-levers-cam" class="s04-levers-camera">
+            <img class="s04-plate-img" src="assets/ui/ui_04_levers.png" alt="Interrogation Levers and Telemetry" />
+          </div>
+        </div>
+
+        <div class="s04-lower-third">
+          <div id="s04-headline" class="s04-headline">4 QUESTIONS. THEN YOU CHOOSE.</div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        // 0.0s - 2.5s: Gentle tactical push into Axis Preview + MindCrystal chords
+        tl.fromTo(
+          "#s04-axis-cam",
+          { scale: 1.0, x: 0, y: 0 },
+          { scale: 1.12, x: -30, y: -24, duration: 2.5, ease: "power1.inOut" },
+          0
+        );
+        // 2.5s: Cut cleanly to Marcus native 720p Gate Cam 01
+        tl.set("#s04-axis-layer", { opacity: 0 }, 2.5);
+        tl.set("#s04-cam-shell", { opacity: 1 }, 2.5);
+        tl.set("#s04-cam-hud", { opacity: 1 }, 2.5);
+        // True +10 BPM telemetry spike mid-defense (4.2s)
+        tl.set("#s04-bpm-88", { opacity: 0 }, 4.2);
+        tl.set("#s04-bpm-98", { opacity: 1 }, 4.2);
+        // 6.5s: Cut to live UI levers + Marcus response, zooming toward [SW-01 // ADMIT] & [SW-02 // INCINERATE]
+        tl.set("#s04-cam-shell", { opacity: 0 }, 6.5);
+        tl.set("#s04-cam-hud", { opacity: 0 }, 6.5);
+        tl.set("#s04-levers-layer", { opacity: 1 }, 6.5);
+        tl.fromTo(
+          "#s04-levers-cam",
+          { scale: 1.02, y: 0 },
+          { scale: 1.24, y: -64, duration: 4.3, ease: "power2.inOut" },
+          6.5
+        );
+        // 8.8s (global 0:26.8): Slam headline in lower third right after Marcus line concludes
+        tl.fromTo(
+          "#s04-headline",
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.22, ease: "power3.out" },
+          8.8
+        );
+        window.__timelines["scene-04"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

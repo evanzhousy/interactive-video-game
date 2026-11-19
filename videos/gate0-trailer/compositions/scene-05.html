@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          background: #050709;
+          overflow: hidden;
+          font-family: "IBM Plex Mono", monospace;
+          color: #f2f5f7;
+        }
+        .s05-fullbleed {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          object-fit: cover;
+        }
+        .s05-storm-banner {
+          position: absolute;
+          left: 240px;
+          top: 124px;
+          width: 1440px;
+          padding: 12px 24px;
+          background: rgba(24, 6, 6, 0.88);
+          border: 2px solid #e04634;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          color: #ff8e80;
+        }
+        .s05-cam-shell {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background:
+            radial-gradient(ellipse at 50% 44%, rgba(224, 70, 52, 0.1) 0%, rgba(5, 7, 9, 0.96) 72%),
+            #050709;
+        }
+        .s05-bezel-frame {
+          position: absolute;
+          left: 312px;
+          top: 104px;
+          width: 1296px;
+          height: 736px;
+          border: 2px solid rgba(224, 70, 52, 0.65);
+          background: #090c10;
+          box-shadow:
+            0 0 0 8px #0b0f14,
+            0 0 0 9px rgba(235, 168, 52, 0.2),
+            0 24px 80px rgba(0, 0, 0, 0.85);
+        }
+        .s05-viewport {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          overflow: hidden;
+          background: transparent;
+          pointer-events: none;
+        }
+        .s05-vid {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1280px;
+          height: 720px;
+          object-fit: cover;
+        }
+        .s05-scanlines {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          background: repeating-linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(0, 0, 0, 0) 2px,
+            rgba(0, 0, 0, 0.24) 3px,
+            rgba(0, 0, 0, 0.24) 4px
+          );
+          pointer-events: none;
+        }
+        .s05-hud-top {
+          position: absolute;
+          left: 344px;
+          top: 132px;
+          width: 1232px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+        }
+        .s05-pill-red {
+          background: rgba(24, 6, 6, 0.9);
+          border: 1px solid #e04634;
+          color: #ff8e80;
+          padding: 6px 14px;
+        }
+        .s05-pill-amber {
+          background: rgba(5, 7, 9, 0.88);
+          border: 1px solid #eba834;
+          color: #f5c15d;
+          padding: 6px 14px;
+        }
+        .s05-sensor-strip {
+          position: absolute;
+          left: 344px;
+          top: 768px;
+          width: 1232px;
+          display: flex;
+          gap: 16px;
+          font-size: 16px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+        }
+        .s05-locked-btn {
+          background: rgba(20, 8, 8, 0.92);
+          border: 1px solid #e04634;
+          color: #ff8e80;
+          padding: 8px 18px;
+        }
+        .s05-lower-third {
+          position: absolute;
+          left: 192px;
+          top: 864px;
+          width: 1536px;
+          height: 92px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .s05-headline {
+          position: absolute;
+          font-family: "IBM Plex Sans", sans-serif;
+          font-size: 54px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          color: #f5c15d;
+          background: rgba(5, 7, 9, 0.94);
+          border-left: 6px solid #e04634;
+          border-right: 6px solid #e04634;
+          padding: 10px 38px;
+          opacity: 0;
+        }
+        .s05-tear-bar {
+          position: absolute;
+          left: 0;
+          top: 420px;
+          width: 1920px;
+          height: 18px;
+          background: rgba(235, 168, 52, 0.65);
+          opacity: 0;
+          pointer-events: none;
+        }
+      </style>
+
+      <div id="root" data-composition-id="scene-05" data-width="1920" data-height="1080">
+        <!-- 0.0s - 2.5s: Storm CRT geomagnetic tear -->
+        <video
+          id="s05-storm-crt"
+          class="clip s05-fullbleed"
+          src="assets/video/trailer_02_storm_crt.mp4"
+          data-start="0"
+          data-duration="2.5"
+          data-track-index="1"
+          muted
+          playsinline
+        ></video>
+        <div id="s05-storm-alert" class="s05-storm-banner" data-layout-ignore>
+          <span>[!] SOLAR GEOMAGNETIC STORM · KP-9</span>
+          <span>THERMAL / STROBE: OFFLINE</span>
+        </div>
+
+        <!-- 2.5s - 7.0s: Gate Cam 01 bezel (Ana Night 3 -> Lin Mei Night 4) -->
+        <div id="s05-cam-shell" class="s05-cam-shell">
+          <div class="s05-bezel-frame"></div>
+        </div>
+
+        <div class="s05-viewport">
+          <video
+            id="s05-ana-flinch"
+            class="clip s05-vid"
+            src="assets/video/ana_flinch.mp4"
+            data-start="2.5"
+            data-duration="2.0"
+            data-track-index="2"
+            muted
+            playsinline
+          ></video>
+          <video
+            id="s05-linmei-flinch"
+            class="clip s05-vid"
+            src="assets/video/linmei_flinch.mp4"
+            data-start="4.5"
+            data-duration="2.5"
+            data-track-index="2"
+            muted
+            playsinline
+          ></video>
+        </div>
+
+        <div id="s05-n3-hud" style="opacity:0; pointer-events:none;" data-layout-ignore>
+          <div class="s05-scanlines"></div>
+          <div class="s05-hud-top">
+            <div class="s05-pill-red">NIGHT 3 // V-05 ANA // STORM BLACKOUT</div>
+            <div class="s05-pill-red">SENSORS DISABLED</div>
+          </div>
+          <div class="s05-sensor-strip">
+            <div class="s05-locked-btn">[X] STROBE LOCKED</div>
+            <div class="s05-locked-btn">[X] THERMAL LOCKED</div>
+          </div>
+        </div>
+
+        <div id="s05-n4-hud" style="opacity:0; pointer-events:none;" data-layout-ignore>
+          <div class="s05-scanlines"></div>
+          <div class="s05-hud-top">
+            <div class="s05-pill-amber">NIGHT 4 // V-07 LIN MEI // CORRIDOR LOG CONFLICT</div>
+            <div class="s05-pill-red">ALIBI MISMATCH</div>
+          </div>
+        </div>
+
+        <div id="s05-tear" class="s05-tear-bar"></div>
+
+        <div class="s05-lower-third">
+          <div id="s05-copy-n3" class="s05-headline">NIGHT 3 · SENSORS OFFLINE.</div>
+          <div id="s05-copy-n4" class="s05-headline">NIGHT 4 · BREAK THEIR ALIBI.</div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        // Storm CRT headline enters at 0.3s and stays across Ana cut until 4.4s
+        tl.fromTo("#s05-copy-n3", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.18, ease: "power3.out" }, 0.35);
+        // RF tear flash on storm -> Ana cut at 2.45s
+        tl.fromTo(
+          "#s05-tear",
+          { opacity: 0.9, y: -140 },
+          { opacity: 0, y: 260, duration: 0.16, ease: "none", immediateRender: false },
+          2.42
+        );
+        tl.set("#s05-storm-alert", { opacity: 0 }, 2.5);
+        tl.set("#s05-cam-shell", { opacity: 1 }, 2.5);
+        tl.set("#s05-n3-hud", { opacity: 1 }, 2.5);
+        // Cut to Night 4 Lin Mei at 4.5s
+        tl.to("#s05-copy-n3", { opacity: 0, duration: 0.1, ease: "none" }, 4.4);
+        tl.set("#s05-n3-hud", { opacity: 0 }, 4.5);
+        tl.set("#s05-n4-hud", { opacity: 1 }, 4.5);
+        tl.fromTo(
+          "#s05-tear",
+          { opacity: 0.75, y: 180 },
+          { opacity: 0, y: -180, duration: 0.14, ease: "none", immediateRender: false },
+          4.48
+        );
+        tl.fromTo("#s05-copy-n4", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.18, ease: "power3.out" }, 4.6);
+        window.__timelines["scene-05"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

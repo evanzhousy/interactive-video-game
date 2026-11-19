@@ -9,3 +9,7 @@ src-tauri/target/
 tauri/target/
 .vercel
 .env*
+videos/gate0-trailer/.hyperframes/
+videos/gate0-trailer/renders/
+videos/gate0-trailer/assets/video/
+videos/gate0-trailer/assets/audio/

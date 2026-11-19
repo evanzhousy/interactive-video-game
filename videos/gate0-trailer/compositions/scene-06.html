@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          background: #050709;
+          overflow: hidden;
+          font-family: "IBM Plex Mono", monospace;
+          color: #f2f5f7;
+        }
+        .s06-fullbleed {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          object-fit: cover;
+        }
+        .s06-brownout-layer {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          overflow: hidden;
+          background: #050709;
+        }
+        .s06-brownout-cam {
+          position: absolute;
+          inset: 0;
+          transform-origin: 28% 42%;
+        }
+        .s06-sub-layer {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background:
+            radial-gradient(ellipse at 50% 50%, rgba(224, 70, 52, 0.12) 0%, #050709 72%);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 28px;
+        }
+        .s06-sub-card {
+          padding: 28px 36px;
+          border: 2px solid #e04634;
+          background: #090c10;
+          box-shadow: 0 0 60px rgba(224, 70, 52, 0.25);
+        }
+        .s06-sub-img {
+          width: 1280px;
+          height: auto;
+          display: block;
+        }
+        .s06-sub-caption {
+          font-size: 32px;
+          font-weight: 700;
+          letter-spacing: 0.2em;
+          color: #9ec6d4;
+        }
+        .s06-crt-snap {
+          position: absolute;
+          left: 0;
+          top: 534px;
+          width: 1920px;
+          height: 12px;
+          background: #9ec6d4;
+          opacity: 0;
+          pointer-events: none;
+        }
+        .s06-lower-third {
+          position: absolute;
+          left: 192px;
+          top: 874px;
+          width: 1536px;
+          height: 92px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .s06-headline {
+          font-family: "IBM Plex Sans", sans-serif;
+          font-size: 56px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          color: #f5c15d;
+          background: rgba(5, 7, 9, 0.94);
+          border-left: 6px solid #e04634;
+          border-right: 6px solid #e04634;
+          padding: 10px 42px;
+          opacity: 0;
+        }
+      </style>
+
+      <div id="root" data-composition-id="scene-06" data-width="1920" data-height="1080">
+        <!-- 0.0s - 2.2s: Full-bleed 1080p Purge Lever Slam -->
+        <video
+          id="s06-purge-lever"
+          class="clip s06-fullbleed"
+          src="assets/video/trailer_03_purge_lever.mp4"
+          data-start="0"
+          data-duration="2.2"
+          data-track-index="1"
+          muted
+          playsinline
+        ></video>
+
+        <!-- 2.2s - 4.2s: Live 1080p Cryo-Brownout 0 FUEL Booth -->
+        <div id="s06-brownout-layer" class="s06-brownout-layer">
+          <div id="s06-brownout-cam" class="s06-brownout-cam">
+            <img class="s06-fullbleed" src="assets/ui/ui_06_cryo_brownout.png" alt="Cryo-Brownout 0 Fuel Alert" />
+          </div>
+        </div>
+
+        <!-- 4.2s - 5.8s: Full-bleed 1080p Nautilus-0 Subterranean Glacial Dock -->
+        <video
+          id="s06-nautilus-dock"
+          class="clip s06-fullbleed"
+          src="assets/video/trailer_04_nautilus_dock.mp4"
+          data-start="4.2"
+          data-duration="1.6"
+          data-track-index="2"
+          muted
+          playsinline
+        ></video>
+
+        <!-- 5.8s - 7.0s: Crisp <NautilusSubSchematic> after CRT power-off snap -->
+        <div id="s06-sub-layer" class="s06-sub-layer">
+          <div class="s06-sub-caption">NAUTILUS-0 CREW</div>
+          <div id="s06-sub-card" class="s06-sub-card">
+            <img class="s06-sub-img" src="assets/ui/ui_06_nautilus_sub.png" alt="Nautilus-0 Submarine Crew Readiness" />
+          </div>
+        </div>
+
+        <div id="s06-crt-snap" class="s06-crt-snap"></div>
+
+        <div class="s06-lower-third">
+          <div id="s06-headline" class="s06-headline">5 FUEL · 8 SURVIVORS.</div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        // 1.35s: Right on lever slam impact, pop headline
+        tl.fromTo("#s06-headline", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.16, ease: "power3.out" }, 1.35);
+        // 2.2s: Cut to live 0 FUEL Cryo-Brownout capture + zoom onto brownout banner
+        tl.set("#s06-brownout-layer", { opacity: 1 }, 2.2);
+        tl.fromTo(
+          "#s06-brownout-cam",
+          { scale: 1.02, x: 0, y: 0 },
+          { scale: 1.15, x: 42, y: 12, duration: 1.9, ease: "power2.out" },
+          2.2
+        );
+        // 4.2s: Cut cleanly to Nautilus-0 glacial dock video
+        tl.set("#s06-brownout-layer", { opacity: 0 }, 4.2);
+        tl.to("#s06-headline", { opacity: 0, duration: 0.14, ease: "none" }, 4.15);
+        // 5.76s: CRT power-off snap (sharp white/cyan scanline flash, NOT a dissolve!) -> Nautilus schematic
+        tl.fromTo(
+          "#s06-crt-snap",
+          { opacity: 0.95, scaleY: 3 },
+          { opacity: 0, scaleY: 0.2, duration: 0.14, ease: "power3.out", immediateRender: false },
+          5.76
+        );
+        tl.set("#s06-sub-layer", { opacity: 1 }, 5.8);
+        tl.fromTo("#s06-sub-card", { scale: 0.96 }, { scale: 1.02, duration: 1.15, ease: "power2.out" }, 5.8);
+        window.__timelines["scene-06"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

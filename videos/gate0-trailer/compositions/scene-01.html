@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          background: #050709;
+          overflow: hidden;
+          font-family: "IBM Plex Mono", monospace;
+          color: #f2f5f7;
+        }
+        .s01-chassis {
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse at 50% 44%, rgba(235, 168, 52, 0.08) 0%, rgba(5, 7, 9, 0.96) 72%),
+            #050709;
+        }
+        .s01-bezel-frame {
+          position: absolute;
+          left: 312px;
+          top: 104px;
+          width: 1296px;
+          height: 736px;
+          border: 2px solid rgba(235, 168, 52, 0.42);
+          background: #090c10;
+          box-shadow:
+            0 0 0 8px #0b0f14,
+            0 0 0 9px rgba(158, 198, 212, 0.16),
+            0 24px 80px rgba(0, 0, 0, 0.85);
+        }
+        .s01-viewport {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          overflow: hidden;
+          background: #000000;
+        }
+        .s01-vid {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1280px;
+          height: 720px;
+          object-fit: cover;
+        }
+        .s01-scanlines {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          background:
+            repeating-linear-gradient(
+              to bottom,
+              rgba(0, 0, 0, 0) 0px,
+              rgba(0, 0, 0, 0) 2px,
+              rgba(0, 0, 0, 0.22) 3px,
+              rgba(0, 0, 0, 0.22) 4px
+            );
+          pointer-events: none;
+        }
+        .s01-hud-top {
+          position: absolute;
+          left: 344px;
+          top: 132px;
+          width: 1232px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 18px;
+          font-weight: 600;
+          letter-spacing: 0.14em;
+          color: #eba834;
+          text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+        }
+        .s01-hud-pill {
+          background: rgba(5, 7, 9, 0.78);
+          border: 1px solid rgba(235, 168, 52, 0.45);
+          padding: 6px 14px;
+        }
+        .s01-hud-pill-red {
+          background: rgba(24, 6, 6, 0.88);
+          border: 1px solid #e04634;
+          color: #ff7c6e;
+          padding: 6px 14px;
+          opacity: 0;
+        }
+        .s01-rail-left {
+          position: absolute;
+          left: 196px;
+          top: 140px;
+          width: 96px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          font-size: 14px;
+          letter-spacing: 0.12em;
+          color: #9ec6d4;
+        }
+        .s01-rail-right {
+          position: absolute;
+          right: 196px;
+          top: 140px;
+          width: 96px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 16px;
+          font-size: 14px;
+          letter-spacing: 0.12em;
+          color: #eba834;
+        }
+        .s01-bar-track {
+          width: 72px;
+          height: 6px;
+          background: rgba(158, 198, 212, 0.18);
+        }
+        .s01-bar-fill {
+          width: 56px;
+          height: 6px;
+          background: #eba834;
+        }
+        .s01-bar-fill-red {
+          width: 68px;
+          height: 6px;
+          background: #e04634;
+        }
+        .s01-lower-third {
+          position: absolute;
+          left: 192px;
+          top: 864px;
+          width: 1536px;
+          height: 92px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .s01-copy {
+          font-family: "IBM Plex Sans", sans-serif;
+          font-size: 56px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          color: #f5c15d;
+          background: rgba(5, 7, 9, 0.92);
+          border-left: 6px solid #e04634;
+          border-right: 6px solid #e04634;
+          padding: 10px 36px;
+        }
+        .s01-flash {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          background: #e04634;
+          opacity: 0;
+          pointer-events: none;
+        }
+      </style>
+
+      <div id="root" data-composition-id="scene-01" data-width="1920" data-height="1080">
+        <div class="s01-chassis"></div>
+        <div class="s01-bezel-frame"></div>
+
+        <div class="s01-rail-left" data-layout-ignore>
+          <div>GATE 0</div>
+          <div>-46°C</div>
+          <div class="s01-bar-track"><div class="s01-bar-fill"></div></div>
+          <div>O2 19%</div>
+        </div>
+
+        <div class="s01-rail-right" data-layout-ignore>
+          <div>CAM 01</div>
+          <div>V-01</div>
+          <div class="s01-bar-track"><div class="s01-bar-fill-red"></div></div>
+          <div>LOCK</div>
+        </div>
+
+        <div class="s01-viewport">
+          <video
+            id="s01-elena-flinch"
+            class="clip s01-vid"
+            src="assets/video/elena_flinch.mp4"
+            data-start="0"
+            data-duration="3.2"
+            data-track-index="1"
+            muted
+            playsinline
+          ></video>
+          <video
+            id="s01-chamber-purge"
+            class="clip s01-vid"
+            src="assets/video/chamber_purge.mp4"
+            data-start="3.2"
+            data-duration="1.8"
+            data-track-index="1"
+            muted
+            playsinline
+          ></video>
+        </div>
+
+        <div class="s01-scanlines"></div>
+        <div id="s01-purge-flash" class="s01-flash"></div>
+
+        <div class="s01-hud-top" data-layout-ignore>
+          <div id="s01-cam-tag" class="s01-hud-pill">GATE CAM 01 // SVALBARD OUTPOST 0</div>
+          <div id="s01-alert-tag" class="s01-hud-pill-red">PURGE PROTOCOL ARMED</div>
+        </div>
+
+        <div class="s01-lower-third">
+          <div id="s01-headline" class="s01-copy">SHE LOCKED THE HATCH.</div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        tl.fromTo(
+          "#s01-headline",
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.22, ease: "power3.out" },
+          0.75
+        );
+        tl.to("#s01-headline", { opacity: 0, duration: 0.16, ease: "power2.in" }, 3.0);
+        // Slam flash & alert tag on shutter cut at 3.2s
+        tl.fromTo(
+          "#s01-purge-flash",
+          { opacity: 0.55 },
+          { opacity: 0, duration: 0.35, ease: "power3.out", immediateRender: false },
+          3.2
+        );
+        tl.fromTo(
+          "#s01-alert-tag",
+          { opacity: 0 },
+          { opacity: 1, duration: 0.12, ease: "none", immediateRender: false },
+          3.22
+        );
+        window.__timelines["scene-01"] = tl;
+      </script>
+    </template>
+  </body>
+</html>

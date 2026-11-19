@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        #root {
+          position: absolute;
+          inset: 0;
+          background: #050709;
+          overflow: hidden;
+          font-family: "IBM Plex Mono", monospace;
+          color: #f2f5f7;
+        }
+        .s02-fullbleed {
+          position: absolute;
+          inset: 0;
+          width: 1920px;
+          height: 1080px;
+          object-fit: cover;
+        }
+        .s02-booth-layer {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          background:
+            radial-gradient(ellipse at 50% 44%, rgba(235, 168, 52, 0.08) 0%, rgba(5, 7, 9, 0.96) 72%),
+            #050709;
+        }
+        .s02-bezel-frame {
+          position: absolute;
+          left: 312px;
+          top: 104px;
+          width: 1296px;
+          height: 736px;
+          border: 2px solid rgba(235, 168, 52, 0.42);
+          background: #090c10;
+          box-shadow:
+            0 0 0 8px #0b0f14,
+            0 0 0 9px rgba(158, 198, 212, 0.16),
+            0 24px 80px rgba(0, 0, 0, 0.85);
+        }
+        .s02-viewport {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          overflow: hidden;
+          background: transparent;
+          pointer-events: none;
+        }
+        .s02-vid {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 1280px;
+          height: 720px;
+          object-fit: cover;
+        }
+        .s02-scanlines {
+          position: absolute;
+          left: 320px;
+          top: 112px;
+          width: 1280px;
+          height: 720px;
+          background: repeating-linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0) 0px,
+            rgba(0, 0, 0, 0) 2px,
+            rgba(0, 0, 0, 0.22) 3px,
+            rgba(0, 0, 0, 0.22) 4px
+          );
+          pointer-events: none;
+        }
+        .s02-hud-top {
+          position: absolute;
+          left: 344px;
+          top: 132px;
+          width: 1232px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 18px;
+          font-weight: 600;
+          letter-spacing: 0.14em;
+          color: #eba834;
+        }
+        .s02-pill {
+          background: rgba(5, 7, 9, 0.82);
+          border: 1px solid rgba(235, 168, 52, 0.45);
+          padding: 6px 14px;
+        }
+        .s02-pill-frost {
+          background: rgba(5, 7, 9, 0.82);
+          border: 1px solid rgba(158, 198, 212, 0.55);
+          color: #9ec6d4;
+          padding: 6px 14px;
+        }
+        .s02-rail-left {
+          position: absolute;
+          left: 196px;
+          top: 140px;
+          width: 96px;
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          font-size: 14px;
+          letter-spacing: 0.12em;
+          color: #9ec6d4;
+        }
+        .s02-rail-right {
+          position: absolute;
+          right: 196px;
+          top: 140px;
+          width: 96px;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 16px;
+          font-size: 14px;
+          letter-spacing: 0.12em;
+          color: #eba834;
+        }
+        .s02-lower-third {
+          position: absolute;
+          left: 192px;
+          top: 864px;
+          width: 1536px;
+          height: 92px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .s02-flash-card {
+          position: absolute;
+          font-family: "IBM Plex Sans", sans-serif;
+          font-size: 56px;
+          font-weight: 700;
+          letter-spacing: 0.14em;
+          color: #f5c15d;
+          background: rgba(5, 7, 9, 0.94);
+          border-left: 6px solid #eba834;
+          border-right: 6px solid #eba834;
+          padding: 10px 40px;
+          opacity: 0;
+        }
+        .s02-ots-tag {
+          position: absolute;
+          left: 212px;
+          top: 120px;
+          background: rgba(5, 7, 9, 0.82);
+          border: 1px solid rgba(235, 168, 52, 0.45);
+          padding: 8px 16px;
+          font-size: 18px;
+          font-weight: 600;
+          letter-spacing: 0.16em;
+          color: #eba834;
+        }
+      </style>
+
+      <div id="root" data-composition-id="scene-02" data-width="1920" data-height="1080">
+        <!-- 0.0s - 2.0s: Full-bleed 1080p Booth OTS looking through frosted blast glass -->
+        <div id="s02-ots-wrap" style="position:absolute; inset:0;">
+          <video
+            id="s02-booth-ots"
+            class="clip s02-fullbleed"
+            src="assets/video/trailer_01_booth_ots.mp4"
+            data-start="0"
+            data-duration="2.0"
+            data-track-index="1"
+            muted
+            playsinline
+          ></video>
+          <div id="s02-ots-tag" class="s02-ots-tag" data-layout-ignore>SVALBARD OUTPOST 0 // NIGHT 1 // -46°C</div>
+        </div>
+
+        <!-- 2.0s - 8.0s: Gate Cam 01 CRT bezel with native 720p Elena idle (6s padded hold) -->
+        <div id="s02-cam-shell" class="s02-booth-layer" data-layout-ignore>
+          <div class="s02-bezel-frame"></div>
+          <div class="s02-rail-left">
+            <div>NIGHT 1</div>
+            <div>-46°C</div>
+            <div>MIC ON</div>
+          </div>
+          <div class="s02-rail-right">
+            <div>V-01</div>
+            <div>ELENA</div>
+            <div>76 BPM</div>
+          </div>
+        </div>
+
+        <div class="s02-viewport">
+          <video
+            id="s02-elena-idle"
+            class="clip s02-vid"
+            src="assets/video/elena_idle_6s.mp4"
+            data-start="2.0"
+            data-duration="6.0"
+            data-track-index="2"
+            muted
+            playsinline
+          ></video>
+        </div>
+
+        <div id="s02-cam-overlay" style="opacity:0; pointer-events:none;" data-layout-ignore>
+          <div class="s02-scanlines"></div>
+          <div class="s02-hud-top">
+            <div class="s02-pill">GATE CAM 01 // AIRLOCK EXTERIOR</div>
+            <div class="s02-pill-frost">ID VERIFIED · CLEARANCE OK</div>
+          </div>
+        </div>
+
+        <div class="s02-lower-third">
+          <div id="s02-card-1" class="s02-flash-card">PERFECT PASSWORDS.</div>
+          <div id="s02-card-2" class="s02-flash-card">PERFECT FACES.</div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+        // Subtle tremor right on glass thud at 1.92s
+        tl.to("#s02-ots-wrap", { x: -8, y: 5, duration: 0.04, ease: "none" }, 1.92);
+        tl.to("#s02-ots-wrap", { x: 6, y: -4, duration: 0.04, ease: "none" }, 1.96);
+        // Hard cut to Gate Cam 01 shell at 2.0s
+        tl.set("#s02-ots-tag", { opacity: 0 }, 2.0);
+        tl.set("#s02-cam-shell", { opacity: 1 }, 2.0);
+        tl.set("#s02-cam-overlay", { opacity: 1 }, 2.0);
+        // Lower-third beat 1: PERFECT PASSWORDS. (local 2.4s = global 0:07.4)
+        tl.fromTo("#s02-card-1", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.14, ease: "power3.out" }, 2.4);
+        tl.to("#s02-card-1", { opacity: 0, duration: 0.12, ease: "power2.in" }, 3.15);
+        // Lower-third beat 2: PERFECT FACES. (local 5.0s = global 0:10.0)
+        tl.fromTo("#s02-card-2", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.14, ease: "power3.out" }, 5.0);
+        tl.to("#s02-card-2", { opacity: 0, duration: 0.12, ease: "power2.in" }, 5.85);
+        window.__timelines["scene-02"] = tl;
+      </script>
+    </template>
+  </body>
+</html>
