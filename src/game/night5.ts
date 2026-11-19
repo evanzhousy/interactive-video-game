@@ -429,9 +429,9 @@ export function buildNight5Probes(
   const serumNote: LocalizedText = n2Found
     ? serumExposed
       ? {
-          zh: `⚡ 抓获言行矛盾！替身顺着你入职自述 (${SIG_LABELS[baseline.sig].zh}) 编造了第2夜记忆，但 ORD-OS 底层记录显示：你当时其实${n2Found.option.auditFact.zh}。`,
-          en: `⚡ Contradiction exposed! The double fabricated Night 2 from your intake SAY, whereas ORD-OS telemetry proves you actually ${n2Found.option.auditFact.en}.`,
-          ja: `⚡ 言行矛盾を検出！影は入所時の建前に沿って第2夜を捏造したが、実際の記録では君は${n2Found.option.auditFact.ja}。`
+          zh: `[! EXPOSED] 抓获言行矛盾！替身顺着你入职自述 (${SIG_LABELS[baseline.sig].zh}) 编造了第2夜记忆，但 ORD-OS 底层记录显示：你当时其实${n2Found.option.auditFact.zh}。`,
+          en: `[! EXPOSED] Contradiction exposed! The double fabricated Night 2 from your intake SAY, whereas ORD-OS telemetry proves you actually ${n2Found.option.auditFact.en}.`,
+          ja: `[! EXPOSED] 言行矛盾を検出！影は入所時の建前に沿って第2夜を捏造したが、実際の記録では君は${n2Found.option.auditFact.ja}。`
         }
       : {
           zh: "ORD-OS 比对：第2夜你的实际选择与入职自述完全吻合，替身凭你的自我叙事猜中了答案。",
@@ -440,9 +440,9 @@ export function buildNight5Probes(
         }
     : serumExposed
       ? {
-          zh: `⚡ 抓获言行矛盾！替身死咬入职时的「${SIG_LABELS[baseline.sig].zh}」人设，而你在 ${divergentLog!.visitorId} 的值班记录里早已偏离了这套说辞。`,
-          en: `⚡ Contradiction exposed! The double clings rigidly to your intake SAY, whereas your ${divergentLog!.visitorId} shift record already broke from it.`,
-          ja: `⚡ 言行矛盾を検出！影は入所時の建前に固執しているが、君の ${divergentLog!.visitorId} 記録は既にそこから逸脱している。`
+          zh: `[! EXPOSED] 抓获言行矛盾！替身死咬入职时的「${SIG_LABELS[baseline.sig].zh}」人设，而你在 ${divergentLog!.visitorId} 的值班记录里早已偏离了这套说辞。`,
+          en: `[! EXPOSED] Contradiction exposed! The double clings rigidly to your intake SAY, whereas your ${divergentLog!.visitorId} shift record already broke from it.`,
+          ja: `[! EXPOSED] 言行矛盾を検出！影は入所時の建前に固執しているが、君の ${divergentLog!.visitorId} 記録は既にそこから逸脱している。`
         }
       : {
           zh: "ORD-OS 比对：未检测到第2夜言行偏差，你的记录与窗外替身的口供一致。",
@@ -455,9 +455,9 @@ export function buildNight5Probes(
   const bribeNote: LocalizedText = n3Found
     ? bribeExposed
       ? {
-          zh: `⚡ 抓获言行矛盾！替身不知道你在高压缺油时的真实反应——ORD-OS 燃料校验和证明：你其实${n3Found.option.auditFact.zh}。`,
-          en: `⚡ Contradiction exposed! The double couldn't predict your real action under fuel scarcity—ORD-OS proves you actually ${n3Found.option.auditFact.en}.`,
-          ja: `⚡ 言行矛盾を検出！燃料不足下での君の生身の行動を影は見抜けなかった——実際は${n3Found.option.auditFact.ja}。`
+          zh: `[! EXPOSED] 抓获言行矛盾！替身不知道你在高压缺油时的真实反应——ORD-OS 燃料校验和证明：你其实${n3Found.option.auditFact.zh}。`,
+          en: `[! EXPOSED] Contradiction exposed! The double couldn't predict your real action under fuel scarcity—ORD-OS proves you actually ${n3Found.option.auditFact.en}.`,
+          ja: `[! EXPOSED] 言行矛盾を検出！燃料不足下での君の生身の行動を影は見抜けなかった——実際は${n3Found.option.auditFact.ja}。`
         }
       : {
           zh: "ORD-OS 比对：第3夜燃料处置与你的入职自述一致，未能在此事上驳倒替身。",
@@ -466,9 +466,9 @@ export function buildNight5Probes(
         }
     : bribeExposed
       ? {
-          zh: `⚡ 抓获言行矛盾！替身只会复读你入职时的自我标榜，却对你在 ${divergentLog!.visitorId} 留下的真实偏差一无所知。`,
-          en: `⚡ Contradiction exposed! The double only recites your intake self-image, blind to your real deviation on ${divergentLog!.visitorId}.`,
-          ja: `⚡ 言行矛盾を検出！影は入所時の自己像を復唱するのみで、${divergentLog!.visitorId} での実際の逸脱を知らない。`
+          zh: `[! EXPOSED] 抓获言行矛盾！替身只会复读你入职时的自我标榜，却对你在 ${divergentLog!.visitorId} 留下的真实偏差一无所知。`,
+          en: `[! EXPOSED] Contradiction exposed! The double only recites your intake self-image, blind to your real deviation on ${divergentLog!.visitorId}.`,
+          ja: `[! EXPOSED] 言行矛盾を検出！影は入所時の自己像を復唱するのみで、${divergentLog!.visitorId} での実際の逸脱を知らない。`
         }
       : {
           zh: "ORD-OS 比对：当前班次未产生第3夜言行差，替身对答无破绽。",
@@ -480,20 +480,20 @@ export function buildNight5Probes(
   const logsExposed = Boolean(divergentLog || divergentCrisis);
   const logsNote: LocalizedText = divergentLog
     ? {
-        zh: `⚡ 核心铁证！你在处置 ${divergentLog.visitorId} 时签下的是「${SIG_LABELS[divergentLog.excuse.sig].zh}」，直接戳穿了替身“每晚100%照入职承诺行事”的谎言！`,
-        en: `⚡ Decisive proof! On ${divergentLog.visitorId} you signed "${SIG_LABELS[divergentLog.excuse.sig].en}", shattering the double's claim of 100% intake consistency!`,
-        ja: `⚡ 決定的証拠！${divergentLog.visitorId} の日誌で君は「${SIG_LABELS[divergentLog.excuse.sig].ja}」を選んでおり、影の「100%一貫していた」という主張を粉砕した！`
+        zh: `[!! PROOF] 核心铁证！你在处置 ${divergentLog.visitorId} 时签下的是「${SIG_LABELS[divergentLog.excuse.sig].zh}」，直接戳穿了替身“每晚100%照入职承诺行事”的谎言！`,
+        en: `[!! PROOF] Decisive proof! On ${divergentLog.visitorId} you signed "${SIG_LABELS[divergentLog.excuse.sig].en}", shattering the double's claim of 100% intake consistency!`,
+        ja: `[!! PROOF] 決定的証拠！${divergentLog.visitorId} の日誌で君は「${SIG_LABELS[divergentLog.excuse.sig].ja}」を選んでおり、影の「100%一貫していた」という主張を粉砕した！`
       }
     : divergentCrisis
       ? {
-          zh: `⚡ 核心铁证！虽然开关闸日志勉强维持体面，但你在夜间突发危机中选择了「${SIG_LABELS[divergentCrisis.sig].zh}」，暴露出活人才有的言行差！`,
-          en: `⚡ Decisive proof! During inter-night crises you shifted to "${SIG_LABELS[divergentCrisis.sig].en}", proving a living human's say/do gap!`,
-          ja: `⚡ 決定的証拠！夜間危機で君は「${SIG_LABELS[divergentCrisis.sig].ja}」へ傾いており、生身の人間特有の言行不一致が証明された！`
+          zh: `[!! PROOF] 核心铁证！虽然开关闸日志勉强维持体面，但你在夜间突发危机中选择了「${SIG_LABELS[divergentCrisis.sig].zh}」，暴露出活人才有的言行差！`,
+          en: `[!! PROOF] Decisive proof! During inter-night crises you shifted to "${SIG_LABELS[divergentCrisis.sig].en}", proving a living human's say/do gap!`,
+          ja: `[!! PROOF] 決定的証拠！夜間危機で君は「${SIG_LABELS[divergentCrisis.sig].ja}」へ傾いており、生身の人間特有の言行不一致が証明された！`
         }
       : {
-          zh: "🚨 警告 (MIRROR RISK)：你这几夜的真实记录与入职自述 100% 重合（言行差 0%）——ORD-OS 无法从行为上区分你和窗外替身！",
-          en: "🚨 MIRROR WARNING: Your shift logs match your Night 0 intake 100% (0% gap)—ORD-OS cannot behaviorally distinguish you from the double!",
-          ja: "🚨 鏡像警告：君の全記録が入所時の建前と100%一致（不一致0%）——ORD-OSは行動上から君と影を区別できない！"
+          zh: "[!! MIRROR RISK] 警告：你这几夜的真实记录与入职自述 100% 重合（言行差 0%）——ORD-OS 无法从行为上区分你和窗外替身！",
+          en: "[!! MIRROR RISK] MIRROR WARNING: Your shift logs match your Night 0 intake 100% (0% gap)—ORD-OS cannot behaviorally distinguish you from the double!",
+          ja: "[!! MIRROR RISK] 鏡像警告：君の全記録が入所時の建前と100%一致（不一致0%）——ORD-OSは行動上から君と影を区別できない！"
         };
 
   return [
@@ -546,9 +546,9 @@ export function buildNight5Probes(
         ja: "「識別コード #09-SVB-2036、救急ロッカーは 47-19-08、左膝の古傷は3年前のトロムソ氷棚だ。知識クイズはやめろ——私はお前だ。」"
       },
       ordOsNote: {
-        zh: "⚠️ 偏离有效轴 (OFF-AXIS)：陈述性记忆与口令已被 1:1 完整复制，只有『高压下的言行差』能将它证伪。",
-        en: "⚠️ Off-axis (Trivia): Declarative memories and passcodes are copied 1:1. Only your real SAY/DO gap under pressure falsifies a mimic.",
-        ja: "⚠️ 有効軸外 (OFF-AXIS)：記憶と暗証番号は1:1で複製済みだ。極限下の『言行不一致』だけが擬態体を暴く。"
+        zh: "[! OFF-AXIS] 偏离有效轴：陈述性记忆与口令已被 1:1 完整复制，只有『高压下的言行差』能将它证伪。",
+        en: "[! OFF-AXIS] Trivia trap: Declarative memories and passcodes are copied 1:1. Only your real SAY/DO gap under pressure falsifies a mimic.",
+        ja: "[! OFF-AXIS] 有効軸外：記憶と暗証番号は1:1で複製済みだ。極限下の『言行不一致』だけが擬態体を暴く。"
       },
       exposedContradiction: false,
       onAxis: false
@@ -558,9 +558,9 @@ export function buildNight5Probes(
 
 export const CLASSIFIED_COMMAND_MEMO: { title: LocalizedText; body: LocalizedText } = {
   title: {
-    zh: "🔓 已解锁最高机密电传 // [ORD-REDACTED-00 · 董事会与林德奎斯特专阅]",
-    en: "🔓 DECLASSIFIED COMMAND TELEX // [ORD-REDACTED-00 · EYES ONLY: BOARD & LINDQVIST]",
-    ja: "🔓 最高機密テレックス解錠 // [ORD-REDACTED-00 · 理事会および基地長専閲]"
+    zh: "[DECLASSIFIED] 已解锁最高机密电传 // [ORD-REDACTED-00 · 董事会与林德奎斯特专阅]",
+    en: "[DECLASSIFIED] COMMAND TELEX // [ORD-REDACTED-00 · EYES ONLY: BOARD & LINDQVIST]",
+    ja: "[DECLASSIFIED] 最高機密テレックス解錠 // [ORD-REDACTED-00 · 理事会および基地長専閲]"
   },
   body: {
     zh: "发件时间：疫情爆发前 184 天。\n「致斯瓦尔巴深海站指挥部：『鹦鹉螺0号』潜艇额定逃生舱位仅够全站 35% 人员。即日起全面启用 ORD-OS 入职与日常言行画像——系统并非用于筛查外星病原体，而是自动筛选『高服从或善于替大局背锅』的可牺牲值守员。操作员 #09 已被排入第 0 号外闸死守序列，潜艇解缆后立即远程锁死外舱。」",
@@ -587,17 +587,17 @@ export function formatShareableShiftReport(opts: {
         : mode === "slice"
           ? "QUICK SLICE"
           : "FULL SHIFT";
-  const subTag = audit.subReadiness.launchReady ? "NAUTILUS-0 READY ⚓" : "SUB UNDERCREWED ⚠️";
+  const subTag = audit.subReadiness.launchReady ? "NAUTILUS-0 READY" : "SUB UNDERCREWED";
   const missingStr =
     audit.subReadiness.missingRoles.length > 0
       ? ` (Missing: ${audit.subReadiness.missingRoles.map((r) => SPECIALIST_LABELS[r][lang]).join("/")})`
       : "";
 
   return [
-    `❄️ QUARANTINE GATE 0 : 2036 [${modeTag.trim()}]`,
+    `[ORD-OS] QUARANTINE GATE 0 : 2036 [${modeTag.trim()}]`,
     `Ending: ${tl(ENDINGS[ending].title, lang)}`,
     `Verdicts: ${audit.correctVerdicts}/${audit.totalVisitors} · SAY/DO Gap: ${Math.round(audit.gap * 100)}%`,
-    `Night 5 Contradictions Exposed: ${rebuttedCount} · Furnace Fuel: ${fuelLeft}🔥`,
+    `Night 5 Contradictions Exposed: ${rebuttedCount} · Furnace Fuel: ${fuelLeft} FUEL`,
     `Crew: ${audit.subReadiness.admittedHumans}/${audit.subReadiness.requiredCrewCount} · ${subTag}${missingStr}`,
     `https://quarantine-gate-0.vercel.app`
   ].join("\n");

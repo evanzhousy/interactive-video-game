@@ -6,6 +6,7 @@ import {
   type ClipState
 } from "../../game/media.js";
 import type { VisitorSpec } from "../../game/types.js";
+import { ViewportHudOverlay } from "./Schematics.js";
 
 interface Props {
   visitor: VisitorSpec;
@@ -14,6 +15,7 @@ interface Props {
   strobeTrigger: number;
   thermalTrigger: number;
   verdictState: "NONE" | "ADMIT" | "PURGE";
+  motionPaused?: boolean;
   onClipComplete?: () => void;
 }
 
@@ -24,6 +26,7 @@ export function ViewportCanvas({
   strobeTrigger,
   thermalTrigger,
   verdictState,
+  motionPaused = false,
   onClipComplete
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -92,6 +95,23 @@ export function ViewportCanvas({
     const t = setTimeout(() => setThermalActive(false), 3600);
     return () => clearTimeout(t);
   }, [thermalTrigger]);
+
+  // WCAG 2.2.2: Pause/resume ambient looping portrait videos when user pauses motion
+  useEffect(() => {
+    const videos = [idleVideoRef.current, reactionVideoRef.current];
+    for (const vid of videos) {
+      if (!vid) continue;
+      try {
+        if (motionPaused) {
+          vid.pause();
+        } else if (vid.paused) {
+          void vid.play?.().catch?.(() => {});
+        }
+      } catch {
+        // ignore in headless DOM
+      }
+    }
+  }, [motionPaused, activeState, idleVideoReady, reactionVideoReady]);
 
   // Auto-return non-terminal kinetic clips (`flinch` / `lean_in`) back to `idle`
   useEffect(() => {
@@ -244,7 +264,7 @@ export function ViewportCanvas({
                 ctx.fillStyle = "#fda4af";
                 ctx.font = "bold 12px monospace";
                 ctx.textAlign = "center";
-                ctx.fillText("⚡ FLIR ARRAY SATURATED · GEOMAGNETIC STATIC", w / 2, h * 0.5);
+                ctx.fillText("[! FLIR ARRAY SATURATED · GEOMAGNETIC STATIC]", w / 2, h * 0.5);
               } else {
                 const nx = w * 0.52;
                 const ny = h * 0.54;
@@ -347,12 +367,19 @@ export function ViewportCanvas({
           }
         }
       }
-      rafId = requestAnimationFrame(draw);
+      const prefersReduced =
+        typeof window !== "undefined" &&
+        Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
+      if (!motionPaused && !prefersReduced) {
+        rafId = requestAnimationFrame(draw);
+      }
     };
 
-    rafId = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(rafId);
-  }, [activeState, bpm, idleVideoReady, reactionVideoReady, verdictState, visitor.night]);
+    draw();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [activeState, bpm, idleVideoReady, motionPaused, reactionVideoReady, verdictState, visitor.night]);
 
   const idleCandidates = getVideoClipCandidates(visitor.id, "idle");
   const activeReactionCandidates =
@@ -431,6 +458,13 @@ export function ViewportCanvas({
       </div>
 
       <div className="viewport-scanlines" aria-hidden="true" />
+      <ViewportHudOverlay
+        visitorId={visitor.id}
+        night={visitor.night}
+        bpm={bpm}
+        clipState={activeState}
+        verdictState={verdictState}
+      />
       <canvas ref={canvasRef} className="viewport-canvas" />
     </div>
   );

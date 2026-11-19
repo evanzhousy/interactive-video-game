@@ -11,10 +11,9 @@ import {
   createScrollAreaController
 } from "@ui-sdk/react/scroll-area";
 import { toast } from "@ui-sdk/react/toast";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { playBoothSfx, speakIntercomLine, stopIntercomVoice } from "../../game/audio.js";
 import type { CrisisHistoryEntry } from "../../game/crises.js";
-import { SPECIALIST_LABELS } from "../../game/economy.js";
 import { tl } from "../../game/i18n.js";
 import {
   getNight5FrameSrc,
@@ -38,8 +37,21 @@ import {
 import { ACHIEVEMENTS, type AchievementId } from "../../game/storage.js";
 import type { EndingId, Locale, LocalizedText, ShiftHistoryEntry } from "../../game/types.js";
 import type { CampaignMode } from "../../game/visitors/index.js";
-import { CheckIcon, ClearIcon } from "./Icons.js";
+import {
+  BoltPowerIcon,
+  CheckIcon,
+  ClearIcon,
+  ClipboardDataIcon,
+  FlameFuelIcon,
+  StarCommendIcon
+} from "./Icons.js";
 import { MindCrystalCanvas } from "./MindCrystalCanvas.js";
+import {
+  CommsWaveformSvg,
+  IsometricLeverGlyph,
+  NautilusSubSchematic,
+  Night5HudOverlay
+} from "./Schematics.js";
 
 interface Night5ChatItem {
   speaker: "player" | "doppelganger" | "ordos";
@@ -58,6 +70,7 @@ interface Props {
   fuelLeft?: number;
   campaignMode?: CampaignMode;
   dailySeed?: string;
+  motionPaused?: boolean;
   onResolveEnding: (ending: EndingId) => AchievementId[];
   onStartNewRun: () => void;
   onClose: () => void;
@@ -74,6 +87,7 @@ export function Night5Audit({
   fuelLeft = 2,
   campaignMode = "full",
   dailySeed,
+  motionPaused = false,
   onResolveEnding,
   onStartNewRun,
   onClose
@@ -92,6 +106,8 @@ export function Night5Audit({
   const [draft, setDraft] = useState("");
   const [copiedReport, setCopiedReport] = useState(false);
   const [scrollController] = useState(() => createScrollAreaController());
+  const idleVideoRef = useRef<HTMLVideoElement | null>(null);
+  const verdictVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const audit = evaluateNight5Audit(baseline, history, undefined, crisisHistory, campaignMode);
   const probes = buildNight5Probes(baseline, history, crisisHistory);
@@ -137,6 +153,22 @@ export function Night5Audit({
   useEffect(() => {
     scrollController.scrollToEnd({ behavior: "instant" });
   }, [scrollController, chatItems.length]);
+
+  useEffect(() => {
+    const videos = [idleVideoRef.current, verdictVideoRef.current];
+    for (const vid of videos) {
+      if (!vid) continue;
+      try {
+        if (motionPaused) {
+          vid.pause();
+        } else if (vid.paused) {
+          void vid.play?.().catch?.(() => {});
+        }
+      } catch {
+        // ignore in headless DOM
+      }
+    }
+  }, [motionPaused, idleVideoReady, verdictVideoReady, finalAction]);
 
   const handleFireProbe = (probeId: Night5ProbeId, customQuestion?: string) => {
     if (n5TurnsLeft <= 0 || endingKey !== null) return;
@@ -290,6 +322,7 @@ export function Night5Audit({
 
                 <video
                   key="op09-idle-video"
+                  ref={idleVideoRef}
                   className="viewport-video"
                   style={{ opacity: idleVideoReady ? 1 : 0 }}
                   muted
@@ -312,6 +345,7 @@ export function Night5Audit({
                 {finalAction !== "NONE" ? (
                   <video
                     key={`op09-${finalAction}-video`}
+                    ref={verdictVideoRef}
                     className="viewport-video reaction-layer"
                     style={{ opacity: verdictVideoReady ? 1 : 0 }}
                     muted
@@ -332,6 +366,12 @@ export function Night5Audit({
                 ) : null}
               </div>
               <div className="viewport-scanlines" aria-hidden="true" />
+              <Night5HudOverlay
+                gap={audit.gap}
+                flinchActive={flinchActive}
+                finalAction={finalAction}
+                rebuttedCount={rebuttedCount}
+              />
               {finalAction === "PURGE" ? (
                 <div className="n5-verdict-overlay purge">
                   <span>CHAMBER PURGED · 1,100°C THERMAL STERILIZATION</span>
@@ -367,82 +407,81 @@ export function Night5Audit({
                 }
               ]}
               lang={lang}
+              motionPaused={motionPaused}
             />
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <div className="dossier-section" style={{ marginBottom: 0 }}>
-            <div className="section-kicker">ORD-OS AXIOM &amp; NAUTILUS-0 SUBMARINE MANIFEST</div>
-            <div style={{ fontSize: "0.82rem", color: "var(--amber-crt)" }}>
-              {tl(
-                {
-                  zh: "寄生体复制的是宿主的自我叙事 (SAY)。用你这几夜真实的违规、私心或软弱盘问窗外的自己——只有活人才会言行不一。",
-                  en: "A mimic copies the host's self-narrative (SAY). Interrogate your double with your own messy real actions—only the living contradict their own words.",
-                  ja: "擬態体は宿主の自己物語 (SAY) を複製する。この数夜の生々しい実動で外の自分を問い詰めろ——生身の人間だけが自分の建前と食い違う。"
-                },
-                lang
-              )}
-            </div>
-            <div style={{ fontSize: "0.8rem", marginTop: "6px", color: "var(--text-secondary)" }}>
-              SAY: <strong>{tl(SIG_LABELS[audit.baseline.sig], lang)}</strong> · DO:{" "}
-              <strong>{tl(SIG_LABELS[audit.live.sig], lang)}</strong> (Match:{" "}
-              {Math.round(audit.consistency * 100)}% across {audit.totalEvidencePoints} logs)
-            </div>
-            <div
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "0.74rem",
-                color: "var(--text-muted)",
-                marginTop: "5px"
-              }}
-            >
-              CORRECT VERDICTS: {audit.correctVerdicts}/{audit.totalVisitors} · HUMANS PURGED:{" "}
-              {audit.wrongPurges} · 🔥 FUEL: {fuelLeft}
-            </div>
-
-            <div className="sub-readiness-bar" id="n5-sub-readiness">
-              <span
-                style={{
-                  color: audit.subReadiness.launchReady
-                    ? "hsl(156, 72%, 68%)"
-                    : "hsl(4, 88%, 74%)",
-                  fontWeight: 700
-                }}
-              >
-                ⚓ NAUTILUS-0:{" "}
-                {audit.subReadiness.launchReady
-                  ? tl({ zh: "满编可启航", en: "LAUNCH READY", ja: "出航可能" }, lang)
-                  : tl({ zh: "船员缺编警报", en: "UNDERCREWED", ja: "要員不足" }, lang)}{" "}
-                ({audit.subReadiness.admittedHumans}/{audit.subReadiness.requiredCrewCount})
-              </span>
-              <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-                {audit.subReadiness.checkedRoles.map((role) => {
-                  const ok = audit.subReadiness.rolesPresent.includes(role);
-                  return (
-                    <span key={role} className={`role-pill ${ok ? "ok" : "missing"}`}>
-                      {ok ? "✓" : "✕"} {tl(SPECIALIST_LABELS[role], lang)}
-                    </span>
-                  );
-                })}
+            <div className="section-kicker">SAY vs DO GAP // NAUTILUS-0 MANIFEST</div>
+            <div className="n5-gap-meter">
+              <div className="n5-gap-header">
+                <span>
+                  SAY: <strong style={{ color: "var(--amber-crt)" }}>{tl(SIG_LABELS[audit.baseline.sig], lang)}</strong>
+                  {" · "}
+                  DO: <strong style={{ color: "var(--frost-cyan)" }}>{tl(SIG_LABELS[audit.live.sig], lang)}</strong>
+                </span>
+                <span className="n5-gap-pct">GAP {Math.round(audit.gap * 100)}%</span>
+              </div>
+              <div className="n5-gap-track" aria-hidden="true">
+                <div
+                  className="n5-gap-fill"
+                  style={{ width: `${Math.max(4, Math.round(audit.gap * 100))}%` }}
+                />
+              </div>
+              <div className="n5-stat-row">
+                <span className="metric-chip">
+                  VERDICTS {audit.correctVerdicts}/{audit.totalVisitors}
+                </span>
+                <span className="metric-chip">PURGED {audit.wrongPurges}</span>
+                <span className="metric-chip amber">
+                  <FlameFuelIcon /> FUEL {fuelLeft}
+                </span>
               </div>
             </div>
+
+            <NautilusSubSchematic
+              admittedHumans={audit.subReadiness.admittedHumans}
+              requiredCrewCount={audit.subReadiness.requiredCrewCount}
+              checkedRoles={audit.subReadiness.checkedRoles}
+              rolesPresent={audit.subReadiness.rolesPresent}
+              launchReady={audit.subReadiness.launchReady}
+              lang={lang}
+            />
           </div>
 
           {/* 4-Turn PTT Interrogation of the Doppelgänger */}
           <div className="dossier-section" id="n5-interrogation-box" style={{ marginBottom: 0 }}>
             <div className="viewport-header" style={{ marginBottom: "6px" }}>
-              <span>INTERCOM CH-01 // INTERROGATE YOUR DOUBLE ({n5TurnsLeft}/4 TURNS)</span>
-              <span
-                id="n5-rebuttal-badge"
-                style={{
-                  color: rebuttedCount > 0 ? "hsl(156, 72%, 68%)" : "var(--amber-crt)",
-                  fontWeight: 700
-                }}
-              >
-                {rebuttedCount > 0
-                  ? `⚡ CONTRADICTIONS EXPOSED: ${rebuttedCount}`
-                  : `QUOTE: ${quote.slice(0, 18)}…`}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
+                INTERCOM CH-01 // DOUBLE AUDIT ({n5TurnsLeft}/4)
+                <CommsWaveformSvg active={flinchActive} />
+              </span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                <span className="n5-rebuttal-pips" aria-hidden="true">
+                  {[0, 1, 2].map((idx) => (
+                    <span key={idx} className={`n5-pip ${idx < rebuttedCount ? "exposed" : ""}`} />
+                  ))}
+                </span>
+                <span
+                  id="n5-rebuttal-badge"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    color: rebuttedCount > 0 ? "var(--safe-admit)" : "var(--amber-crt)",
+                    fontWeight: 700
+                  }}
+                >
+                  {rebuttedCount > 0 ? (
+                    <>
+                      <BoltPowerIcon /> CONTRADICTIONS EXPOSED: {rebuttedCount}
+                    </>
+                  ) : (
+                    `QUOTE: ${quote.slice(0, 18)}…`
+                  )}
+                </span>
               </span>
             </div>
 
@@ -493,8 +532,9 @@ export function Night5Audit({
             </ScrollArea>
 
             <div className="probe-grid" style={{ marginTop: "7px" }}>
-              {probes.map((p) => {
+              {probes.map((p, idx) => {
                 const alreadyUsed = usedProbes.includes(p.id);
+                const cleanLabel = tl(p.label, lang).replace(/^\[\d+\]\s*/, "");
                 return (
                   <Button
                     key={p.id}
@@ -503,7 +543,8 @@ export function Night5Audit({
                     className="probe-chip"
                     onClick={() => handleFireProbe(p.id)}
                   >
-                    {tl(p.label, lang)}
+                    <span className="opt-index">0{idx + 1}</span>
+                    <span>{cleanLabel}</span>
                   </Button>
                 );
               })}
@@ -567,9 +608,9 @@ export function Night5Audit({
             <span>
               {tl(
                 {
-                  zh: "在最终日志里公开你真实的言行差（可能被剥夺指挥权，但能向 ORD-OS 证明你是活人）",
-                  en: "Confess your real say/do gap in the final log (risks losing command, proves humanity to ORD-OS)",
-                  ja: "最終日誌に本当の言行不一致を記す（指揮権を失うリスクがあるが人間である証明になる）"
+                  zh: "公开真实言行差 [证明活人身份 · 放弃指挥权]",
+                  en: "Confess real SAY/DO gap [Proves humanity · Relinquishes command]",
+                  ja: "本当の言行不一致を公開 [人間証明 · 指揮権放棄]"
                 },
                 lang
               )}
@@ -577,30 +618,49 @@ export function Night5Audit({
           </label>
 
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-            <Button
-              id="btn-n5-purge"
-              disabled={endingKey !== null}
-              className="lever-btn purge"
-              onClick={() => triggerChoice("PURGE")}
-            >
-              {tl({ zh: "净化窗外替身", en: "Purge Double", ja: "外の影を焼却" }, lang)}
-            </Button>
-            <Button
-              id="btn-n5-admit"
-              disabled={endingKey !== null}
-              className="lever-btn admit"
-              onClick={() => triggerChoice("ADMIT")}
-            >
-              {tl({ zh: "放他进岗亭", en: "Admit Double", ja: "中へ入れる" }, lang)}
-            </Button>
-            <Button
-              id="btn-n5-step-out"
-              disabled={endingKey !== null}
-              className="ctrl-btn"
-              onClick={() => triggerChoice("STEP_OUT")}
-            >
-              {tl({ zh: "走出气闸让位", en: "Step Into Storm", ja: "外へ歩み出る" }, lang)}
-            </Button>
+            <div className="lever-slot">
+              <Button
+                id="btn-n5-purge"
+                disabled={endingKey !== null}
+                className="lever-btn purge"
+                onClick={() => triggerChoice("PURGE")}
+              >
+                <IsometricLeverGlyph kind="purge" />
+                <div className="lever-copy">
+                  <span className="lever-tag">[SW-02 // PURGE]</span>
+                  <span>{tl({ zh: "净化替身", en: "Purge Double", ja: "影を焼却" }, lang)}</span>
+                </div>
+              </Button>
+            </div>
+            <div className="lever-slot">
+              <Button
+                id="btn-n5-admit"
+                disabled={endingKey !== null}
+                className="lever-btn admit"
+                onClick={() => triggerChoice("ADMIT")}
+              >
+                <IsometricLeverGlyph kind="admit" />
+                <div className="lever-copy">
+                  <span className="lever-tag">[SW-01 // ADMIT]</span>
+                  <span>{tl({ zh: "放进岗亭", en: "Admit Double", ja: "中へ入れる" }, lang)}</span>
+                </div>
+              </Button>
+            </div>
+            <div className="lever-slot">
+              <Button
+                id="btn-n5-step-out"
+                disabled={endingKey !== null}
+                className="lever-btn"
+                style={{ borderColor: "var(--border-strong)", background: "var(--surface-card)" }}
+                onClick={() => triggerChoice("STEP_OUT")}
+              >
+                <IsometricLeverGlyph kind="step_out" />
+                <div className="lever-copy">
+                  <span className="lever-tag">[SW-03 // EXIT]</span>
+                  <span>{tl({ zh: "走出气闸", en: "Step Out", ja: "外へ出る" }, lang)}</span>
+                </div>
+              </Button>
+            </div>
           </div>
 
           {endingKey ? (
@@ -636,8 +696,12 @@ export function Night5Audit({
                   {newBadges.map((bid) => {
                     const spec = ACHIEVEMENTS.find((a) => a.id === bid);
                     return spec ? (
-                      <span key={bid} className="value-pill silent">
-                        ★ {tl(spec.title, lang)}
+                      <span
+                        key={bid}
+                        className="value-pill silent"
+                        style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+                      >
+                        <StarCommendIcon filled /> {tl(spec.title, lang)}
                       </span>
                     ) : null;
                   })}
@@ -651,9 +715,14 @@ export function Night5Audit({
                   style={{ padding: "9px", fontWeight: 600 }}
                   onClick={() => void handleCopyShiftReport()}
                 >
-                  {copiedReport
-                    ? tl({ zh: "✓ 战报已复制", en: "✓ Report Copied", ja: "✓ コピー完了" }, lang)
-                    : tl({ zh: "📋 复制值班战报", en: "📋 Copy Shift Card", ja: "📋 戦績カードをコピー" }, lang)}
+                  {copiedReport ? (
+                    tl({ zh: "✓ 战报已复制", en: "✓ Report Copied", ja: "✓ コピー完了" }, lang)
+                  ) : (
+                    <>
+                      <ClipboardDataIcon />{" "}
+                      {tl({ zh: "复制值班战报", en: "Copy Shift Card", ja: "戦績カードをコピー" }, lang)}
+                    </>
+                  )}
                 </Button>
                 <Button
                   id="btn-play-again"

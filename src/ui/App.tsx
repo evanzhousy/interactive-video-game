@@ -1,5 +1,6 @@
 import "./agent-bridge.js";
 import { Button } from "@ui-sdk/react/button";
+import { Collapsible, CollapsiblePanel } from "@ui-sdk/react/collapsible";
 import { Meter, MeterIndicator, MeterTrack } from "@ui-sdk/react/meter";
 import { OverlayHost } from "@ui-sdk/react/overlays";
 import {
@@ -14,6 +15,7 @@ import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import { Toggle } from "@ui-sdk/react/toggle";
 import { Tooltip, TooltipContent, TooltipShortcut, TooltipTrigger } from "@ui-sdk/react/tooltip";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import {
   playBoothSfx,
   setBoothAmbience,
@@ -71,12 +73,27 @@ import {
 import { CompendiumModal } from "./components/CompendiumModal.js";
 import { CrisisModal, DemoCliffhangerModal } from "./components/CrisisModal.js";
 import { FlashConfigDrawer } from "./components/FlashConfigDrawer.js";
-import { CheckIcon, ChevronDownIcon } from "./components/Icons.js";
+import {
+  ArchiveIcon,
+  BoltPowerIcon,
+  CheckIcon,
+  ChevronDownIcon,
+  FlameFuelIcon,
+  HazardTriangleIcon,
+  MicSignalIcon,
+  MotionPauseIcon,
+  MotionPlayIcon,
+  SlidersConsoleIcon,
+  SnowHazardIcon,
+  StrobeTargetIcon,
+  ThermalWaveIcon
+} from "./components/Icons.js";
 import { IntakeModal } from "./components/IntakeModal.js";
 import { IntercomPanel, type TranscriptLine } from "./components/IntercomPanel.js";
 import { Night5Audit } from "./components/Night5Audit.js";
 import { OnboardingGuide } from "./components/OnboardingGuide.js";
 import { OrdamorDossier, type DossierTab } from "./components/OrdamorDossier.js";
+import { IsometricAirlockSchematic } from "./components/Schematics.js";
 import { ViewportCanvas } from "./components/ViewportCanvas.js";
 
 type Stage = "intake" | "booth" | "crisis" | "demo_end" | "night5";
@@ -146,9 +163,19 @@ export function App() {
   const [flashConfig, setFlashConfig] = useState<FlashRephraseConfig>(() =>
     resolveInitialFlashConfig()
   );
+  const [sysDrawerOpen, setSysDrawerOpen] = useState(false);
+  const [motionPaused, setMotionPaused] = useState(false);
+
+  // Sync root motion pause attribute so portaled Dialogs/Popovers also obey WCAG 2.2.2 Pause
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      document.documentElement.dataset.motion = motionPaused ? "paused" : "running";
+    }
+  }, [motionPaused]);
   const [flashDrawerOpen, setFlashDrawerOpen] = useState(false);
   const [isRephrasing, setIsRephrasing] = useState(false);
   const shiftEpochRef = useRef(0);
+  const mainRef = useRef<HTMLElement | null>(null);
 
   const initialPwrBudget = getSensorPowerBudget(initialFuel, initialOverdraft);
   const [turnsLeft, setTurnsLeft] = useState(4);
@@ -273,33 +300,84 @@ export function App() {
     }
   };
 
+  const transitionStage = useCallback(
+    (fn: () => void, direction: "forward" | "backward" = "forward") => {
+      const canVT =
+        !motionPaused &&
+        typeof document !== "undefined" &&
+        "startViewTransition" in document &&
+        !window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+      const focusMain = () => {
+        if (!mainRef.current) return;
+        const active = document.activeElement;
+        if (
+          !active ||
+          active === document.body ||
+          !document.contains(active) ||
+          mainRef.current.contains(active)
+        ) {
+          mainRef.current.focus({ preventScroll: true });
+        }
+      };
+      if (!canVT) {
+        fn();
+        focusMain();
+        return;
+      }
+      const startVT = (
+        document as unknown as {
+          startViewTransition: (
+            arg: (() => void) | { update: () => void; types: string[] }
+          ) => { finished: Promise<void> };
+        }
+      ).startViewTransition.bind(document);
+      let vt: { finished: Promise<void> };
+      try {
+        vt = startVT({
+          update: () => flushSync(fn),
+          types: [direction]
+        });
+      } catch {
+        vt = startVT(() => {
+          flushSync(fn);
+        });
+      }
+      void vt.finished.finally(focusMain);
+    },
+    [motionPaused]
+  );
+
   const startNewShift = (modeOverride: CampaignMode = campaignMode) => {
     const freshSeed = getDailyShiftSeed();
-    setDailySeed(freshSeed);
     const roster = getVisitorsForMode(modeOverride, freshSeed);
     const initFuel = getInitialFuel(modeOverride);
     playBoothSfx("ptt", sfx);
-    setRolls(rollShiftForMode(modeOverride, roster, freshSeed));
-    setHistory([]);
-    setCrisisHistory([]);
-    setActiveCrisis(null);
-    setFuelLeft(initFuel);
-    setEmergencyOverdraftUsed(false);
-    setBoggartUsedIds([]);
-    setStage("booth");
-    resetVisitorState(0, roster, true, initFuel, false);
+    transitionStage(() => {
+      setDailySeed(freshSeed);
+      setRolls(rollShiftForMode(modeOverride, roster, freshSeed));
+      setHistory([]);
+      setCrisisHistory([]);
+      setActiveCrisis(null);
+      setFuelLeft(initFuel);
+      setEmergencyOverdraftUsed(false);
+      setBoggartUsedIds([]);
+      setStage("booth");
+      resetVisitorState(0, roster, true, initFuel, false);
+    });
   };
 
   const handleRestartFromIntake = () => {
     stopIntercomVoice();
     clearSavedShift();
-    setHistory([]);
-    setCrisisHistory([]);
-    setActiveCrisis(null);
-    setFuelLeft(getInitialFuel(campaignMode));
-    setEmergencyOverdraftUsed(false);
-    setBoggartUsedIds([]);
-    setStage("intake");
+    transitionStage(() => {
+      setHistory([]);
+      setCrisisHistory([]);
+      setActiveCrisis(null);
+      setFuelLeft(getInitialFuel(campaignMode));
+      setEmergencyOverdraftUsed(false);
+      setBoggartUsedIds([]);
+      setStage("intake");
+    }, "backward");
   };
 
   const handleSwitchCampaignMode = (nextMode: CampaignMode) => {
@@ -316,7 +394,7 @@ export function App() {
     setEmergencyOverdraftUsed(false);
     setBoggartUsedIds([]);
     if (stage === "crisis" || stage === "demo_end") {
-      setStage("booth");
+      transitionStage(() => setStage("booth"));
     }
     resetVisitorState(0, roster, stage === "booth", initFuel, false);
   };
@@ -329,14 +407,14 @@ export function App() {
         playBoothSfx("strobe", sfx);
         setStrobeTrigger((c) => c + 1);
         const msg = currentRoll.isMimic ? visitor.sensors.strobeMimic : visitor.sensors.strobeHuman;
-        setSensorToast(`🔦 ${tl(msg, lang)}`);
+        setSensorToast(`[STROBE] ${tl(msg, lang)}`);
       } else {
         playBoothSfx("thermal", sfx);
         setThermalTrigger((c) => c + 1);
         const msg = currentRoll.isMimic
           ? visitor.sensors.thermalMimic
           : visitor.sensors.thermalHuman;
-        setSensorToast(`🌡️ ${tl(msg, lang)}`);
+        setSensorToast(`[THERMAL] ${tl(msg, lang)}`);
       }
     },
     [currentRoll.isMimic, lang, powerLeft, sfx, verdictState, visitor.sensors]
@@ -452,7 +530,7 @@ export function App() {
           : canonicalReply;
       const flashTag =
         outcome.source === "flash"
-          ? `⚡ FLASH ${outcome.latencyMs}ms`
+          ? `FLASH // ${outcome.latencyMs}ms`
           : `FALLBACK (${outcome.fallbackReason ?? "CANONICAL"})`;
 
       setTranscript((prev) => {
@@ -596,9 +674,9 @@ export function App() {
         setSensorToast(
           tl(
             {
-              zh: "⚠️ 供暖燃料已归零！本次净化透支了备用电容，下一名访客传感器归零 (0⚡)！",
-              en: "⚠️ 0 FUEL! Emergency purge drained backup capacitor—next visitor gets 0⚡ sensor power!",
-              ja: "⚠️ 燃料ゼロ！緊急焼却で予備コンデンサを消費——次の訪問者はセンサー電力 0⚡！"
+              zh: "[! OVERDRAFT] 供暖燃料已归零！本次净化透支了备用电容，下一名访客传感器归零 [0 PWR]！",
+              en: "[! OVERDRAFT] 0 FUEL! Emergency purge drained backup capacitor—next visitor gets 0 PWR sensor power!",
+              ja: "[! OVERDRAFT] 燃料ゼロ！緊急焼却で予備コンデンサを消費——次の訪問者はセンサー電力 0 PWR！"
             },
             lang
           )
@@ -630,7 +708,7 @@ export function App() {
     if (campaignMode === "demo" && safeIdx >= activeVisitors.length - 1) {
       stopIntercomVoice();
       playBoothSfx("purge", sfx);
-      setStage("demo_end");
+      transitionStage(() => setStage("demo_end"));
       return;
     }
 
@@ -646,8 +724,10 @@ export function App() {
       if (scheduledCrisis && !crisisHistory.some((c) => c.crisisId === scheduledCrisis.id)) {
         stopIntercomVoice();
         playBoothSfx("ptt", sfx);
-        setActiveCrisis(scheduledCrisis);
-        setStage("crisis");
+        transitionStage(() => {
+          setActiveCrisis(scheduledCrisis);
+          setStage("crisis");
+        });
         return;
       }
     }
@@ -659,7 +739,7 @@ export function App() {
     } else {
       stopIntercomVoice();
       playBoothSfx("purge", sfx);
-      setStage("night5");
+      transitionStage(() => setStage("night5"));
     }
   };
 
@@ -669,28 +749,30 @@ export function App() {
     const nextFuel = fuelLeft + option.fuelDelta;
     const nextOverdraft = nextFuel > 0 ? false : emergencyOverdraftUsed;
 
-    setCrisisHistory((prev) => [
-      ...prev,
-      {
-        crisisId: activeCrisis.id,
-        optionId: option.id,
-        kept: option.kept,
-        dropped: option.dropped,
-        sig: option.sig,
-        fuelDelta: option.fuelDelta
-      }
-    ]);
-    setFuelLeft(nextFuel);
-    setEmergencyOverdraftUsed(false);
-    setActiveCrisis(null);
+    transitionStage(() => {
+      setCrisisHistory((prev) => [
+        ...prev,
+        {
+          crisisId: activeCrisis.id,
+          optionId: option.id,
+          kept: option.kept,
+          dropped: option.dropped,
+          sig: option.sig,
+          fuelDelta: option.fuelDelta
+        }
+      ]);
+      setFuelLeft(nextFuel);
+      setEmergencyOverdraftUsed(false);
+      setActiveCrisis(null);
 
-    if (safeIdx < activeVisitors.length - 1) {
-      setStage("booth");
-      resetVisitorState(safeIdx + 1, activeVisitors, true, nextFuel, nextOverdraft);
-    } else {
-      playBoothSfx("purge", sfx);
-      setStage("night5");
-    }
+      if (safeIdx < activeVisitors.length - 1) {
+        setStage("booth");
+        resetVisitorState(safeIdx + 1, activeVisitors, true, nextFuel, nextOverdraft);
+      } else {
+        playBoothSfx("purge", sfx);
+        setStage("night5");
+      }
+    });
   };
 
   const handleUpgradeDemoToFullShift = () => {
@@ -702,11 +784,13 @@ export function App() {
       ...fullRolls.slice(4)
     ];
     const bonusFuel = fuelLeft + 2;
-    setCampaignMode("full");
-    setRolls(mergedRolls);
-    setFuelLeft(bonusFuel);
-    setActiveCrisis(INTER_NIGHT_CRISES[0]!);
-    setStage("crisis");
+    transitionStage(() => {
+      setCampaignMode("full");
+      setRolls(mergedRolls);
+      setFuelLeft(bonusFuel);
+      setActiveCrisis(INTER_NIGHT_CRISES[0]!);
+      setStage("crisis");
+    });
   };
 
   const handleResolveNight5Ending = (ending: EndingId): AchievementId[] => {
@@ -723,34 +807,35 @@ export function App() {
   };
 
   return (
-    <div className="booth-shell">
+    <div className="booth-shell" data-motion={motionPaused ? "paused" : "active"}>
       <OverlayHost />
       <header className="topbar">
         <div className="topbar-brand">
-          <h1 className="topbar-title">QUARANTINE GATE 0 : 2036</h1>
-          <span className="topbar-subtitle">{tl(UI_STRINGS.subtitle, lang)}</span>
+          <span className="station-stamp">GATE-0</span>
+          <h1 className="topbar-title">ORD-OS // 2036</h1>
+          <span className="topbar-subtitle">SVALBARD -46°C · OP#09</span>
+        </div>
+
+        <div className="stepper" aria-label="Visitor progress">
+          {activeVisitors.map((v, idx) => (
+            <span
+              key={v.id}
+              aria-label={`Night ${v.night} ${v.id} ${tl(v.name, lang)}`}
+              data-night={v.night}
+              className={`stepper-pill ${
+                stage === "booth" && idx === safeIdx
+                  ? "active"
+                  : idx < history.length
+                    ? "done"
+                    : ""
+              }`}
+            >
+              {v.id.replace("V-", "")}
+            </span>
+          ))}
         </div>
 
         <div className="topbar-controls">
-          <div className="stepper" aria-label="Visitor progress">
-            {activeVisitors.map((v, idx) => (
-              <span
-                key={v.id}
-                title={`Night ${v.night} · ${tl(v.name, lang)}`}
-                className={`stepper-pill ${
-                  stage === "booth" && idx === safeIdx
-                    ? "active"
-                    : idx < history.length
-                      ? "done"
-                      : ""
-                }`}
-              >
-                N{v.night}:{v.id}
-                {idx < history.length ? "✓" : ""}
-              </span>
-            ))}
-          </div>
-
           <Select<CampaignMode>
             items={campaignModeItems}
             value={campaignMode}
@@ -783,78 +868,56 @@ export function App() {
             </SelectContent>
           </Select>
 
-          <Button className="ctrl-btn" onClick={() => startNewShift()}>
-            {tl(UI_STRINGS.reroll, lang)}
-          </Button>
-
           <Button
             id="btn-compendium"
             className={`ctrl-btn ${compendiumOpen ? "amber" : ""}`}
             onClick={() => setCompendiumOpen((o) => !o)}
           >
-            🏆 {tl({ zh: "图鉴", en: "Archive", ja: "図鑑" }, lang)} (
-            {compendium.unlockedEndings.length}/7)
+            <ArchiveIcon />
+            <span>
+              {tl({ zh: "图鉴", en: "Archive", ja: "図鑑" }, lang)} (
+              {compendium.unlockedEndings.length}/7)
+            </span>
           </Button>
 
-          <Button
-            id="btn-flash-toggle"
-            className={`ctrl-btn ${flashConfig.enabled ? "amber" : ""}`}
-            onClick={() => setFlashDrawerOpen((o) => !o)}
-          >
-            ⚡ Flash: {flashConfig.enabled ? "ON" : "OFF"}
-          </Button>
-
-          <Button
-            className="ctrl-btn amber"
-            onClick={() => {
-              stopIntercomVoice();
-              playBoothSfx("purge", sfx);
-              setStage("night5");
-            }}
-          >
-            {tl(UI_STRINGS.night5Btn, lang)}
-          </Button>
-
-          <Toggle
-            id="btn-voice-toggle"
-            pressed={voice}
-            className="ctrl-btn"
-            onPressedChange={(next) => {
-              if (!next) stopIntercomVoice();
-              setVoice(next);
-            }}
-          >
-            {voice ? "🎙️ VOICE: ON" : "🎙️ VOICE: OFF"}
-          </Toggle>
-
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Toggle
-                  id="btn-ambience-toggle"
-                  pressed={ambience}
-                  className="ctrl-btn"
-                  onPressedChange={setAmbience}
-                />
+          <Select<Locale>
+            items={langItems}
+            value={lang}
+            onValueChange={(next) => {
+              if (next) {
+                stopIntercomVoice();
+                setLang(next);
               }
-            >
-              {ambience ? "🌨️ AMB: ON" : "🌨️ AMB: OFF"}
-            </TooltipTrigger>
-            <TooltipContent>
-              {tl(
-                {
-                  zh: "-46°C 极地暴风雪与钢壳结构啸叫环境音",
-                  en: "-46°C Blizzard & Hull Stress Ambience",
-                  ja: "-46°C 吹雪と船殻ストレス環境音"
-                },
-                lang
-              )}
-            </TooltipContent>
-          </Tooltip>
+            }}
+          >
+            <SelectTrigger id="lang-select" aria-label="Language" className="ctrl-select">
+              <SelectValue />
+              <ChevronDownIcon />
+            </SelectTrigger>
+            <SelectContent>
+              {langItems.map((item) => (
+                <SelectItem key={item.value} value={item.value} label={item.label}>
+                  {item.label}
+                  <SelectItemIndicator>
+                    <CheckIcon />
+                  </SelectItemIndicator>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <Toggle pressed={sfx} className="ctrl-btn" onPressedChange={setSfx}>
-            {sfx ? "SFX: ON" : "SFX: OFF"}
-          </Toggle>
+          <Button
+            id="btn-motion-toggle"
+            className="ctrl-btn"
+            onClick={() => setMotionPaused((p) => !p)}
+          >
+            {motionPaused ? <MotionPlayIcon /> : <MotionPauseIcon />}
+            <span>
+              {motionPaused
+                ? tl({ zh: "恢复动效", en: "PLAY FX", ja: "動效再生" }, lang)
+                : tl({ zh: "暂停动效", en: "PAUSE FX", ja: "動效停止" }, lang)}
+            </span>
+          </Button>
 
           <Tooltip>
             <TooltipTrigger
@@ -893,33 +956,121 @@ export function App() {
             </TooltipContent>
           </Tooltip>
 
-          <Select<Locale>
-            items={langItems}
-            value={lang}
-            onValueChange={(next) => {
-              if (next) {
-                stopIntercomVoice();
-                setLang(next);
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Toggle
+                  id="btn-sys-console"
+                  pressed={sysDrawerOpen}
+                  aria-label={tl(
+                    {
+                      zh: "展开系统控制台",
+                      en: "Toggle System Console Drawer",
+                      ja: "システム制御盤切替"
+                    },
+                    lang
+                  )}
+                  className={`ctrl-btn ${sysDrawerOpen ? "amber" : ""}`}
+                  onPressedChange={setSysDrawerOpen}
+                />
               }
-            }}
-          >
-            <SelectTrigger id="lang-select" aria-label="Language" className="ctrl-select">
-              <SelectValue />
-              <ChevronDownIcon />
-            </SelectTrigger>
-            <SelectContent>
-              {langItems.map((item) => (
-                <SelectItem key={item.value} value={item.value} label={item.label}>
-                  {item.label}
-                  <SelectItemIndicator>
-                    <CheckIcon />
-                  </SelectItemIndicator>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            >
+              <SlidersConsoleIcon />
+              <span>SYS</span>
+              {flashConfig.enabled ? <span className="led-dot" aria-hidden="true" /> : null}
+            </TooltipTrigger>
+            <TooltipContent>
+              {tl(
+                {
+                  zh: "系统控制舱：音频总线 · Flash 改写 · 班次调试",
+                  en: "System Console: Audio Bus · Flash AI · Shift Ops",
+                  ja: "システム制御盤：音声・Flash・周回操作"
+                },
+                lang
+              )}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </header>
+
+      <Collapsible open={sysDrawerOpen} onOpenChange={setSysDrawerOpen}>
+        <CollapsiblePanel keepMounted>
+          <div className="sys-console-bar" id="sys-console-drawer">
+            <div className="sys-console-group">
+              <span className="sys-group-label">AUDIO // COMMS</span>
+              <Toggle
+                id="btn-voice-toggle"
+                pressed={voice}
+                className="ctrl-btn"
+                onPressedChange={(next) => {
+                  if (!next) stopIntercomVoice();
+                  setVoice(next);
+                }}
+              >
+                <MicSignalIcon /> {voice ? "VOICE: ON" : "VOICE: OFF"}
+              </Toggle>
+
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <Toggle
+                      id="btn-ambience-toggle"
+                      pressed={ambience}
+                      className="ctrl-btn"
+                      onPressedChange={setAmbience}
+                    />
+                  }
+                >
+                  <SnowHazardIcon /> {ambience ? "AMB: ON" : "AMB: OFF"}
+                </TooltipTrigger>
+                <TooltipContent>
+                  {tl(
+                    {
+                      zh: "-46°C 极地暴风雪与钢壳结构啸叫环境音",
+                      en: "-46°C Blizzard & Hull Stress Ambience",
+                      ja: "-46°C 吹雪と船殻ストレス環境音"
+                    },
+                    lang
+                  )}
+                </TooltipContent>
+              </Tooltip>
+
+              <Toggle id="btn-sfx-toggle" pressed={sfx} className="ctrl-btn" onPressedChange={setSfx}>
+                {sfx ? "SFX: ON" : "SFX: OFF"}
+              </Toggle>
+            </div>
+
+            <div className="sys-console-group">
+              <span className="sys-group-label">AI // BUS</span>
+              <Button
+                id="btn-flash-toggle"
+                className={`ctrl-btn ${flashConfig.enabled ? "amber" : ""}`}
+                onClick={() => setFlashDrawerOpen((o) => !o)}
+              >
+                <BoltPowerIcon /> FLASH: {flashConfig.enabled ? "ON" : "OFF"}
+              </Button>
+            </div>
+
+            <div className="sys-console-group">
+              <span className="sys-group-label">SHIFT // OPS</span>
+              <Button id="btn-reroll-shift" className="ctrl-btn" onClick={() => startNewShift()}>
+                {tl(UI_STRINGS.reroll, lang)}
+              </Button>
+              <Button
+                id="btn-night5-jump"
+                className="ctrl-btn amber"
+                onClick={() => {
+                  stopIntercomVoice();
+                  playBoothSfx("purge", sfx);
+                  transitionStage(() => setStage("night5"));
+                }}
+              >
+                {tl(UI_STRINGS.night5Btn, lang)}
+              </Button>
+            </div>
+          </div>
+        </CollapsiblePanel>
+      </Collapsible>
 
       <FlashConfigDrawer
         open={flashDrawerOpen}
@@ -936,7 +1087,7 @@ export function App() {
         compendium={compendium}
       />
 
-      <main>
+      <main ref={mainRef} tabIndex={-1} className="booth-main">
         {stage === "intake" ? (
           <IntakeModal
             lang={lang}
@@ -996,12 +1147,9 @@ export function App() {
                 <section className="panel">
                   <div className="viewport-header">
                     <span>
-                      NIGHT {visitor.night} // GATE CAM 01 · {visitor.id}{" "}
-                      {visitor.name.en.toUpperCase()}
+                      CAM-01 // N{visitor.night} · {visitor.id} {visitor.name.en.toUpperCase()}
                     </span>
-                    <div style={{ display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
-                      <span style={{ color: "var(--frost-cyan)" }}>{reaction}</span>
-                      <span style={{ color: "var(--danger-purge)" }}>♥ {bpm} BPM</span>
+                    <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                       <Tooltip>
                         <TooltipTrigger
                           render={(triggerProps) => {
@@ -1017,14 +1165,20 @@ export function App() {
                             );
                           }}
                         >
-                          🔥 {fuelLeft} FUEL
+                          <FlameFuelIcon />
+                          <span className="pip-row" aria-hidden="true">
+                            {Array.from({ length: Math.max(5, fuelLeft) }, (_, i) => (
+                              <span key={i} className={`pip-dot ${i < fuelLeft ? "lit" : ""}`} />
+                            ))}
+                          </span>
+                          <span>{fuelLeft} FUEL</span>
                         </TooltipTrigger>
                         <TooltipContent>
                           {tl(
                             {
-                              zh: "岗亭供暖与高温净化燃料：每次净化消耗 1🔥，归零后触发低温降电 (1⚡)",
-                              en: "Furnace & Purge Fuel: Each PURGE costs 1🔥; 0 fuel triggers -46°C brownout (1⚡)",
-                              ja: "暖房・浄化燃料：焼却ごとに 1🔥 消費。ゼロで氷点下電圧低下 (1⚡)"
+                              zh: "岗亭供暖与高温净化燃料：每次净化消耗 1 FUEL，归零后触发低温降电 [1 PWR]",
+                              en: "Furnace & Purge Fuel: Each PURGE costs 1 FUEL; 0 fuel triggers -46°C brownout [1 PWR]",
+                              ja: "暖房・浄化燃料：焼却ごとに 1 FUEL 消費。ゼロで氷点下電圧低下 [1 PWR]"
                             },
                             lang
                           )}
@@ -1044,8 +1198,8 @@ export function App() {
                           <MeterIndicator />
                         </MeterTrack>
                       </Meter>
-                      <span style={{ color: "var(--amber-crt)" }}>
-                        ⚡ {powerLeft}/{maxPower} PWR
+                      <span className="telemetry-readout amber">
+                        <BoltPowerIcon /> {powerLeft}/{maxPower} PWR
                       </span>
                     </div>
                   </div>
@@ -1057,32 +1211,37 @@ export function App() {
                     strobeTrigger={strobeTrigger}
                     thermalTrigger={thermalTrigger}
                     verdictState={verdictState}
+                    motionPaused={motionPaused}
                     onClipComplete={handleClipComplete}
                   />
 
                   {fuelLeft === 0 ? (
                     <div className="cryo-brownout-banner" id="cryo-brownout-banner">
-                      {tl(
-                        {
-                          zh: "❄️ -46°C 供暖停摆 (0🔥)：备用电容结霜，传感器供电衰减至 1⚡（强行拉闸净化将透支下回合至 0⚡）！",
-                          en: "❄️ -46°C CRYO-BROWNOUT (0🔥): Frosted capacitor limits sensors to 1⚡ (forcing PURGE drains next shift to 0⚡)!",
-                          ja: "❄️ -46°C 暖房停止 (0🔥)：センサー電力が 1⚡ に低下（燃料ゼロでの強行焼却は次回 0⚡ へ枯渇）！"
-                        },
-                        lang
-                      )}
+                      <SnowHazardIcon />
+                      <span>
+                        {tl(
+                          {
+                            zh: "[! CRYO-BROWNOUT · 0 FUEL] 电容结霜 -> 1 PWR（零油强行净化将透支至 0 PWR）",
+                            en: "[! CRYO-BROWNOUT · 0 FUEL] CAPACITOR 1 PWR (PURGE OVERDRAFTS TO 0 PWR)",
+                            ja: "[! CRYO-BROWNOUT · 0 FUEL] 電力 1 PWR（強行焼却で次回 0 PWR）"
+                          },
+                          lang
+                        )}
+                      </span>
                     </div>
                   ) : null}
 
                   {visitor.night === 3 ? (
                     <div className="storm-banner" id="night3-storm-banner">
-                      {tl(UI_STRINGS.stormBanner, lang)}
+                      <HazardTriangleIcon />
+                      <span>{tl(UI_STRINGS.stormBanner, lang)}</span>
                     </div>
                   ) : null}
 
                   {sensorToast ? <div className="sensor-toast">{sensorToast}</div> : null}
 
                   <div className="sensor-bar">
-                    <div style={{ display: "flex", gap: "8px" }}>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                       <Tooltip shortcut="s">
                         <TooltipTrigger
                           render={
@@ -1096,7 +1255,8 @@ export function App() {
                             />
                           }
                         >
-                          {tl(UI_STRINGS.strobeBtn, lang)}
+                          <StrobeTargetIcon /> <span>{tl(UI_STRINGS.strobeBtn, lang)}</span>{" "}
+                          <kbd className="kbd-chip" aria-hidden="true">S</kbd>
                         </TooltipTrigger>
                         <TooltipContent>
                           {tl(
@@ -1124,7 +1284,8 @@ export function App() {
                             />
                           }
                         >
-                          {tl(UI_STRINGS.thermalBtn, lang)}
+                          <ThermalWaveIcon /> <span>{tl(UI_STRINGS.thermalBtn, lang)}</span>{" "}
+                          <kbd className="kbd-chip" aria-hidden="true">T</kbd>
                         </TooltipTrigger>
                         <TooltipContent>
                           {tl(
@@ -1139,8 +1300,18 @@ export function App() {
                         </TooltipContent>
                       </Tooltip>
                     </div>
-                    <span className="zero-lip-caption">{tl(UI_STRINGS.zeroLipNote, lang)}</span>
+                    <span className="telemetry-readout">
+                      CH-01 // {reaction}
+                    </span>
                   </div>
+
+                  <IsometricAirlockSchematic
+                    verdictState={verdictState}
+                    night={visitor.night}
+                    fuelLeft={fuelLeft}
+                    powerLeft={powerLeft}
+                    maxPower={maxPower}
+                  />
                 </section>
 
                 <IntercomPanel
@@ -1172,6 +1343,7 @@ export function App() {
                 spoilerOpen={spoilerOpen}
                 onToggleSpoiler={() => setSpoilerOpen((o) => !o)}
                 lastPipelinePayload={lastPipelinePayload}
+                motionPaused={motionPaused}
               />
             </div>
           </>
@@ -1189,9 +1361,10 @@ export function App() {
             fuelLeft={fuelLeft}
             campaignMode={campaignMode}
             dailySeed={dailySeed}
+            motionPaused={motionPaused}
             onResolveEnding={handleResolveNight5Ending}
             onStartNewRun={handleRestartFromIntake}
-            onClose={() => setStage("booth")}
+            onClose={() => transitionStage(() => setStage("booth"), "backward")}
           />
         ) : null}
       </main>

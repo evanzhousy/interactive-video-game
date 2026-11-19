@@ -12,6 +12,8 @@ import {
   type PlayerCompactProfile
 } from "../../game/night5.js";
 import type { Locale, ShiftHistoryEntry } from "../../game/types.js";
+import { FlameFuelIcon, HazardTriangleIcon } from "./Icons.js";
+import { IsometricCrisisBanner, IsometricCrisisGlyph, Night5HudOverlay } from "./Schematics.js";
 
 interface CrisisModalProps {
   crisis: InterNightCrisis;
@@ -34,39 +36,36 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
       data-crisis-id={crisis.id}
     >
       <div className="viewport-header">
-        <span style={{ color: "var(--amber-crt)", fontWeight: 700 }}>
-          ⚠️ {tl(crisis.nightLabel, lang)}
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            color: "var(--amber-crt)",
+            fontWeight: 700
+          }}
+        >
+          <HazardTriangleIcon /> {tl(crisis.nightLabel, lang)}
         </span>
         <span className={`fuel-pill ${fuelLeft <= 1 ? "low" : ""}`}>
-          🔥 {fuelLeft} FUEL
+          <FlameFuelIcon /> {fuelLeft} FUEL
         </span>
       </div>
 
-      <h2 style={{ margin: "6px 0 8px", fontSize: "1.1rem" }}>{tl(crisis.title, lang)}</h2>
-      <p style={{ margin: "0 0 12px", fontSize: "0.86rem", color: "var(--text-primary)" }}>
+      <div className="crisis-title-row">
+        <IsometricCrisisGlyph crisisId={crisis.id} />
+        <div>
+          <h2 style={{ margin: "0 0 4px", fontSize: "1.06rem" }}>{tl(crisis.title, lang)}</h2>
+          <span className="axis-tag do">REC // ORD-OS DO TELEMETRY</span>
+        </div>
+      </div>
+      <IsometricCrisisBanner crisisId={crisis.id} fuelLeft={fuelLeft} />
+      <p style={{ margin: "10px 0 12px", fontSize: "0.85rem", color: "var(--text-primary)" }}>
         {tl(crisis.situation, lang)}
       </p>
 
-      <div
-        style={{
-          fontFamily: "var(--font-mono)",
-          fontSize: "0.73rem",
-          color: "var(--text-muted)",
-          marginBottom: "8px"
-        }}
-      >
-        {tl(
-          {
-            zh: "ORD-OS 物理传感器正在后台静默记录你的真实行动 (DO)：",
-            en: "ORD-OS telemetry is silently recording your actual booth action (DO):",
-            ja: "ORD-OSテレメトリが君の実際の行動 (DO) を静かに記録している："
-          },
-          lang
-        )}
-      </div>
-
       <div>
-        {crisis.options.map((opt) => {
+        {crisis.options.map((opt, idx) => {
           const isSelected = picked?.id === opt.id;
           return (
             <Button
@@ -76,7 +75,8 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
               className={`option-card crisis-option-btn ${isSelected ? "selected" : ""}`}
               onClick={() => setPicked(opt)}
             >
-              {tl(opt.label, lang)}
+              <span className="opt-index">0{idx + 1}</span>
+              <span>{tl(opt.label, lang)}</span>
             </Button>
           );
         })}
@@ -198,6 +198,7 @@ export function DemoCliffhangerModal({
           </video>
         </div>
         <div className="viewport-scanlines" aria-hidden="true" />
+        <Night5HudOverlay gap={audit.gap} />
       </div>
 
       <div className="dossier-section" style={{ borderColor: "hsla(38, 92%, 52%, 0.45)" }}>

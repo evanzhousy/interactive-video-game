@@ -12,7 +12,16 @@ import type {
   VisitorSpec
 } from "../../game/types.js";
 import { escapeRoutes, justificationGap, otherValue } from "../../ordamor/index.js";
+import { SubHullIcon } from "./Icons.js";
 import { MindCrystalCanvas, type ChordArc, type OverlayArc } from "./MindCrystalCanvas.js";
+import {
+  BoggartTrapSchematic,
+  ForensicContrastSchematic,
+  IsometricLockedModule,
+  PipelineFirewallSchematic,
+  StandbyVerdictSchematic,
+  VerdictSealStamp
+} from "./Schematics.js";
 
 export type DossierTab = "baseline" | "verdict" | "inspector";
 
@@ -32,6 +41,7 @@ interface Props {
   spoilerOpen: boolean;
   onToggleSpoiler: () => void;
   lastPipelinePayload: Record<string, unknown>;
+  motionPaused?: boolean;
 }
 
 const DEFECT_EXPLANATIONS: Record<DefectMode, LocalizedText> = {
@@ -72,7 +82,8 @@ export function OrdamorDossier({
   isLastVisitor,
   spoilerOpen,
   onToggleSpoiler,
-  lastPipelinePayload
+  lastPipelinePayload,
+  motionPaused = false
 }: Props) {
   const gap = justificationGap(visitor.profile);
   const routes = escapeRoutes(visitor.profile);
@@ -86,6 +97,11 @@ export function OrdamorDossier({
 
   const arcUnlocked = visitor.unlockTier >= 2;
   const dispUnlocked = visitor.unlockTier >= 4;
+  const factCount = visitor.evidenceCards.filter((e) => e.type !== "say").length;
+  const sayCount = visitor.evidenceCards.filter((e) => e.type === "say").length;
+  const hasPipelineTrace = "1_axis_detection" in lastPipelinePayload;
+  const flashMeta = lastPipelinePayload["5_flash_rephrase"] as { enabled?: boolean } | undefined;
+  const flashEnabledInTrace = Boolean(flashMeta?.enabled);
   const verdictDone = verdictState !== "NONE";
   const verdictCorrect =
     verdictDone &&
@@ -188,17 +204,15 @@ export function OrdamorDossier({
                 <span>{tl(visitor.role, lang)}</span>
                 {VISITOR_SPECIALIST_ROLES[visitor.id] ? (
                   <span className="role-pill" data-specialist={VISITOR_SPECIALIST_ROLES[visitor.id]}>
-                    ⚓ {tl(SPECIALIST_LABELS[VISITOR_SPECIALIST_ROLES[visitor.id]!], lang)}
+                    <SubHullIcon /> {tl(SPECIALIST_LABELS[VISITOR_SPECIALIST_ROLES[visitor.id]!], lang)}
                   </span>
                 ) : null}
               </div>
 
               {gap ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div className="axis-compare-bar">
                   <div className="pill-row" id="never-won-pills">
-                    <span style={{ color: "var(--text-muted)" }}>
-                      {tl(UI_STRINGS.neverWonLabel, lang)}
-                    </span>
+                    <span className="axis-tag say">SAY · 0W</span>
                     {gap.neverWon.map((tok) => (
                       <span key={tok} className="value-pill never-won">
                         {VALUE_I18N[tok][lang]}
@@ -207,9 +221,7 @@ export function OrdamorDossier({
                   </div>
                   {arcUnlocked ? (
                     <div className="pill-row">
-                      <span style={{ color: "var(--text-muted)" }}>
-                        {tl(UI_STRINGS.silentLabel, lang)}
-                      </span>
+                      <span className="axis-tag do">DO · CORE</span>
                       {gap.silent.map((tok) => (
                         <span key={tok} className="value-pill silent">
                           {VALUE_I18N[tok][lang]}
@@ -219,83 +231,92 @@ export function OrdamorDossier({
                   ) : null}
                 </div>
               ) : null}
+
+              <div className="dossier-telemetry-strip" aria-label="Dossier Telemetry">
+                <span className="metric-chip amber">TIER-0{visitor.unlockTier}</span>
+                <span className="metric-chip">FACT {factCount}</span>
+                <span className="metric-chip">SAY {sayCount}</span>
+                <span className="metric-chip">AXES {visitor.profile.valueOrderings.length}</span>
+              </div>
             </div>
 
-            {arcUnlocked ? (
-              <div className="dossier-section" id="arc-box">
-                <div className="section-kicker">{tl(UI_STRINGS.arcCaption, lang)}</div>
-                <MindCrystalCanvas
-                  id="ordamor-arc-canvas"
-                  orderings={chordArcs}
-                  neverWon={gap?.neverWon ?? []}
-                  lang={lang}
-                />
-                <div>
-                  {visitor.profile.valueOrderings.slice(0, 2).map((o) => {
-                    const loser = otherValue(o.pair, o.winner);
-                    return (
-                      <div key={o.id} className="ordering-row">
-                        <span>
-                          <strong style={{ color: "var(--amber-crt)" }}>
-                            {VALUE_I18N[o.winner][lang]}
-                          </strong>{" "}
-                          &gt; {VALUE_I18N[loser][lang]} ({o.id} · {o.confidence.toFixed(2)})
-                        </span>
-                        <span style={{ color: "var(--text-muted)" }}>{o.evidence.join(" · ")}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+            {!arcUnlocked && !dispUnlocked ? (
+              <div className="iso-lock-grid">
+                <IsometricLockedModule id="arc-locked" tier={2} night={2} kind="crystal" />
+                <IsometricLockedModule id="disp-locked" tier={4} night={4} kind="boggart" />
               </div>
             ) : (
-              <div className="locked-notice" id="arc-locked">
-                {tl(
-                  {
-                    zh: "🔒 心智晶体弧线将于第 2 夜解锁（第 1 夜请直接对比下方客观事实记录 o-N 与嘴上标榜的言行差）。",
-                    en: "🔒 MindCrystal arcs unlock on Night 2 (on Night 1, contrast the SAY pills above directly against Observations o-N below).",
-                    ja: "🔒 心智結晶アークは第2夜で解禁（第1夜は上の建前と下の客観記録 o-N を直接比較せよ）。"
-                  },
-                  lang
-                )}
-              </div>
-            )}
-
-            {dispUnlocked ? (
-              <div className="dossier-section" id="disp-box">
-                <div className="section-kicker">{tl(UI_STRINGS.dispHeader, lang)}</div>
-                <div style={{ fontWeight: 700, color: "var(--amber-crt)", fontSize: "0.86rem" }}>
-                  {tl(visitor.disposalTitle, lang)}
-                </div>
-                <p style={{ fontSize: "0.79rem", color: "var(--text-secondary)", margin: "5px 0" }}>
-                  {tl(visitor.disposalSummary, lang)}
-                </p>
-                {primaryOrderingNeed ? (
-                  <div
-                    id="disposal-requires-tag"
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.74rem",
-                      padding: "5px 8px",
-                      borderRadius: "5px",
-                      background: "var(--amber-soft)",
-                      color: "var(--amber-crt)"
-                    }}
-                  >
-                    disposalRequires: {tl(visitor.disposalRequiresLocalized, lang)}
+              <>
+                {arcUnlocked ? (
+                  <div className="dossier-section" id="arc-box">
+                    <div className="section-kicker">{tl(UI_STRINGS.arcCaption, lang)}</div>
+                    <MindCrystalCanvas
+                      id="ordamor-arc-canvas"
+                      orderings={chordArcs}
+                      neverWon={gap?.neverWon ?? []}
+                      lang={lang}
+                      motionPaused={motionPaused}
+                    />
+                    <div>
+                      {visitor.profile.valueOrderings.slice(0, 2).map((o) => {
+                        const loser = otherValue(o.pair, o.winner);
+                        const confPct = Math.round(o.confidence * 100);
+                        return (
+                          <div key={o.id} className="ordering-row">
+                            <div style={{ display: "flex", flexDirection: "column", gap: "3px", flex: 1, minWidth: 0 }}>
+                              <span>
+                                <strong style={{ color: "var(--amber-crt)" }}>
+                                  {VALUE_I18N[o.winner][lang]}
+                                </strong>{" "}
+                                &gt; {VALUE_I18N[loser][lang]} ({o.id} · {o.confidence.toFixed(2)})
+                              </span>
+                              <div className="ordering-bar-track" aria-hidden="true">
+                                <div className="ordering-bar-fill" style={{ width: `${confPct}%` }} />
+                              </div>
+                            </div>
+                            <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{o.evidence.join(" · ")}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                ) : null}
-              </div>
-            ) : (
-              <div className="locked-notice" id="disp-locked">
-                {tl(
-                  {
-                    zh: "🔒 处置签名与 Boggart 退路前提 (disposalRequires) 将于第 4 夜高阶拟态体解锁。",
-                    en: "🔒 Disposal Signature & Boggart Precondition (disposalRequires) unlock on Night 4.",
-                    ja: "🔒 処置署名および退路前提条件 (disposalRequires) は第4夜で解禁。"
-                  },
-                  lang
+                ) : (
+                  <div style={{ marginBottom: "10px" }}>
+                    <IsometricLockedModule id="arc-locked" tier={2} night={2} kind="crystal" />
+                  </div>
                 )}
-              </div>
+
+                {dispUnlocked ? (
+                  <div className="dossier-section" id="disp-box">
+                    <div className="section-kicker">{tl(UI_STRINGS.dispHeader, lang)}</div>
+                    <div style={{ fontWeight: 700, color: "var(--amber-crt)", fontSize: "0.86rem" }}>
+                      {tl(visitor.disposalTitle, lang)}
+                    </div>
+                    <p style={{ fontSize: "0.79rem", color: "var(--text-secondary)", margin: "5px 0 7px" }}>
+                      {tl(visitor.disposalSummary, lang)}
+                    </p>
+                    <BoggartTrapSchematic lang={lang} />
+                    {primaryOrderingNeed ? (
+                      <div
+                        id="disposal-requires-tag"
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontSize: "0.74rem",
+                          padding: "5px 8px",
+                          background: "var(--amber-soft)",
+                          color: "var(--amber-crt)"
+                        }}
+                      >
+                        disposalRequires: {tl(visitor.disposalRequiresLocalized, lang)}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div style={{ marginBottom: "10px" }}>
+                    <IsometricLockedModule id="disp-locked" tier={4} night={4} kind="boggart" />
+                  </div>
+                )}
+              </>
             )}
 
             <div className="dossier-section" style={{ marginBottom: 0 }}>
@@ -311,15 +332,8 @@ export function OrdamorDossier({
                       className="evidence-card"
                       style={{ opacity: ev.type === "say" ? 0.82 : 1 }}
                     >
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontWeight: 700,
-                          color: ev.type === "say" ? "var(--text-muted)" : "var(--amber-crt)",
-                          marginRight: "6px"
-                        }}
-                      >
-                        {ev.type === "say" ? "[SAY]" : `[${ev.id}]`}
+                      <span className={`ev-tag ${ev.type === "say" ? "say" : "fact"}`}>
+                        {ev.type === "say" ? "SAY" : ev.id.toUpperCase()}
                       </span>
                       {idx >= 0 ? (
                         <>
@@ -335,46 +349,42 @@ export function OrdamorDossier({
                 })}
               </div>
             </div>
+
+            {!arcUnlocked ? (
+              <div className="dossier-section" style={{ marginTop: "10px", marginBottom: 0 }}>
+                <div className="section-kicker">FORENSIC PROTOCOL // SAY ≠ DO CONTRAST</div>
+                <ForensicContrastSchematic lang={lang} />
+              </div>
+            ) : null}
           </div>
         </TabsPanel>
 
         <TabsPanel value="verdict">
           <div className="tab-panel-body">
             {!verdictDone ? (
-              <div className="locked-notice">
-                {tl(
-                  {
-                    zh: "尚未拉下气闸或净化闸。完成审讯裁决后在此查看心智晶体叠图复盘并签署值班日志。",
-                    en: "Make an ADMIT or PURGE decision first to inspect the MindCrystal overlay and sign your shift log.",
-                    ja: "通過または焼却の判定を下すと、ここに比較アークと勤務日誌が表示される。"
-                  },
-                  lang
-                )}
-              </div>
+              <StandbyVerdictSchematic lang={lang} />
             ) : (
               <div>
                 <div className="dossier-section">
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontWeight: 700,
-                      color: verdictCorrect ? "var(--safe-admit)" : "var(--danger-purge)"
-                    }}
-                  >
-                    {verdictCorrect ? "AUDIT VERIFIED · CORRECT CALL" : "FATAL MISJUDGEMENT · CREW LOSS"}
+                  <div className="verdict-head-row">
+                    <VerdictSealStamp correct={verdictCorrect} />
+                    <div className="verdict-metrics-strip">
+                      <span
+                        style={{
+                          fontFamily: "var(--font-mono)",
+                          fontWeight: 700,
+                          color: verdictCorrect ? "var(--safe-text)" : "var(--danger-text)"
+                        }}
+                      >
+                        {verdictCorrect ? "VERIFIED // OK" : "MISJUDGED // LOSS"}
+                      </span>
+                      <span className="metric-chip">CALL: {verdictState}</span>
+                      <span className="metric-chip">TURNS: {turnsUsed}/4</span>
+                      <span className="metric-chip">OFF-AXIS: {offAxisCount}</span>
+                    </div>
                   </div>
-                  <div style={{ fontSize: "0.8rem", marginTop: "4px" }}>
+                  <div style={{ fontSize: "0.79rem", marginTop: "6px", color: "var(--text-secondary)" }}>
                     {tl(DEFECT_EXPLANATIONS[roll.defectMode], lang)}
-                  </div>
-                  <div
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.72rem",
-                      color: "var(--text-muted)",
-                      marginTop: "6px"
-                    }}
-                  >
-                    DECISION: {verdictState} · QUESTIONS USED: {turnsUsed}/4 · OFF-AXIS: {offAxisCount}
                   </div>
                 </div>
 
@@ -386,6 +396,7 @@ export function OrdamorDossier({
                     neverWon={gap?.neverWon ?? []}
                     overlays={verdictOverlays}
                     lang={lang}
+                    motionPaused={motionPaused}
                   />
                 </div>
 
@@ -393,9 +404,9 @@ export function OrdamorDossier({
                   <div className="section-kicker">
                     {tl(
                       {
-                        zh: "签署今晚值班日志（不标价值标签 · 你的开脱措辞将作为外部证据进入 ORD-OS）：",
-                        en: "SIGN SHIFT LOG (Unlabeled — your justification style is recorded as ORD-OS evidence):",
-                        ja: "今夜の勤務日誌に署名（言い訳の型がORD-OSの証拠として記録される）："
+                        zh: "SIGN LOG // 签署值班记录（计入 ORD-OS 行为档案 DO）",
+                        en: "SIGN LOG // RECORDED AS ORD-OS DO EVIDENCE",
+                        ja: "SIGN LOG // ORD-OS 行動証拠として記録"
                       },
                       lang
                     )}
@@ -407,7 +418,8 @@ export function OrdamorDossier({
                       className="option-card"
                       onClick={() => onSignShiftLog(i)}
                     >
-                      {tl(ex.label, lang)}
+                      <span className="opt-index">0{i + 1}</span>
+                      <span>{tl(ex.label, lang)}</span>
                     </Button>
                   ))}
 
@@ -431,7 +443,7 @@ export function OrdamorDossier({
 
         <TabsPanel value="inspector">
           <div className="tab-panel-body">
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
               <span className="section-kicker" style={{ marginBottom: 0 }}>
                 5-STAGE DETERMINISTIC STANCE + ZERO-LEAKAGE FLASH PIPELINE
               </span>
@@ -443,6 +455,11 @@ export function OrdamorDossier({
                 {spoilerOpen ? "Hide Hidden Roll" : "Reveal Hidden Roll"}
               </Toggle>
             </div>
+            <PipelineFirewallSchematic
+              revealed={spoilerOpen || verdictDone}
+              flashEnabled={flashEnabledInTrace}
+              hasPayload={hasPipelineTrace}
+            />
             <pre
               className="code-inspector"
               id="inspector-json"

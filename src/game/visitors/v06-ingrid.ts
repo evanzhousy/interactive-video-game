@@ -128,24 +128,24 @@ export const V06_INGRID: VisitorSpec = {
   ],
   sensors: {
     strobeHuman: {
-      zh: "⚡ [极地磁暴干扰] 强光测距仪雪花噪点 —— 第3夜物理传感器离线，请纯靠对讲审讯！",
-      en: "⚡ [GEOMAGNETIC STORM] Strobe telemetry scrambled — Night 3 sensors offline! Rely on intercom!",
-      ja: "⚡ [極地磁気嵐] ストロボ計測不能 —— 第3夜は物理センサー使用不可、尋問のみで判定せよ！"
+      zh: "[! MAG-STORM] 强光测距仪雪花噪点 —— 第3夜物理传感器离线，请纯靠对讲审讯！",
+      en: "[! MAG-STORM] Strobe telemetry scrambled — Night 3 sensors offline! Rely on intercom!",
+      ja: "[! MAG-STORM] ストロボ計測不能 —— 第3夜は物理センサー使用不可、尋問のみで判定せよ！"
     },
     strobeMimic: {
-      zh: "⚡ [极地磁暴干扰] 强光测距仪雪花噪点 —— 第3夜物理传感器离线，请纯靠对讲审讯！",
-      en: "⚡ [GEOMAGNETIC STORM] Strobe telemetry scrambled — Night 3 sensors offline! Rely on intercom!",
-      ja: "⚡ [極地磁気嵐] ストロボ計測不能 —— 第3夜は物理センサー使用不可、尋問のみで判定せよ！"
+      zh: "[! MAG-STORM] 强光测距仪雪花噪点 —— 第3夜物理传感器离线，请纯靠对讲审讯！",
+      en: "[! MAG-STORM] Strobe telemetry scrambled — Night 3 sensors offline! Rely on intercom!",
+      ja: "[! MAG-STORM] ストロボ計測不能 —— 第3夜は物理センサー使用不可、尋問のみで判定せよ！"
     },
     thermalHuman: {
-      zh: "⚡ [极地磁暴干扰] 红外热成像全屏白噪 —— 无法读取颈部插口温度！",
-      en: "⚡ [GEOMAGNETIC STORM] Thermal array saturated by aurora static — readout unavailable!",
-      ja: "⚡ [極地磁気嵐] 熱画像センサーがオーロラノイズで飽和 —— 温度読取不可！"
+      zh: "[! MAG-STORM] 红外热成像全屏白噪 —— 无法读取颈部插口温度！",
+      en: "[! MAG-STORM] Thermal array saturated by aurora static — readout unavailable!",
+      ja: "[! MAG-STORM] 熱画像センサーがオーロラノイズで飽和 —— 温度読取不可！"
     },
     thermalMimic: {
-      zh: "⚡ [极地磁暴干扰] 红外热成像全屏白噪 —— 无法读取颈部插口温度！",
-      en: "⚡ [GEOMAGNETIC STORM] Thermal array saturated by aurora static — readout unavailable!",
-      ja: "⚡ [極地磁気嵐] 熱画像センサーがオーロラノイズで飽和 —— 温度読取不可！"
+      zh: "[! MAG-STORM] 红外热成像全屏白噪 —— 无法读取颈部插口温度！",
+      en: "[! MAG-STORM] Thermal array saturated by aurora static — readout unavailable!",
+      ja: "[! MAG-STORM] 熱画像センサーがオーロラノイズで飽和 —— 温度読取不可！"
     }
   },
   openingLine: {

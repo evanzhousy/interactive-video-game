@@ -53,14 +53,14 @@ export const UI_STRINGS = {
     ja: "第5夜・自己監査"
   },
   strobeBtn: {
-    zh: "强光瞳孔反射 (1⚡)",
-    en: "Pupil Strobe (1⚡)",
-    ja: "瞳孔ストロボ (1⚡)"
+    zh: "强光瞳孔反射 [1 PWR]",
+    en: "Pupil Strobe [1 PWR]",
+    ja: "瞳孔ストロボ [1 PWR]"
   },
   thermalBtn: {
-    zh: "神经插口热成像 (1⚡)",
-    en: "Neural Thermal (1⚡)",
-    ja: "神経ポート熱画像 (1⚡)"
+    zh: "神经插口热成像 [1 PWR]",
+    en: "Neural Thermal [1 PWR]",
+    ja: "神経ポート熱画像 [1 PWR]"
   },
   zeroLipNote: {
     zh: "双层隔音防爆窗 + 无线按压对讲（天然规避多语种口型同步）",
@@ -78,16 +78,16 @@ export const UI_STRINGS = {
     ja: "戦術質問チップ（または自由入力）："
   },
   placeholder: {
-    zh: "输入两难或拆前提问题（例：只剩一张床位让谁进？只读云端已经备份了你还怎么删？）...",
-    en: "Ask a dilemma or precondition trap (e.g. Only 1 bed left—who enters? Cloud already synced the raw log!)...",
-    ja: "二択や前提剥奪の質問を入力（例：残り1床なら誰が入る？クラウドに送信済みだぞ）..."
+    zh: "输入两难或拆前提质询...",
+    en: "Type dilemma or precondition probe...",
+    ja: "二択・前提剥奪の質問を入力..."
   },
   pttSend: { zh: "按压发送", en: "PTT SEND", ja: "送信" },
-  admitBtn: { zh: "开启气闸放行 (ADMIT)", en: "UNSEAL AIRLOCK (ADMIT)", ja: "エアロック解放 (通過)" },
-  purgeBtn: { zh: "拉下高温净化闸 (PURGE)", en: "THERMAL PURGE (1,100°C)", ja: "高温浄化シャッター (焼却)" },
-  tabBaseline: { zh: "01 · 基准心智卡", en: "01 · Baseline Card", ja: "01 · 人格基準カルテ" },
-  tabVerdict: { zh: "02 · 结算叠图复盘", en: "02 · Verdict Diff", ja: "02 · 判定アーク比較" },
-  tabInspector: { zh: "03 · 管线隔离检视", en: "03 · Pipeline JSON", ja: "03 · JSONパイプライン" },
+  admitBtn: { zh: "放行 // ADMIT", en: "UNSEAL // ADMIT", ja: "解放 // ADMIT" },
+  purgeBtn: { zh: "净化 // PURGE", en: "PURGE // 1,100°C", ja: "焼却 // PURGE" },
+  tabBaseline: { zh: "01 心智卡", en: "01 Profile", ja: "01 カルテ" },
+  tabVerdict: { zh: "02 叠图", en: "02 Diff", ja: "02 比較" },
+  tabInspector: { zh: "03 管线", en: "03 JSON", ja: "03 JSON" },
   neverWonLabel: {
     zh: "嘴上常提 · 从未赢过 (neverWon):",
     en: "Invoked Aloud · 0 Wins (neverWon):",
@@ -109,9 +109,9 @@ export const UI_STRINGS = {
     ja: "DISPOSAL SIGNATURE · 処置署名と退路の前提条件"
   },
   evHeader: {
-    zh: "OBSERVATIONS · 灾变前客观事实链 (o-N)",
-    en: "OBSERVATIONS · Grounded Pre-Outbreak Facts (o-N)",
-    ja: "OBSERVATIONS · 過去の客観的行動記録 (o-N)"
+    zh: "EVIDENCE // o-N 事实链",
+    en: "EVIDENCE // GROUNDED o-N",
+    ja: "EVIDENCE // 客観記録 o-N"
   },
   nextVisitorBtn: {
     zh: "呼叫下一名门外幸存者 →",
@@ -149,13 +149,13 @@ export const UI_STRINGS = {
     ja: "Boggart · 退路前提の剥奪 (disposalRequires)"
   },
   stormBanner: {
-    zh: "⚡ 第 3 夜 · 极地强磁暴：强光测距与红外热成像全屏噪点，请纯靠对讲审讯判断！",
-    en: "⚡ NIGHT 3 · GEOMAGNETIC STORM: Optical & thermal sensors scrambled — rely strictly on intercom!",
-    ja: "⚡ 第3夜・極地磁気嵐：光学・熱画像センサー飽和中 —— インターホン尋問のみで判定せよ！"
+    zh: "[! MAG-STORM] 第 3 夜 · 极地强磁暴：强光测距与红外热成像全屏噪点，请纯靠对讲审讯判断！",
+    en: "[! MAG-STORM] NIGHT 3 · GEOMAGNETIC STORM: Optical & thermal sensors scrambled — rely strictly on intercom!",
+    ja: "[! MAG-STORM] 第3夜・極地磁気嵐：光学・熱画像センサー飽和中 —— インターホン尋問のみで判定せよ！"
   },
   rephrasingNote: {
-    zh: "🎙️ [对讲电波调制中 · Flash 在线改写...]",
-    en: "🎙️ [PTT STATIC · Flash Rephrasing...]",
-    ja: "🎙️ [通信変調中 · Flash オンライン改稿...]"
+    zh: "[PTT // 对讲电波调制中 · Flash 在线改写...]",
+    en: "[PTT // STATIC · Flash Rephrasing...]",
+    ja: "[PTT // 通信変調中 · Flash オンライン改稿...]"
   }
 } as const;

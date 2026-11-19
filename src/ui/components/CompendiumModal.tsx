@@ -15,13 +15,10 @@ import {
 } from "@ui-sdk/react/scroll-area";
 import { tl } from "../../game/i18n.js";
 import { ENDINGS } from "../../game/night5.js";
-import {
-  ACHIEVEMENTS,
-  ALL_ENDING_IDS,
-  ENDING_HINTS,
-  type CompendiumState
-} from "../../game/storage.js";
+import { ACHIEVEMENTS, ALL_ENDING_IDS, ENDING_HINTS, type CompendiumState } from "../../game/storage.js";
 import type { Locale } from "../../game/types.js";
+import { ArchiveIcon, LockSealIcon } from "./Icons.js";
+import { AchievementMedallionSvg, EndingConstellationSvg } from "./Schematics.js";
 
 interface Props {
   open: boolean;
@@ -40,25 +37,20 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
       <DialogContent className="panel compendium-panel" id="compendium-modal">
         <div className="viewport-header" style={{ marginBottom: 0 }}>
           <div>
-            <DialogTitle>
-              🏆 ORD-OS ARCHIVE // {unlockedEndings.size}/7 ENDINGS · {unlockedAch.size}/
+            <DialogTitle style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <ArchiveIcon /> ORD-OS ARCHIVE // {unlockedEndings.size}/7 ENDINGS · {unlockedAch.size}/
               {ACHIEVEMENTS.length} BADGES · RUNS: {compendium.completedRuns}
             </DialogTitle>
             <DialogDescription>
-              {tl(
-                {
-                  zh: "第 5 夜全结局档案与法医审讯勋章记录（按 Esc 或点击遮罩关闭）",
-                  en: "Night 5 Self-Audit ending archive & forensic commendations (Esc or backdrop closes)",
-                  ja: "第5夜全エンディング記録と法医尋問勲章（Esc または背景クリックで閉じる）"
-                },
-                lang
-              )}
+              ENDINGS [{unlockedEndings.size}/7] · COMMENDATIONS [{unlockedAch.size}/{ACHIEVEMENTS.length}] · ESC
             </DialogDescription>
           </div>
           <DialogClose id="btn-close-compendium" className="ctrl-btn">
-            {tl({ zh: "关闭图鉴", en: "Close Archive", ja: "閉じる" }, lang)}
+            {tl({ zh: "关闭", en: "Close", ja: "閉じる" }, lang)}
           </DialogClose>
         </div>
+
+        <EndingConstellationSvg unlockedEndings={unlockedEndings} lang={lang} />
 
         <ScrollArea className="compendium-scroll-area" type="auto">
           <ScrollAreaViewport
@@ -93,14 +85,22 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
                           <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                             <span
                               style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
                                 fontFamily: "var(--font-mono)",
                                 fontWeight: 700,
                                 color: isUnlocked ? "var(--amber-crt)" : "var(--text-muted)"
                               }}
                             >
-                              {isUnlocked
-                                ? `✓ ${tl(endSpec.title, lang)}`
-                                : `🔒 [${id}] ${tl({ zh: "未解锁结局", en: "LOCKED ENDING", ja: "未解禁エンディング" }, lang)}`}
+                              {isUnlocked ? (
+                                `[OK] ${tl(endSpec.title, lang)}`
+                              ) : (
+                                <>
+                                  <LockSealIcon /> [{id}]{" "}
+                                  {tl({ zh: "未解锁结局", en: "LOCKED ENDING", ja: "未解禁エンディング" }, lang)}
+                                </>
+                              )}
                             </span>
                           </div>
                           <p
@@ -130,7 +130,7 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
                     )}
                   </div>
                   <div className="compendium-list">
-                    {ACHIEVEMENTS.map((ach) => {
+                    {ACHIEVEMENTS.map((ach, idx) => {
                       const has = unlockedAch.has(ach.id);
                       return (
                         <div
@@ -139,18 +139,21 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
                         >
                           <div
                             style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "8px",
                               fontFamily: "var(--font-mono)",
                               fontWeight: 700,
                               color: has ? "var(--safe-admit)" : "var(--text-muted)"
                             }}
                           >
-                            {has ? "★ " : "☆ "}
-                            {tl(ach.title, lang)}
+                            <AchievementMedallionSvg unlocked={has} index={idx} />
+                            <span>{tl(ach.title, lang)}</span>
                           </div>
                           <p
                             style={{
                               fontSize: "0.79rem",
-                              margin: "4px 0 0",
+                              margin: "5px 0 0",
                               color: "var(--text-secondary)"
                             }}
                           >

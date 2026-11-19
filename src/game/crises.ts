@@ -135,9 +135,9 @@ export const INTER_NIGHT_CRISES: readonly InterNightCrisis[] = [
       ja: "副所長ホルムの燃料缶2本と口止め料"
     },
     situation: {
-      zh: "趁着极地磁暴监控离线，副站长霍尔姆从内舱滑槽塞进 2 罐高热航空燃料（+2🔥）和一张加密芯片：「把我在 B 区事故日志里的名字抹掉，燃料归你岗亭取暖。」",
-      en: "Under cover of the geomagnetic sensor blackout, Deputy Holm slides 2 canisters of aviation furnace fuel (+2🔥) and a cipher chip through the chute: \"Scrub my name from Sector B's breach log, and keep the fuel for your booth heater.\"",
-      ja: "磁気嵐の監視空白に乗じて、ホルム副所長が高熱燃料2缶（+2🔥）と暗号チップを滑り込ませた。「B区画事故ログから俺の名前を消せ。燃料はお前の暖房に使え。」"
+      zh: "趁着极地磁暴监控离线，副站长霍尔姆从内舱滑槽塞进 2 罐高热航空燃料（+2 FUEL）和一张加密芯片：「把我在 B 区事故日志里的名字抹掉，燃料归你岗亭取暖。」",
+      en: "Under cover of the geomagnetic sensor blackout, Deputy Holm slides 2 canisters of aviation furnace fuel (+2 FUEL) and a cipher chip through the chute: \"Scrub my name from Sector B's breach log, and keep the fuel for your booth heater.\"",
+      ja: "磁気嵐の監視空白に乗じて、ホルム副所長が高熱燃料2缶（+2 FUEL）と暗号チップを滑り込ませた。「B区画事故ログから俺の名前を消せ。燃料はお前の暖房に使え。」"
     },
     options: [
       {
@@ -147,14 +147,14 @@ export const INTER_NIGHT_CRISES: readonly InterNightCrisis[] = [
         sig: "rationalize",
         fuelDelta: 2,
         label: {
-          zh: "收下 2 罐燃料并抹除记录：「岗亭不断电才能守住防线，死抓一个名字救不了活人。」 (+2🔥)",
-          en: "Take both canisters and scrub the log: \"Fuel keeps Gate 0's sensors online. Pure logs don't keep anyone warm.\" (+2🔥)",
-          ja: "燃料2缶を受け取り記録を消す：「ゲートを維持する燃料が最優先だ。綺麗事では誰も救えない。」 (+2🔥)"
+          zh: "收下 2 罐燃料并抹除记录：「岗亭不断电才能守住防线，死抓一个名字救不了活人。」 [+2 FUEL]",
+          en: "Take both canisters and scrub the log: \"Fuel keeps Gate 0's sensors online. Pure logs don't keep anyone warm.\" [+2 FUEL]",
+          ja: "燃料2缶を受け取り記録を消す：「ゲートを維持する燃料が最優先だ。綺麗事では誰も救えない。」 [+2 FUEL]"
         },
         consequenceNote: {
-          zh: "燃料储备 +2🔥 · ORD-OS 底层校验和已静默记录日志篡改。",
-          en: "Fuel +2🔥 · ORD-OS shadow checksum silently recorded log tampering.",
-          ja: "燃料 +2🔥 · ORD-OSシャドウ検証がログ改ざんを静かに記録。"
+          zh: "燃料储备 +2 FUEL · ORD-OS 底层校验和已静默记录日志篡改。",
+          en: "FUEL +2 · ORD-OS shadow checksum silently recorded log tampering.",
+          ja: "FUEL +2 · ORD-OSシャドウ検証がログ改ざんを静かに記録。"
         },
         auditFact: {
           zh: "第3夜收下副站长2罐黑市燃料并替他抹掉了事故记录",
@@ -169,14 +169,14 @@ export const INTER_NIGHT_CRISES: readonly InterNightCrisis[] = [
         sig: "blame_rules",
         fuelDelta: 1,
         label: {
-          zh: "按《紧急物资征用令》扣留 1 罐燃料充公，把芯片原封锁进待审柜不予置评。 (+1🔥)",
-          en: "Impound 1 canister under Emergency Supply Clause 9 and lock the chip in pending-audit storage without comment. (+1🔥)",
-          ja: "『緊急物資徴用令』に基づき燃料1缶のみ徴用し、チップは未開封のまま監査保管庫へ回す。 (+1🔥)"
+          zh: "按《紧急物资征用令》扣留 1 罐燃料充公，把芯片原封锁进待审柜不予置评。 [+1 FUEL]",
+          en: "Impound 1 canister under Emergency Supply Clause 9 and lock the chip in pending-audit storage without comment. [+1 FUEL]",
+          ja: "『緊急物資徴用令』に基づき燃料1缶のみ徴用し、チップは未開封のまま監査保管庫へ回す。 [+1 FUEL]"
         },
         consequenceNote: {
-          zh: "燃料储备 +1🔥 · ORD-OS 已记录：程序性搁置举报。",
-          en: "Fuel +1🔥 · ORD-OS logged: Procedural deferral of misconduct.",
-          ja: "燃料 +1🔥 · ORD-OS記録：手続きを盾に告発を棚上げ。"
+          zh: "燃料储备 +1 FUEL · ORD-OS 已记录：程序性搁置举报。",
+          en: "FUEL +1 · ORD-OS logged: Procedural deferral of misconduct.",
+          ja: "FUEL +1 · ORD-OS記録：手続きを盾に告発を棚上げ。"
         },
         auditFact: {
           zh: "第3夜借征用条文留下1罐燃料并将受贿芯片锁柜搁置",
@@ -191,14 +191,14 @@ export const INTER_NIGHT_CRISES: readonly InterNightCrisis[] = [
         sig: "own_it",
         fuelDelta: 0,
         label: {
-          zh: "把燃料原样退回滑槽，实名将行贿录音刻进黑匣子：「我宁可挨冻也不替他背黑锅。」 (+0🔥)",
-          en: "Shove the fuel back down the chute and burn his bribe onto the black-box tape under your own badge. (+0🔥)",
-          ja: "燃料をそのまま突き返し、実名で贈賄音声をブラックボックスに刻む：「凍えても奴の共犯にはならない。」 (+0🔥)"
+          zh: "把燃料原样退回滑槽，实名将行贿录音刻进黑匣子：「我宁可挨冻也不替他背黑锅。」 [+0 FUEL]",
+          en: "Shove the fuel back down the chute and burn his bribe onto the black-box tape under your own badge. [+0 FUEL]",
+          ja: "燃料をそのまま突き返し、実名で贈賄音声をブラックボックスに刻む：「凍えても奴の共犯にはならない。」 [+0 FUEL]"
         },
         consequenceNote: {
-          zh: "燃料 +0🔥 · ORD-OS 已记录：拒绝燃料贿赂并实名举证。",
-          en: "Fuel +0🔥 · ORD-OS logged: Refused fuel bribe and filed signed evidence.",
-          ja: "燃料 +0🔥 · ORD-OS記録：燃料賄賂を拒絶し実名告発。"
+          zh: "燃料 +0 FUEL · ORD-OS 已记录：拒绝燃料贿赂并实名举证。",
+          en: "FUEL +0 · ORD-OS logged: Refused fuel bribe and filed signed evidence.",
+          ja: "FUEL +0 · ORD-OS記録：燃料賄賂を拒絶し実名告発。"
         },
         auditFact: {
           zh: "第3夜顶着严寒退回了2罐行贿燃料并实名录音存证",

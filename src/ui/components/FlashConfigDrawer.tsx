@@ -21,7 +21,7 @@ import { useState } from "react";
 import { tl } from "../../game/i18n.js";
 import { VERCEL_PRODUCTION_REPHRASE_URL } from "../../game/rephrase.js";
 import type { FlashRephraseConfig, FlashTransportMode, Locale } from "../../game/types.js";
-import { CheckIcon, ChevronDownIcon, ClearIcon } from "./Icons.js";
+import { BoltPowerIcon, CheckIcon, ChevronDownIcon, ClearIcon, LockSealIcon } from "./Icons.js";
 
 interface Props {
   open: boolean;
@@ -79,8 +79,16 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
       <CollapsiblePanel>
         <section className="panel flash-drawer" id="flash-config-drawer">
           <div className="viewport-header" style={{ marginBottom: "10px" }}>
-            <span style={{ color: "var(--amber-crt)", fontWeight: 700 }}>
-              ⚡ FLASH ONLINE FREE-TEXT REPHRASE LAYER (ZERO IDENTITY LEAKAGE)
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                color: "var(--amber-crt)",
+                fontWeight: 700
+              }}
+            >
+              <BoltPowerIcon /> FLASH ONLINE FREE-TEXT REPHRASE LAYER (ZERO IDENTITY LEAKAGE)
             </span>
             <Button className="ctrl-btn" onClick={() => onOpenChange(false)}>
               {tl({ zh: "收起面板", en: "Close", ja: "閉じる" }, lang)}
@@ -103,9 +111,9 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
               <span>
                 {tl(
                   {
-                    zh: "启用在线 Flash 台词改写（针对玩家自由提问重塑措辞，超时/断网 0 阻塞自动回退）",
-                    en: "Enable live Flash line rephrasing (adapts canonical stance line to player wording; instant fallback on timeout/offline)",
-                    ja: "Flashオンライン台詞改稿を有効化（自由入力に合わせて言い回しを調整・タイムアウト時は即座にフォールバック）"
+                    zh: "启用在线 Flash 改写（超时/断网 0 阻塞回退）",
+                    en: "Enable Flash rephrase (0-block canonical fallback)",
+                    ja: "Flashオンライン改稿を有効化（自動フォールバック）"
                   },
                   lang
                 )}
@@ -127,9 +135,9 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
               <span>
                 {tl(
                   {
-                    zh: "仅对自由输入问题调用 Flash（推荐：预设芯片保持 0ms 瞬时响应）",
-                    en: "Invoke Flash on typed free-text questions only (preset chips stay 0ms instant)",
-                    ja: "自由入力の質問のみFlashを使用（定型チップは0ms即時応答を維持）"
+                    zh: "仅自由输入调用（预设芯片保持 0ms 响应）",
+                    en: "Free-text only (preset probes remain 0ms)",
+                    ja: "自由入力のみ使用（定型は0ms維持）"
                   },
                   lang
                 )}
@@ -238,15 +246,20 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
 
             {probeStatus ? <div className="flash-status-pill">{probeStatus}</div> : null}
 
-            <div style={{ fontSize: "0.73rem", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-              {tl(
-                {
-                  zh: "🔒 管线红线校验：LlmRephraseInput 严禁包含 isMimic / defectMode / lineKey；生成结果经长度、语种与防出戏校验后才上屏。",
-                  en: "🔒 Anti-Leakage Guard: `isMimic`, `defectMode`, and `lineKey` are stripped by construction and rejected with HTTP 400 if smuggled.",
-                  ja: "🔒 漏洩防止ガード：`isMimic` / `defectMode` は構造的に排除され、不正送信時は HTTP 400 で拒否されます。"
-                },
-                lang
-              )}
+            <div
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                fontSize: "0.73rem",
+                color: "var(--text-muted)",
+                fontFamily: "var(--font-mono)"
+              }}
+            >
+              <LockSealIcon />
+              <span>
+                GUARD // ZERO-LEAKAGE BOUNDARY: isMimic · defectMode · lineKey = HTTP 400
+              </span>
             </div>
           </div>
         </section>

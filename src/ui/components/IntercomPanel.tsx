@@ -18,7 +18,8 @@ import {
   resolveVisitorProbeKey
 } from "../../game/intent.js";
 import type { Locale, LocalizedText, ProbeKey, VisitorSpec } from "../../game/types.js";
-import { ClearIcon } from "./Icons.js";
+import { ClearIcon, MicSignalIcon } from "./Icons.js";
+import { CommsWaveformSvg, IsometricLeverGlyph } from "./Schematics.js";
 
 export interface TranscriptLine {
   speaker: "player" | "npc" | "system";
@@ -78,10 +79,13 @@ export function IntercomPanel({
   return (
     <section className="panel" id="intercom-panel">
       <div className="viewport-header">
-        <span>{tl(UI_STRINGS.intercomHeader, lang)}</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
+          <MicSignalIcon /> COMMS // CH-01
+          <CommsWaveformSvg active={isRephrasing} />
+        </span>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <Meter
-            className="hud-meter"
+            className="hud-meter turns-meter"
             value={turnsLeft}
             min={0}
             max={4}
@@ -98,7 +102,7 @@ export function IntercomPanel({
               <MeterIndicator />
             </MeterTrack>
           </Meter>
-          <span style={{ color: "var(--amber-crt)" }}>TURNS: {turnsLeft} / 4</span>
+          <span style={{ color: "var(--amber-crt)", fontWeight: 700 }}>{turnsLeft}/4</span>
         </div>
       </div>
 
@@ -150,13 +154,9 @@ export function IntercomPanel({
         </ScrollAreaScrollbar>
       </ScrollArea>
 
-      <div style={{ marginTop: "9px", fontSize: "0.75rem", color: "var(--text-secondary)" }}>
-        {tl(UI_STRINGS.probeHint, lang)}
-      </div>
-
       <div className="probe-grid" id="probe-buttons">
         {(Object.entries(visitor.probes) as Array<[ProbeKey, NonNullable<VisitorSpec["probes"][ProbeKey]>]>).map(
-          ([key, probe]) => (
+          ([key, probe], idx) => (
             <Button
               key={key}
               data-probe={key}
@@ -164,7 +164,8 @@ export function IntercomPanel({
               className="probe-chip"
               onClick={() => void onAskProbe(key)}
             >
-              {tl(probe.label, lang)}
+              <span className="opt-index">0{idx + 1}</span>
+              <span>{tl(probe.label, lang)}</span>
             </Button>
           )
         )}
@@ -224,22 +225,36 @@ export function IntercomPanel({
       ) : null}
 
       <div className="verdict-levers">
-        <Button
-          id="btn-admit"
-          disabled={verdictDone}
-          className="lever-btn admit"
-          onClick={() => onExecuteVerdict("ADMIT")}
-        >
-          {tl(UI_STRINGS.admitBtn, lang)}
-        </Button>
-        <Button
-          id="btn-purge"
-          disabled={verdictDone}
-          className="lever-btn purge"
-          onClick={() => onExecuteVerdict("PURGE")}
-        >
-          {tl(UI_STRINGS.purgeBtn, lang)} {fuelLeft > 0 ? "(-1🔥)" : "(⚡ OVERDRAFT)"}
-        </Button>
+        <div className="lever-slot">
+          <Button
+            id="btn-admit"
+            disabled={verdictDone}
+            className="lever-btn admit"
+            onClick={() => onExecuteVerdict("ADMIT")}
+          >
+            <IsometricLeverGlyph kind="admit" />
+            <div className="lever-copy">
+              <span className="lever-tag">[SW-01 // ADMIT]</span>
+              <span>{tl(UI_STRINGS.admitBtn, lang)}</span>
+            </div>
+          </Button>
+        </div>
+        <div className="lever-slot">
+          <Button
+            id="btn-purge"
+            disabled={verdictDone}
+            className="lever-btn purge"
+            onClick={() => onExecuteVerdict("PURGE")}
+          >
+            <IsometricLeverGlyph kind="purge" />
+            <div className="lever-copy">
+              <span className="lever-tag">[SW-02 // INCINERATE]</span>
+              <span>
+                {tl(UI_STRINGS.purgeBtn, lang)} {fuelLeft > 0 ? "[-1 FUEL]" : "[! OVERDRAFT]"}
+              </span>
+            </div>
+          </Button>
+        </div>
       </div>
     </section>
   );

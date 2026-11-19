@@ -31,7 +31,7 @@ export function getInitialFuel(mode: CampaignMode): number {
 
 /**
  * When station heating fuel hits 0, -46°C cryo-brownout degrades booth sensor capacitor
- * from 2⚡ down to 1⚡ per visitor (or 0⚡ if an emergency reserve purge was forced at 0 fuel).
+ * from 2 PWR down to 1 PWR per visitor (or 0 PWR if an emergency reserve purge was forced at 0 fuel).
  */
 export function getSensorPowerBudget(fuelLeft: number, emergencyOverdraftUsed = false): number {
   if (emergencyOverdraftUsed) return 0;

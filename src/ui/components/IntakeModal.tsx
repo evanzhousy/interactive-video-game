@@ -10,6 +10,7 @@ import {
   type PlayerCompactProfile
 } from "../../game/night5.js";
 import type { Locale } from "../../game/types.js";
+import { IsometricOutpostBanner } from "./Schematics.js";
 
 interface Props {
   lang: Locale;
@@ -26,25 +27,34 @@ export function IntakeModal({ lang, onComplete }: Props) {
 
   return (
     <section className="panel modal-stage" id="intake-panel">
-      <div className="section-kicker">
-        ORD-OS // NIGHT 0 · OPERATOR #09 PSYCHOLOGICAL BASELINE INTAKE
+      <div className="section-kicker intake-header-row">
+        <span>ORD-OS // NIGHT 0 · OPERATOR #09 PSYCHOLOGICAL BASELINE INTAKE</span>
+        <span className="tech-stamp">FORM ORD-09</span>
       </div>
-      <Progress
-        className="hud-progress"
-        value={pct}
-        aria-label={tl(
-          { zh: "入职心理基线测验进度", en: "Baseline intake progress", ja: "入所時ベースライン進捗" },
-          lang
-        )}
-      >
-        <ProgressTrack>
-          <ProgressIndicator />
-        </ProgressTrack>
-      </Progress>
+      <div className="intake-progress-row">
+        <Progress
+          className="hud-progress"
+          style={{ marginTop: 0, flex: 1 }}
+          value={pct}
+          aria-label={tl(
+            { zh: "入职心理基线测验进度", en: "Baseline intake progress", ja: "入所時ベースライン進捗" },
+            lang
+          )}
+        >
+          <ProgressTrack>
+            <ProgressIndicator />
+          </ProgressTrack>
+        </Progress>
+        <span className="intake-pct-tag">{pct}%</span>
+      </div>
+      <IsometricOutpostBanner
+        step={done ? INTAKE_QUESTIONS.length : step + 1}
+        totalSteps={INTAKE_QUESTIONS.length}
+      />
       {!done ? (
-        <div style={{ marginTop: "10px" }}>
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--amber-crt)" }}>
-            QUESTION {step + 1} / {INTAKE_QUESTIONS.length}
+        <div style={{ marginTop: "12px" }}>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--amber-crt)", letterSpacing: "0.06em" }}>
+            QUERY // 0{step + 1} OF 0{INTAKE_QUESTIONS.length}
           </div>
           <p style={{ fontSize: "0.95rem", margin: "10px 0 12px" }}>
             {tl(INTAKE_QUESTIONS[step]!.prompt, lang)}
@@ -56,7 +66,8 @@ export function IntakeModal({ lang, onComplete }: Props) {
                 className="option-card"
                 onClick={() => setAnswers((prev) => [...prev, opt])}
               >
-                {tl(opt.text, lang)}
+                <span className="opt-index">0{idx + 1}</span>
+                <span>{tl(opt.text, lang)}</span>
               </Button>
             ))}
           </div>
@@ -73,16 +84,17 @@ export function IntakeModal({ lang, onComplete }: Props) {
                 &gt; {VALUE_I18N[baseline.dropped][lang]} · {tl(SIG_LABELS[baseline.sig], lang)}
               </div>
             </div>
-            <p style={{ fontSize: "0.82rem", color: "var(--text-secondary)", margin: 0 }}>
-              {tl(
-                {
-                  zh: "这张卡记录的是你的「自述」(SAY)。接下来几夜你在值班日志里实际怎么替自己开脱，将作为外部证据进入 ORD-OS 档案。",
-                  en: "This card records your self-description (SAY). How you actually justify your calls in the shift logs becomes ORD-OS external evidence.",
-                  ja: "このカルテは君の「自己申告 (SAY)」だ。これからの夜、勤務日誌で実際にどう言い訳するかがORD-OSの証拠として記録される。"
-                },
-                lang
-              )}
-            </p>
+            <div className="audit-pipeline-strip" aria-label="ORD-OS Audit Pipeline">
+              <span className="pipe-node active">N0 // SAY</span>
+              <svg aria-hidden="true" className="svg-flow-arrow" width="18" height="10" viewBox="0 0 18 10" fill="none">
+                <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />
+              </svg>
+              <span className="pipe-node">N1–N4 // DO LOGS</span>
+              <svg aria-hidden="true" className="svg-flow-arrow" style={{ animationDelay: "0.4s" }} width="18" height="10" viewBox="0 0 18 10" fill="none">
+                <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />
+              </svg>
+              <span className="pipe-node danger">N5 // MIRROR AUDIT</span>
+            </div>
             <Button
               id="btn-start-shift"
               className="ctrl-btn amber"
