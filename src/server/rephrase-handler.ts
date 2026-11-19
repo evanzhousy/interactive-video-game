@@ -5,7 +5,7 @@ import {
   normalizeChatCompletionsUrl,
   validateRephrasedLine
 } from "../game/rephrase.js";
-import type { LlmRephraseInput, Locale, TellLevel } from "../game/types.js";
+import type { LlmRephraseInput, Locale } from "../game/types.js";
 import { isValueToken } from "../ordamor/index.js";
 
 export interface ServerFlashProvider {
@@ -59,7 +59,6 @@ export function resolveServerFlashProvider(
 }
 
 const VALID_LOCALES = new Set<Locale>(["zh", "en", "ja"]);
-const VALID_TELLS = new Set<TellLevel>(["none", "explicit", "implied", "subtle"]);
 
 export function parseAndValidateRephraseRequest(
   rawBody: unknown
@@ -108,11 +107,8 @@ export function parseAndValidateRephraseRequest(
   const st = rawStance as Record<string, unknown>;
   const choose = st.choose === null ? null : typeof st.choose === "string" && isValueToken(st.choose) ? st.choose : undefined;
   const over = st.over === null ? null : typeof st.over === "string" && isValueToken(st.over) ? st.over : undefined;
-  const justification_style =
-    typeof st.justification_style === "string" ? st.justification_style.trim().slice(0, 120) : "";
-  const tell_level = st.tell_level as TellLevel;
 
-  if (choose === undefined || over === undefined || !justification_style || !VALID_TELLS.has(tell_level)) {
+  if (choose === undefined || over === undefined) {
     return { ok: false, status: 400, error: "INVALID_STANCE_FIELDS" };
   }
 
@@ -126,9 +122,7 @@ export function parseAndValidateRephraseRequest(
       canonical_line,
       stance: {
         choose,
-        over,
-        justification_style,
-        tell_level
+        over
       },
       locale,
       max_sentences: 2

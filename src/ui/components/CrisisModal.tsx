@@ -47,7 +47,10 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
         >
           <HazardTriangleIcon /> {tl(crisis.nightLabel, lang)}
         </span>
-        <span className={`fuel-pill ${fuelLeft <= 1 ? "low" : ""}`}>
+        <span
+          className={`fuel-pill ${fuelLeft <= 1 ? "low" : ""}`}
+          aria-label={`Furnace fuel: ${fuelLeft}`}
+        >
           <FlameFuelIcon /> {fuelLeft} FUEL
         </span>
       </div>

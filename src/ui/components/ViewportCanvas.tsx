@@ -36,6 +36,8 @@ export function ViewportCanvas({
   const strobeAlphaRef = useRef(0);
   const strobeHudUntilRef = useRef(0);
   const thermalHudUntilRef = useRef(0);
+  const prevStrobeTriggerRef = useRef(strobeTrigger);
+  const prevThermalTriggerRef = useRef(thermalTrigger);
 
   const [idleVideoReady, setIdleVideoReady] = useState(false);
   const [reactionVideoReady, setReactionVideoReady] = useState(false);
@@ -65,6 +67,9 @@ export function ViewportCanvas({
     setReactionVideoReady(false);
     setThermalActive(false);
     setRetainedReactionSrc(null);
+    strobeAlphaRef.current = 0;
+    strobeHudUntilRef.current = 0;
+    thermalHudUntilRef.current = 0;
 
     if (typeof Image !== "undefined") {
       for (const src of getVisitorPreloadFrames(visitor.id, visitor.portraitUrl)) {
@@ -79,17 +84,21 @@ export function ViewportCanvas({
     }
   }, [visitor.id, visitor.portraitUrl]);
 
-  // Strobe flash + 3.0s pupil reticle HUD
+  // Strobe flash + 3.0s pupil reticle HUD (only on fresh increment, never on remount)
   useEffect(() => {
-    if (strobeTrigger > 0) {
+    const prev = prevStrobeTriggerRef.current;
+    prevStrobeTriggerRef.current = strobeTrigger;
+    if (strobeTrigger > prev && strobeTrigger > 0) {
       strobeAlphaRef.current = 1.0;
       strobeHudUntilRef.current = Date.now() + 3000;
     }
   }, [strobeTrigger]);
 
-  // 3.6s FLIR false-color infrared thermal view
+  // 3.6s FLIR false-color infrared thermal view (only on fresh increment, never on remount)
   useEffect(() => {
-    if (thermalTrigger <= 0) return;
+    const prev = prevThermalTriggerRef.current;
+    prevThermalTriggerRef.current = thermalTrigger;
+    if (thermalTrigger <= prev || thermalTrigger <= 0) return;
     thermalHudUntilRef.current = Date.now() + 3600;
     setThermalActive(true);
     const t = setTimeout(() => setThermalActive(false), 3600);

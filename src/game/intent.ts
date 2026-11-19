@@ -25,7 +25,7 @@ const AXIS_RULES: ReadonlyArray<readonly [ProbeKey, RegExp]> = [
   ],
   [
     "dilemma",
-    /只剩|只能|还是|谁|选|救|让|床位|血清|名额|锁门|开门|公布|发不发|氧气表|工头|董事长|合伙人|高管|文员|抱住|奥斯陆|轮换|瞒|篡改|好友|举报|either| or |whom|who|choose|save|only one|last|lock|publish|foreman|gauge|chairman|partnership|clerk|oslo|rotate|squadmate|cover for|report friend|一つ|どちら|誰|選|助け|閉め|公開|職長|酸素計|会長|事務員|オスロ|帰還|改ざん/i
+    /只剩|只能|还是|选谁|救谁|让谁|床位|血清|名额|锁门|开门|公布|发不发|氧气表|工头|董事长|合伙人|高管|文员|抱住|奥斯陆|轮换|瞒|篡改|好友|举报|either| or |whom|who\s+(do\s+you|would\s+you|should|gets|enters|lives|dies|stays|goes|save|pick|choose)|choose|save|only one|last|lock|publish|foreman|gauge|chairman|partnership|clerk|oslo|rotate|squadmate|cover for|report friend|一つ|どちら|誰を|誰が|選|助け|閉め|公開|職長|酸素計|会長|事務員|オスロ|帰還|改ざん/i
   ]
 ];
 

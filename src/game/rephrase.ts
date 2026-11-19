@@ -14,7 +14,10 @@ export const FORBIDDEN_LEAK_KEYS = [
   "defectMode",
   "lineKey",
   "defectPool",
-  "roll"
+  "roll",
+  "tell_level",
+  "tellLevel",
+  "justification_style"
 ] as const;
 
 const FORBIDDEN_SET = new Set<string>(FORBIDDEN_LEAK_KEYS);
@@ -118,7 +121,7 @@ export function buildFlashRephraseMessages(input: LlmRephraseInput): ChatMessage
   const stanceConstraint =
     input.stance.choose && input.stance.over
       ? `Value priority locked: uphold "${input.stance.choose}" over "${input.stance.over}". Never flip or soften this choice.`
-      : `Justification angle locked: "${input.stance.justification_style}" (tell subtlety: ${input.stance.tell_level}).`;
+      : "Preserve the exact rhetorical stance and factual framing of CANONICAL_LINE without softening or adding new claims.";
 
   const system = [
     "You rewrite spoken intercom lines for a claustrophobic Svalbard -46°C quarantine booth game (Quarantine Gate 0: 2036).",

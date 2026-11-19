@@ -113,11 +113,8 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
     await act(async () => {
       (document.querySelector("#shift-log-box .option-card") as HTMLButtonElement).click();
     });
-    await act(async () => {
-      (document.getElementById("btn-next-visitor") as HTMLButtonElement).click();
-    });
 
-    // Unmount and remount App WITHOUT clearing localStorage -> must resume directly at V-02 with 4🔥 fuel!
+    // Unmount and remount App right AFTER signing V-01 (before clicking Next!) -> must advance cleanly to V-02 with 4 FUEL & no duplicate V-01!
     await act(async () => {
       root.unmount();
     });
@@ -141,6 +138,13 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
     for (let idx = 1; idx < 8; idx++) {
       if (idx === 4 || idx === 5) {
         expect(document.getElementById("night3-storm-banner")).not.toBeNull();
+        // Night 3 geomagnetic storm strictly blinds strobe & thermal sensors
+        expect(document.getElementById("btn-strobe")?.getAttribute("aria-disabled")).toBe("true");
+        expect(document.getElementById("btn-thermal")?.getAttribute("aria-disabled")).toBe("true");
+        await act(async () => {
+          window.dispatchEvent(new KeyboardEvent("keydown", { key: "s", bubbles: true }));
+        });
+        expect(document.querySelector(".sensor-toast")).toBeNull();
       } else {
         expect(document.getElementById("night3-storm-banner")).toBeNull();
       }
@@ -248,6 +252,29 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
     await act(async () => {
       (document.querySelector('[data-n5-probe="n5_serum"]') as HTMLButtonElement).click();
     });
+    expect(document.getElementById("n5-rebuttal-badge")?.textContent).toContain(
+      "CONTRADICTIONS EXPOSED: 1"
+    );
+
+    // Off-axis chatter ("hello") and duplicate serum free-text must NOT double-count exposures!
+    const submitN5Text = async (txt: string) => {
+      await act(async () => {
+        const input = document.getElementById("n5-ask-input") as HTMLInputElement;
+        const nativeSetter = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          "value"
+        )?.set;
+        nativeSetter?.call(input, txt);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      });
+      await act(async () => {
+        const form = document.getElementById("n5-ask-form") as HTMLFormElement;
+        form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      });
+    };
+    await submitN5Text("hello");
+    await submitN5Text("what happened to the serum?");
     expect(document.getElementById("n5-rebuttal-badge")?.textContent).toContain(
       "CONTRADICTIONS EXPOSED: 1"
     );

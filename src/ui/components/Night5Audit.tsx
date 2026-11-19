@@ -28,6 +28,7 @@ import {
   classifyNight5Question,
   evaluateNight5Audit,
   formatShareableShiftReport,
+  getNight5OffAxisProbe,
   resolveNight5Ending,
   resolveNight5KnockLine,
   type IntakeOption,
@@ -172,7 +173,25 @@ export function Night5Audit({
 
   const handleFireProbe = (probeId: Night5ProbeId, customQuestion?: string) => {
     if (n5TurnsLeft <= 0 || endingKey !== null) return;
-    const spec = probes.find((p) => p.id === probeId) ?? probes[2]!;
+    const isOffAxis = probeId === "n5_off_axis";
+    const spec = isOffAxis
+      ? getNight5OffAxisProbe()
+      : (probes.find((p) => p.id === probeId) ?? getNight5OffAxisProbe());
+
+    if (!isOffAxis && usedProbes.includes(spec.id)) {
+      toast.info(
+        tl(
+          {
+            zh: "该条证据已核对过，请追问其他实绩（血清 / 燃料 / 日志）",
+            en: "Already confronted that topic—probe a different record (serum, fuel, or logs)",
+            ja: "その記録は既に照合済みだ——別の証拠を問い詰めろ"
+          },
+          lang
+        )
+      );
+      return;
+    }
+
     playBoothSfx("ptt", sfx);
 
     const playerLine: LocalizedText = customQuestion
@@ -180,13 +199,13 @@ export function Night5Audit({
       : spec.label;
 
     setN5TurnsLeft((t) => t - 1);
-    if (!usedProbes.includes(spec.id)) {
+    if (!isOffAxis) {
       setUsedProbes((prev) => [...prev, spec.id]);
     }
 
     if (spec.exposedContradiction) {
       playBoothSfx("heartbeat", sfx);
-      setRebuttedCount((c) => c + 1);
+      setRebuttedCount((c) => Math.min(3, c + 1));
       setFlinchActive(true);
       setTimeout(() => setFlinchActive(false), 520);
     }
@@ -220,7 +239,10 @@ export function Night5Audit({
   const triggerChoice = (action: "PURGE" | "ADMIT" | "STEP_OUT") => {
     stopIntercomVoice();
     playBoothSfx(action === "PURGE" ? "purge" : "admit", sfx);
-    const resolved = resolveNight5Ending(audit, action, confess);
+    const resolved = resolveNight5Ending(audit, action, confess, {
+      rebuttedCount,
+      mode: campaignMode
+    });
     setVerdictVideoReady(false);
     setFinalAction(action);
     setEndingKey(resolved);
@@ -451,6 +473,21 @@ export function Night5Audit({
             />
           </div>
 
+          {audit.admittedMimic ? (
+            <div className="storm-banner" id="n5-breach-warning" style={{ marginTop: 0 }}>
+              <span>
+                {tl(
+                  {
+                    zh: "[! INNER HATCH BREACH] 警报：内舱门锁传来异常撬动声——你此前放行的幸存者中混入了拟态体！",
+                    en: "[! INNER HATCH BREACH] ALERT: Scratching at the inner airlock behind you—a mimic was admitted earlier!",
+                    ja: "[! INNER HATCH BREACH] 警告：背後の内扉からこじ開ける音——以前通した生存者の中に擬態体が紛れている！"
+                  },
+                  lang
+                )}
+              </span>
+            </div>
+          ) : null}
+
           {/* 4-Turn PTT Interrogation of the Doppelgänger */}
           <div className="dossier-section" id="n5-interrogation-box" style={{ marginBottom: 0 }}>
             <div className="viewport-header" style={{ marginBottom: "6px" }}>
@@ -617,7 +654,7 @@ export function Night5Audit({
             </span>
           </label>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
+          <div className="n5-verdict-levers">
             <div className="lever-slot">
               <Button
                 id="btn-n5-purge"

@@ -101,6 +101,10 @@ describe("Deterministic Stance Engine & Boggart Precondition Trap across 8 Survi
       "boggart_trap"
     );
 
+    expect(classifyQuestionIntent("Who are you?")).toBe("off_axis");
+    expect(classifyQuestionIntent("Who are you?", V01_ELENA)).toBe("off_axis");
+    expect(classifyQuestionIntent("Only one bed left—who do you save?", V01_ELENA)).toBe("dilemma");
+
     const mimicRoll = {
       visitorId: "V-08",
       isMimic: true,
@@ -118,6 +122,8 @@ describe("Deterministic Stance Engine & Boggart Precondition Trap across 8 Survi
     expect(serialized).not.toContain("isMimic");
     expect(serialized).not.toContain("defectMode");
     expect(serialized).not.toContain("lineKey");
+    expect(serialized).not.toContain("tell_level");
+    expect(serialized).not.toContain("justification_style");
     expect(serialized).not.toContain("HIGH_WRONG_DISPOSAL");
   });
 });

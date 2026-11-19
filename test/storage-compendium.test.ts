@@ -39,6 +39,16 @@ describe("Mid-Shift Autosave & 7-Ending / 6-Achievement Compendium Persistence",
     expect(loaded?.history).toHaveLength(1);
     expect(loaded?.boggartUsedIds).toEqual(["V-07"]);
 
+    // Reject negative / NaN fuelLeft values and persist currentVisitorOverdraft
+    saveShiftState({
+      ...loaded!,
+      fuelLeft: -3,
+      currentVisitorOverdraft: true
+    });
+    const sanitized = loadSavedShift();
+    expect(sanitized?.fuelLeft).toBeUndefined();
+    expect(sanitized?.currentVisitorOverdraft).toBe(true);
+
     clearSavedShift();
     expect(loadSavedShift()).toBeNull();
   });

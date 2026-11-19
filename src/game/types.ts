@@ -93,7 +93,8 @@ export interface StanceDecision {
 
 /**
  * Strictly sanitized payload for the optional Flash-class LLM rephrasing layer.
- * Red Line / Anti-Leakage Invariant: NEVER contains `isMimic`, `defectMode`, `lineKey`, or hidden roll state.
+ * Red Line / Anti-Leakage Invariant: NEVER contains `isMimic`, `defectMode`, `lineKey`,
+ * `tell_level`, `justification_style`, or hidden roll state.
  */
 export interface LlmRephraseInput {
   speaker: string;
@@ -104,8 +105,6 @@ export interface LlmRephraseInput {
   stance: {
     choose: ValueToken | null;
     over: ValueToken | null;
-    justification_style: string;
-    tell_level: TellLevel;
   };
   locale: Locale;
   max_sentences: 2;

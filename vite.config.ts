@@ -87,7 +87,23 @@ export default defineConfig(({ mode }) => {
     base: "./",
     build: {
       outDir: "dist",
-      emptyOutDir: true
+      emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes("node_modules/react") || id.includes("node_modules/scheduler")) {
+              return "vendor-react";
+            }
+            if (id.includes("node_modules/@ui-sdk") || id.includes("node_modules/@floating-ui")) {
+              return "vendor-ui-sdk";
+            }
+            if (id.includes("/src/game/") || id.includes("/src/ordamor/")) {
+              return "game-engine";
+            }
+            return undefined;
+          }
+        }
+      }
     },
     server: {
       port: 5173

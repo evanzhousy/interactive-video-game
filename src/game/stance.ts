@@ -98,7 +98,7 @@ export function decideStance(
 
 /**
  * Builds the strictly sanitized input object for the optional Flash-class rephrasing model.
- * Guaranteed free of `isMimic`, `defectMode`, or `lineKey`.
+ * Guaranteed free of `isMimic`, `defectMode`, `lineKey`, `tell_level`, and `justification_style`.
  */
 export function buildRephraseInput(
   visitor: VisitorSpec,
@@ -115,9 +115,7 @@ export function buildRephraseInput(
     canonical_line: canonicalLine,
     stance: {
       choose: stance.choose,
-      over: stance.over,
-      justification_style: stance.justification_style,
-      tell_level: stance.tell_level
+      over: stance.over
     },
     locale,
     max_sentences: 2

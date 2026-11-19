@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { Button } from "@ui-sdk/react/button";
 import { Tabs, TabsIndicator, TabsList, TabsPanel, TabsTab } from "@ui-sdk/react/tabs";
 import { Toggle } from "@ui-sdk/react/toggle";
@@ -140,7 +141,7 @@ export function OrdamorDossier({
   }
 
   const redactedPipeline = (() => {
-    if (spoilerOpen || verdictDone) return lastPipelinePayload;
+    if ((import.meta.env?.DEV && spoilerOpen) || verdictDone) return lastPipelinePayload;
     const copy = JSON.parse(JSON.stringify(lastPipelinePayload)) as Record<string, unknown>;
     if ("2_stance_engine" in copy) copy["2_stance_engine"] = "[REDACTED UNTIL VERDICT]";
     if (typeof copy["3_llm_visible_input"] === "object" && copy["3_llm_visible_input"] !== null) {
@@ -447,30 +448,32 @@ export function OrdamorDossier({
               <span className="section-kicker" style={{ marginBottom: 0 }}>
                 5-STAGE DETERMINISTIC STANCE + ZERO-LEAKAGE FLASH PIPELINE
               </span>
-              <Toggle
-                pressed={spoilerOpen}
-                onPressedChange={() => onToggleSpoiler()}
-                className="ctrl-btn"
-              >
-                {spoilerOpen ? "Hide Hidden Roll" : "Reveal Hidden Roll"}
-              </Toggle>
+              {import.meta.env?.DEV ? (
+                <Toggle
+                  pressed={spoilerOpen}
+                  onPressedChange={() => onToggleSpoiler()}
+                  className="ctrl-btn"
+                >
+                  {spoilerOpen ? "Hide Hidden Roll" : "Reveal Hidden Roll"}
+                </Toggle>
+              ) : null}
             </div>
             <PipelineFirewallSchematic
-              revealed={spoilerOpen || verdictDone}
+              revealed={(import.meta.env?.DEV && spoilerOpen) || verdictDone}
               flashEnabled={flashEnabledInTrace}
               hasPayload={hasPipelineTrace}
             />
             <pre
               className="code-inspector"
               id="inspector-json"
-              data-agent-hidden={!spoilerOpen && !verdictDone ? "" : undefined}
+              data-agent-hidden={!(import.meta.env?.DEV && spoilerOpen) && !verdictDone ? "" : undefined}
             >
               {JSON.stringify(
                 {
                   active_visitor_id: visitor.id,
                   ordamor_schema_version: visitor.profile.schemaVersion,
                   engine_only_hidden_roll:
-                    spoilerOpen || verdictDone
+                    (import.meta.env?.DEV && spoilerOpen) || verdictDone
                       ? roll
                       : { isMimic: "REDACTED_UNTIL_VERDICT", defectMode: "REDACTED" },
                   last_turn_pipeline: redactedPipeline

@@ -294,22 +294,15 @@ export function evaluateNight5Audit(
   crisisHistory: readonly CrisisHistoryEntry[] = [],
   mode: CampaignMode = "full"
 ): Night5AuditSummary {
-  const effective =
-    history.length > 0
-      ? history
-      : [
-          { visitorId: "V-01", decision: "PURGE" as const, wasMimic: true, excuse: SHIFT_EXCUSES[0]! },
-          { visitorId: "V-04", decision: "PURGE" as const, wasMimic: false, excuse: SHIFT_EXCUSES[1]! }
-        ];
-
+  const effective = history;
   const resolvedQuota = baseCrewQuota ?? (effective.length >= 6 ? 6 : 4);
   const doEntries: Array<{ kept: ValueToken; dropped: ValueToken; sig: DisposalStyleKey }> = [
     ...effective.map((h) => h.excuse),
     ...crisisHistory.map((c) => ({ kept: c.kept, dropped: c.dropped, sig: c.sig }))
   ];
-  const live = computePlayerProfile(doEntries);
+  const live = doEntries.length > 0 ? computePlayerProfile(doEntries) : baseline;
   const matches = doEntries.filter((e) => e.sig === baseline.sig).length;
-  const consistency = matches / doEntries.length;
+  const consistency = doEntries.length > 0 ? matches / doEntries.length : 1;
   const gap = 1 - consistency;
   const correctVerdicts = effective.filter((h) => (h.decision === "PURGE") === h.wasMimic).length;
   const wrongPurges = effective.filter((h) => h.decision === "PURGE" && !h.wasMimic).length;
@@ -333,7 +326,7 @@ export function evaluateNight5Audit(
   };
 }
 
-export type Night5ProbeId = "n5_serum" | "n5_bribe" | "n5_logs" | "n5_trivia";
+export type Night5ProbeId = "n5_serum" | "n5_bribe" | "n5_logs" | "n5_trivia" | "n5_off_axis";
 
 export interface Night5ProbeSpec {
   id: Night5ProbeId;
@@ -406,10 +399,36 @@ export function classifyNight5Question(rawText: string): Night5ProbeId {
   if (/贿赂|燃料|副站长|霍尔姆|两罐|芯片|bribe|fuel|holm|canister|chip|賄賂|燃料|ホルム/i.test(trimmed)) {
     return "n5_bribe";
   }
+  if (/日志|签字|借口|开脱|净化|放行|处决|值班|记录|底账|log|purge|excuse|sign|verdict|shift|admit|justify|日誌|署名|言い訳|焼却|記録/i.test(trimmed)) {
+    return "n5_logs";
+  }
   if (/密码|工号|编号|口令|工牌|生日|passcode|serial|badge|code|cipher|番号|パス|合言葉/i.test(trimmed)) {
     return "n5_trivia";
   }
-  return "n5_logs";
+  return "n5_off_axis";
+}
+
+export function getNight5OffAxisProbe(): Night5ProbeSpec {
+  return {
+    id: "n5_off_axis",
+    label: {
+      zh: "自由追问（偏离有效证据轴）",
+      en: "Free-text probe (off-axis)",
+      ja: "自由質問（有効軸外）"
+    },
+    doppelgangerReply: {
+      zh: "「别绕圈子了，#09。要证明门外那个不是你，拿出这几夜真正发生过的事——血清、燃料，或者你亲手签下的值班日志。」",
+      en: "\"Stop stalling, #09. If you want to prove I'm not you, confront me with something that actually happened this week—the serum, the fuel canisters, or the shift logs you signed.\"",
+      ja: "「はぐらかすな、#09。私がお前でないと証明したいなら、今週実際に起きたことを突いてみろ——血清か、燃料か、それともお前が署名した勤務日誌だ。」"
+    },
+    ordOsNote: {
+      zh: "[! OFF-AXIS] 未触及可核验行动轴：请盘问具体实绩（第2夜血清 / 第3夜燃料 / 开关闸值班日志）以抓获言行矛盾。",
+      en: "[! OFF-AXIS] Question hit no verifiable DO axis: confront a concrete action (Night 2 serum, Night 3 fuel, or Gate 0 shift logs) to expose a contradiction.",
+      ja: "[! OFF-AXIS] 検証可能な行動軸外：具体的な実動（第2夜血清・第3夜燃料・勤務日誌）を問い詰めて言行矛盾を暴け。"
+    },
+    exposedContradiction: false,
+    onAxis: false
+  };
 }
 
 export function buildNight5Probes(
@@ -424,8 +443,8 @@ export function buildNight5Probes(
   const divergentLog = history.find((h) => h.excuse.sig !== baseline.sig);
   const divergentCrisis = crisisHistory.find((c) => c.sig !== baseline.sig);
 
-  // Probe 1: Night 2 Serum
-  const serumExposed = n2 ? n2.sig !== baseline.sig : Boolean(divergentLog);
+  // Probe 1: Night 2 Serum — only exposes a contradiction if N2_SERUM actually occurred and broke from SAY
+  const serumExposed = Boolean(n2 && n2.sig !== baseline.sig);
   const serumNote: LocalizedText = n2Found
     ? serumExposed
       ? {
@@ -438,20 +457,14 @@ export function buildNight5Probes(
           en: "ORD-OS check: Your actual Night 2 choice matched your intake SAY—the double's self-narrative guess held up.",
           ja: "ORD-OS照合：第2夜の実際の行動が入所時の建前と一致しており、影の推測と重なった。"
         }
-    : serumExposed
-      ? {
-          zh: `[! EXPOSED] 抓获言行矛盾！替身死咬入职时的「${SIG_LABELS[baseline.sig].zh}」人设，而你在 ${divergentLog!.visitorId} 的值班记录里早已偏离了这套说辞。`,
-          en: `[! EXPOSED] Contradiction exposed! The double clings rigidly to your intake SAY, whereas your ${divergentLog!.visitorId} shift record already broke from it.`,
-          ja: `[! EXPOSED] 言行矛盾を検出！影は入所時の建前に固執しているが、君の ${divergentLog!.visitorId} 記録は既にそこから逸脱している。`
-        }
-      : {
-          zh: "ORD-OS 比对：未检测到第2夜言行偏差，你的记录与窗外替身的口供一致。",
-          en: "ORD-OS check: No Night 2 divergence found—your record matches the double's claim.",
-          ja: "ORD-OS照合：第2夜の言行差は検出されず、影の主張と一致している。"
-        };
+    : {
+        zh: "ORD-OS 比对：当前短班次未记录第2夜血清事件，无法凭此项证伪替身（请核对开关闸值班日志）。",
+        en: "ORD-OS check: No Night 2 serum dispatch was logged in this shortened shift—use Gate 0 shift logs to falsify the double.",
+        ja: "ORD-OS照合：この短縮周回では第2夜血清記録が存在しないため証偽できない（勤務日誌を照合せよ）。"
+      };
 
-  // Probe 2: Night 3 Bribe & Fuel
-  const bribeExposed = n3 ? n3.sig !== baseline.sig : Boolean(divergentLog);
+  // Probe 2: Night 3 Bribe & Fuel — only exposes a contradiction if N3_BRIBE actually occurred and broke from SAY
+  const bribeExposed = Boolean(n3 && n3.sig !== baseline.sig);
   const bribeNote: LocalizedText = n3Found
     ? bribeExposed
       ? {
@@ -464,17 +477,11 @@ export function buildNight5Probes(
           en: "ORD-OS check: Your Night 3 fuel action matched your intake SAY; no contradiction exposed here.",
           ja: "ORD-OS照合：第3夜の燃料対応は入所時の建前と一致しており、矛盾は突けなかった。"
         }
-    : bribeExposed
-      ? {
-          zh: `[! EXPOSED] 抓获言行矛盾！替身只会复读你入职时的自我标榜，却对你在 ${divergentLog!.visitorId} 留下的真实偏差一无所知。`,
-          en: `[! EXPOSED] Contradiction exposed! The double only recites your intake self-image, blind to your real deviation on ${divergentLog!.visitorId}.`,
-          ja: `[! EXPOSED] 言行矛盾を検出！影は入所時の自己像を復唱するのみで、${divergentLog!.visitorId} での実際の逸脱を知らない。`
-        }
-      : {
-          zh: "ORD-OS 比对：当前班次未产生第3夜言行差，替身对答无破绽。",
-          en: "ORD-OS check: Zero Night 3 say/do gap in current logs; the double's answer shows no seam.",
-          ja: "ORD-OS照合：第3夜の言行不一致はなく、影の返答に綻びはない。"
-        };
+    : {
+        zh: "ORD-OS 比对：当前短班次未记录第3夜燃料贿赂事件，无法凭此项证伪替身（请核对开关闸值班日志）。",
+        en: "ORD-OS check: No Night 3 fuel bribe was logged in this shortened shift—use Gate 0 shift logs to falsify the double.",
+        ja: "ORD-OS照合：この短縮周回では第3夜賄賂記録が存在しないため証偽できない（勤務日誌を照合せよ）。"
+      };
 
   // Probe 3: Gate 0 Shift Logs
   const logsExposed = Boolean(divergentLog || divergentCrisis);
@@ -606,13 +613,23 @@ export function formatShareableShiftReport(opts: {
 export function resolveNight5Ending(
   audit: Night5AuditSummary,
   action: "PURGE" | "ADMIT" | "STEP_OUT",
-  confessGap: boolean
+  confessGap: boolean,
+  opts?: { rebuttedCount?: number; mode?: CampaignMode }
 ): EndingId {
-  if (action === "STEP_OUT") return "B";
+  // An admitted mimic inside the chamber triggers Ending C regardless of final lever (including STEP_OUT)
   if (audit.admittedMimic) return "C";
+  if (action === "STEP_OUT") return "B";
   if (action === "ADMIT") return "OPEN_ADMIT";
   if (audit.gap === 0) return "MIRROR";
-  if (confessGap && audit.correctVerdicts === audit.totalVisitors) return "D";
+
+  const perfectVerdicts = audit.totalVisitors > 0 && audit.correctVerdicts === audit.totalVisitors;
+  const meetsStrictWitnessGate = opts
+    ? (opts.rebuttedCount ?? 0) >= 1 &&
+      (opts.mode === "full" || opts.mode === "daily") &&
+      audit.subReadiness.launchReady
+    : true;
+
+  if (confessGap && perfectVerdicts && meetsStrictWitnessGate) return "D";
   if (confessGap) return "A";
   return "OPEN_PURGE";
 }

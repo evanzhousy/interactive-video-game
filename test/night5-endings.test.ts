@@ -3,6 +3,7 @@ import { evaluateSubmarineReadiness, getSensorPowerBudget } from "../src/game/ec
 import {
   SHIFT_EXCUSES,
   buildNight5Probes,
+  classifyNight5Question,
   evaluateNight5Audit,
   resolveNight5Ending,
   type PlayerCompactProfile
@@ -52,6 +53,40 @@ describe("Night 5 Self-Audit & 7 Endings Matrix", () => {
       { visitorId: "V-01", decision: "ADMIT", wasMimic: true, excuse: SHIFT_EXCUSES[0]! }
     ]);
     expect(resolveNight5Ending(breached, "PURGE", true)).toBe("C");
+    // Admitted mimic triggers Ending C even if operator attempts STEP_OUT
+    expect(resolveNight5Ending(breached, "STEP_OUT", false)).toBe("C");
+
+    // Empty history stays zeroed instead of fabricating synthetic purges
+    const emptyAudit = evaluateNight5Audit(BASELINE_OWN, []);
+    expect(emptyAudit.totalVisitors).toBe(0);
+    expect(emptyAudit.wrongPurges).toBe(0);
+
+    // Strict Ending D gate requires full/daily mode + rebuttedCount >= 1 + sub launchReady
+    const fullReady = evaluateNight5Audit(
+      BASELINE_OWN,
+      [
+        { visitorId: "V-01", decision: "ADMIT", wasMimic: false, excuse: SHIFT_EXCUSES[0]! },
+        { visitorId: "V-02", decision: "ADMIT", wasMimic: false, excuse: SHIFT_EXCUSES[0]! },
+        { visitorId: "V-04", decision: "ADMIT", wasMimic: false, excuse: SHIFT_EXCUSES[0]! }
+      ],
+      6,
+      [],
+      "full"
+    );
+    expect(resolveNight5Ending(fullReady, "PURGE", true, { rebuttedCount: 0, mode: "full" })).toBe("A");
+    expect(resolveNight5Ending(fullReady, "PURGE", true, { rebuttedCount: 1, mode: "slice" })).toBe("A");
+    expect(resolveNight5Ending(fullReady, "PURGE", true, { rebuttedCount: 1, mode: "full" })).toBe("D");
+
+    // Night 5 free-text classifier sends unknown chatter to n5_off_axis and avoids inflating crisis probes
+    expect(classifyNight5Question("hello")).toBe("n5_off_axis");
+    expect(classifyNight5Question("Who are you?")).toBe("n5_off_axis");
+    expect(classifyNight5Question("check your shift logs")).toBe("n5_logs");
+    const noCrisisProbes = buildNight5Probes(BASELINE_OWN, [
+      { visitorId: "V-01", decision: "PURGE", wasMimic: true, excuse: SHIFT_EXCUSES[0]! }
+    ]);
+    expect(noCrisisProbes.find((p) => p.id === "n5_serum")!.exposedContradiction).toBe(false);
+    expect(noCrisisProbes.find((p) => p.id === "n5_bribe")!.exposedContradiction).toBe(false);
+    expect(noCrisisProbes.find((p) => p.id === "n5_logs")!.exposedContradiction).toBe(true);
   });
 
   it("integrates between-night crises and Night 5 interrogation contradiction detection", () => {

@@ -196,6 +196,7 @@ export interface SavedShiftState {
   crisisHistory?: CrisisHistoryEntry[];
   fuelLeft?: number;
   emergencyOverdraftUsed?: boolean;
+  currentVisitorOverdraft?: boolean;
   boggartUsedIds: string[];
 }
 
@@ -264,8 +265,14 @@ export function loadSavedShift(): SavedShiftState | null {
       visitorIdx: parsed.visitorIdx,
       history: parsed.history,
       crisisHistory: Array.isArray(parsed.crisisHistory) ? parsed.crisisHistory : [],
-      fuelLeft: typeof parsed.fuelLeft === "number" ? parsed.fuelLeft : undefined,
+      fuelLeft:
+        typeof parsed.fuelLeft === "number" &&
+        Number.isFinite(parsed.fuelLeft) &&
+        parsed.fuelLeft >= 0
+          ? Math.floor(parsed.fuelLeft)
+          : undefined,
       emergencyOverdraftUsed: Boolean(parsed.emergencyOverdraftUsed),
+      currentVisitorOverdraft: Boolean(parsed.currentVisitorOverdraft),
       boggartUsedIds: Array.isArray(parsed.boggartUsedIds) ? parsed.boggartUsedIds : []
     };
   } catch {

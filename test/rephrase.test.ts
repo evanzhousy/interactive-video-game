@@ -47,6 +47,8 @@ describe("Optional Flash Online Free-Text Rephrase Pipeline & Zero-Leakage Guard
 
     expect(hasIdentityLeakage({ ...input, isMimic: true })).toBe("isMimic");
     expect(hasIdentityLeakage({ nested: { defectMode: "HIGH_WRONG_DISPOSAL" } })).toBe("defectMode");
+    expect(hasIdentityLeakage({ ...input, stance: { ...input.stance, tell_level: "explicit" } })).toBe("tell_level");
+    expect(hasIdentityLeakage({ ...input, stance: { ...input.stance, justification_style: "wrong_signature" } })).toBe("justification_style");
   });
 
   it("validates rephrased lines for length, sentence cap, locale script, and anti-meta rules", () => {

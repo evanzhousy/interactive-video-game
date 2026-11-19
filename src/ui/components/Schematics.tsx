@@ -131,10 +131,9 @@ export function IsometricOutpostBanner({
           SURFACE // -46°C POLAR SHELF
         </text>
 
-        {/* Cable Tunnel: Surface -> Gate 0 (Base dashed + Glowing Traveling Beam) */}
+        {/* Cable Tunnel: Surface -> Gate 0 (Static dashed rail + Glowing Traveling Beam) */}
         <path
           d="M198 46 L264 60"
-          className="svg-signal-flow"
           stroke={surfaceActive || gateActive ? "rgba(235,168,52,0.52)" : "rgba(235,168,52,0.28)"}
           strokeWidth="1.1"
           strokeDasharray="5 4"
@@ -178,7 +177,6 @@ export function IsometricOutpostBanner({
             fill="rgba(158,198,212,0.14)"
             stroke="#9ec6d4"
             strokeDasharray="2 2"
-            className="svg-dash-slow"
           />
           <line
             x1="334"
@@ -214,7 +212,6 @@ export function IsometricOutpostBanner({
         {/* Sub-glacial Elevator Shaft: Gate-0 -> Nautilus-0 */}
         <path
           d="M398 73 H460 L488 92"
-          className="svg-signal-flow"
           stroke={subActive ? "rgba(73,184,130,0.65)" : "rgba(158,198,212,0.45)"}
           strokeWidth="1.2"
           strokeDasharray="5 3"
@@ -412,7 +409,6 @@ export function ViewportHudOverlay({
             width="14"
             height="14"
             fill="none"
-            className="svg-dash-slow"
             strokeDasharray="3 3"
             stroke="rgba(235,168,52,0.32)"
           />
@@ -827,7 +823,6 @@ export function IsometricAirlockSchematic({
               y1="40"
               x2="180"
               y2="40"
-              className="svg-signal-flow"
               stroke="rgba(235,168,52,0.45)"
               strokeWidth="1.1"
               strokeDasharray="3 3"
@@ -845,7 +840,7 @@ export function IsometricAirlockSchematic({
         {/* Vertical Divider */}
         <line x1="258" y1="10" x2="258" y2="68" stroke="rgba(198,176,138,0.22)" />
 
-        {/* Zone 2: Thermal Coil Canister Rack (Overflow-Safe + Live Staggered Thermal Shimmer) */}
+        {/* Zone 2: Thermal Coil Canister Rack (Overflow-Safe; alerts only on <= 1 fuel) */}
         <text x="270" y="26" fill="#a2aeb6" fontSize="8.6" fontFamily="monospace" fontWeight="700">
           THERMAL RACK
         </text>
@@ -855,14 +850,7 @@ export function IsometricAirlockSchematic({
           return (
             <polygon
               key={idx}
-              className={
-                lit
-                  ? fuelLeft <= 1
-                    ? "svg-low-fuel-cell"
-                    : "svg-cell-breathe"
-                  : undefined
-              }
-              style={lit && fuelLeft > 1 ? { animationDelay: `${(idx * 0.28).toFixed(2)}s` } : undefined}
+              className={lit && fuelLeft <= 1 ? "svg-low-fuel-cell" : undefined}
               points={`${x + 3},14 ${x + 17},14 ${x + 14},30 ${x},30`}
               fill={lit ? (fuelLeft <= 1 ? "#eb7634" : "#eba834") : "#0d1115"}
               stroke={lit ? "#eba834" : "rgba(198,176,138,0.25)"}
@@ -920,8 +908,6 @@ export function IsometricAirlockSchematic({
                 y="5"
                 width={cellW - 8}
                 height="6"
-                className={lit ? "svg-cell-breathe" : undefined}
-                style={lit ? { animationDelay: `${(idx * 0.4).toFixed(2)}s` } : undefined}
                 fill={lit ? "#9ec6d4" : "rgba(224,70,52,0.22)"}
               />
             </g>
@@ -1018,7 +1004,6 @@ export function PipelineFirewallSchematic({
           y1="39"
           x2="104"
           y2="39"
-          className="svg-signal-flow"
           stroke="rgba(235,168,52,0.45)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -1055,7 +1040,6 @@ export function PipelineFirewallSchematic({
           y1="39"
           x2="262"
           y2="39"
-          className="svg-signal-flow"
           stroke="rgba(224,70,52,0.55)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -1076,7 +1060,6 @@ export function PipelineFirewallSchematic({
           stroke="#e04634"
           strokeWidth="1.2"
           strokeDasharray="3 2"
-          className="svg-dash-slow"
         />
         <line
           x1="201"
@@ -1122,7 +1105,6 @@ export function PipelineFirewallSchematic({
           y1="39"
           x2="366"
           y2="39"
-          className="svg-signal-flow"
           stroke={flashEnabled ? "rgba(73,184,130,0.55)" : "rgba(158,198,212,0.55)"}
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -1233,7 +1215,6 @@ export function EndingConstellationSvg({
         {/* Orthogonal PCB Branch Rails + Traveling Circuit Pulses */}
         <path
           d="M142 54 H186 V24 H320 M476 24 H520"
-          className={topLit ? undefined : "svg-signal-flow"}
           stroke={topLit ? "rgba(224,70,52,0.72)" : "rgba(198,176,138,0.28)"}
           strokeWidth={topLit ? "1.5" : "1"}
           strokeDasharray={topLit ? undefined : "4 3"}
@@ -1248,7 +1229,6 @@ export function EndingConstellationSvg({
 
         <path
           d="M142 54 H320 M476 54 H520"
-          className={midLit ? undefined : "svg-signal-flow"}
           stroke={midLit ? "rgba(235,168,52,0.82)" : "rgba(198,176,138,0.28)"}
           strokeWidth={midLit ? "1.5" : "1"}
           strokeDasharray={midLit ? undefined : "4 3"}
@@ -1263,7 +1243,6 @@ export function EndingConstellationSvg({
 
         <path
           d="M142 54 H186 V88 H320 M476 88 H520 M676 88 H720"
-          className={botLit ? undefined : "svg-signal-flow"}
           stroke={botLit ? "rgba(158,198,212,0.82)" : "rgba(198,176,138,0.28)"}
           strokeWidth={botLit ? "1.5" : "1"}
           strokeDasharray={botLit ? undefined : "4 3"}
@@ -1423,10 +1402,9 @@ export function IsometricLockedModule({
   return (
     <div className="iso-lock-card" id={id}>
       <svg aria-hidden="true" width="52" height="44" viewBox="0 0 52 44" fill="none">
-        {/* Outer isometric wireframe lock cage with slow marching lock edges */}
+        {/* Outer isometric wireframe lock cage */}
         <polygon
           points="26,3 46,12 26,21 6,12"
-          className="svg-dash-slow"
           stroke="rgba(198,176,138,0.5)"
           strokeDasharray="2 2"
         />
@@ -1699,8 +1677,15 @@ export function NautilusSubSchematic({
         </text>
       </svg>
 
-      {/* Accessible mirrored status pills */}
+      {/* Accessible mirrored status summary & role pills */}
       <div className="visually-hidden">
+        <span>
+          NAUTILUS-0:{" "}
+          {launchReady
+            ? tl({ zh: "满编可启航", en: "LAUNCH READY", ja: "出航可能" }, lang)
+            : tl({ zh: "船员缺编警报", en: "UNDERCREWED", ja: "要員不足" }, lang)}{" "}
+          ({admittedHumans}/{requiredCrewCount})
+        </span>
         {checkedRoles.map((role) => {
           const ok = rolesPresent.includes(role);
           return (
@@ -1767,10 +1752,9 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
           {tl({ zh: "审讯对质", en: "CONFRONT", ja: "対立尋問" }, lang)}
         </text>
 
-        {/* Dual Animated Branch Connectors + Glowing Traveling Signal Pulses */}
+        {/* Dual Branch Connectors + Glowing Traveling Signal Pulses */}
         <path
           d="M94 38 H122 V21 H146"
-          className="svg-signal-flow"
           stroke="rgba(73,184,130,0.48)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -1785,7 +1769,6 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
 
         <path
           d="M94 38 H122 V55 H146"
-          className="svg-signal-flow"
           stroke="rgba(224,70,52,0.48)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -1805,7 +1788,7 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
         </text>
         <line x1="330" y1="21" x2="352" y2="21" stroke="rgba(73,184,130,0.5)" strokeWidth="1.2" />
         <path d="M330 21 H352" pathLength={100} className="svg-beam-travel delay-1" stroke="#86e8b8" strokeWidth="2" />
-        <rect x="352" y="9" width="98" height="24" fill="#49b882" className="svg-cell-breathe" />
+        <rect x="352" y="9" width="98" height="24" fill="#49b882" />
         <text x="401" y="24" textAnchor="middle" fill="#060809" fontSize="8" fontFamily="monospace" fontWeight="700">
           HUMAN // ADMIT
         </text>
@@ -1816,7 +1799,6 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
           y="43"
           width="184"
           height="24"
-          className="svg-dash-slow"
           fill="rgba(224,70,52,0.1)"
           stroke="#e04634"
           strokeDasharray="3 2"
@@ -1826,15 +1808,7 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
         </text>
         <line x1="330" y1="55" x2="352" y2="55" stroke="rgba(224,70,52,0.5)" strokeWidth="1.2" />
         <path d="M330 55 H352" pathLength={100} className="svg-beam-travel delay-2" stroke="#ff9c8f" strokeWidth="2" />
-        <rect
-          x="352"
-          y="43"
-          width="98"
-          height="24"
-          fill="#e04634"
-          className="svg-cell-breathe"
-          style={{ animationDelay: "0.7s" }}
-        />
+        <rect x="352" y="43" width="98" height="24" fill="#e04634" />
         <text x="401" y="58" textAnchor="middle" fill="#060809" fontSize="8" fontFamily="monospace" fontWeight="700">
           MIMIC // PURGE
         </text>
@@ -1883,7 +1857,6 @@ export function StandbyVerdictSchematic({ lang }: { lang: Locale }) {
           y1="52"
           x2="144"
           y2="52"
-          className="svg-signal-flow"
           stroke="rgba(235,168,52,0.48)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -1912,7 +1885,6 @@ export function StandbyVerdictSchematic({ lang }: { lang: Locale }) {
           y1="52"
           x2="306"
           y2="52"
-          className="svg-signal-flow"
           stroke="rgba(158,198,212,0.48)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -2016,7 +1988,6 @@ export function BoggartTrapSchematic({ lang }: { lang: Locale }) {
           y1="25"
           x2="152"
           y2="25"
-          className="svg-signal-flow"
           stroke="rgba(224,70,52,0.52)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -2028,7 +1999,6 @@ export function BoggartTrapSchematic({ lang }: { lang: Locale }) {
           y="8"
           width="136"
           height="34"
-          className="svg-dash-slow"
           fill="rgba(224,70,52,0.14)"
           stroke="#e04634"
           strokeDasharray="3 2"
@@ -2054,7 +2024,6 @@ export function BoggartTrapSchematic({ lang }: { lang: Locale }) {
           y1="25"
           x2="318"
           y2="25"
-          className="svg-signal-flow"
           stroke="rgba(73,184,130,0.52)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
@@ -2116,7 +2085,6 @@ export function IsometricCrisisBanner({
         {/* Connecting Telemetry Conduit + Glowing Data Packet */}
         <path
           d="M142 52 H262"
-          className="svg-signal-flow"
           stroke="rgba(235,168,52,0.52)"
           strokeWidth="1.4"
           strokeDasharray="6 4"
@@ -2197,7 +2165,6 @@ export function IsometricCrisisBanner({
         {/* Right: Night 5 Record Sink */}
         <path
           d="M418 52 H516"
-          className="svg-signal-flow"
           stroke="rgba(158,198,212,0.52)"
           strokeWidth="1.3"
           strokeDasharray="5 3"

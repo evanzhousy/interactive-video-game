@@ -68,7 +68,8 @@ export function MindCrystalCanvas({
       showTipPulse: boolean,
       beadPhase: number | null,
       mismatchSpark = false,
-      haloPhase = 0.5
+      haloPhase = 0.5,
+      labelU = 0.5
     ) => {
       const p1 = pos[fromKey];
       const p2 = pos[toKey];
@@ -76,11 +77,18 @@ export function MindCrystalCanvas({
       const midX = (p1.x + p2.x) / 2 + (cx - (p1.x + p2.x) / 2) * 0.45;
       const midY = (p1.y + p2.y) / 2 + (cy - (p1.y + p2.y) / 2) * 0.45;
 
+      // Exact quadratic Bezier point at parameter u
+      const ptAt = (u: number) => ({
+        x: (1 - u) * (1 - u) * p1.x + 2 * (1 - u) * u * midX + u * u * p2.x,
+        y: (1 - u) * (1 - u) * p1.y + 2 * (1 - u) * u * midY + u * u * p2.y
+      });
+
       // Exact quadratic Bezier sub-segment [0, t]
       const q1x = (1 - t) * p1.x + t * midX;
       const q1y = (1 - t) * p1.y + t * midY;
-      const q2x = (1 - t) * (1 - t) * p1.x + 2 * (1 - t) * t * midX + t * t * p2.x;
-      const q2y = (1 - t) * (1 - t) * p1.y + 2 * (1 - t) * t * midY + t * t * p2.y;
+      const q2 = ptAt(t);
+      const q2x = q2.x;
+      const q2y = q2.y;
 
       ctx.save();
       // Subtle phosphor under-glow for legibility
@@ -155,12 +163,36 @@ export function MindCrystalCanvas({
       }
 
       if (labelText && t >= 0.65) {
+        const lp = ptAt(labelU);
+        // Canonicalize tangent orientation so reversed mismatch overlays still offset to the opposite side
+        let tx = 2 * (1 - labelU) * (midX - p1.x) + 2 * labelU * (p2.x - midX);
+        let ty = 2 * (1 - labelU) * (midY - p1.y) + 2 * labelU * (p2.y - midY);
+        if (tx < 0 || (Math.abs(tx) < 1e-3 && ty < 0)) {
+          tx = -tx;
+          ty = -ty;
+        }
+        const tLen = Math.hypot(tx, ty) || 1;
+        const nx = -ty / tLen;
+        const ny = tx / tLen;
+        const sign = dashed ? -1 : 1;
+        const dist = dashed ? 18 : 14;
+        const lx = Math.max(24, Math.min(w - 24, lp.x + nx * dist * sign));
+        const ly = Math.max(18, Math.min(h - 14, lp.y + ny * dist * sign));
+
         ctx.globalAlpha = Math.min(1, (t - 0.65) / 0.35);
+        ctx.font = "700 9.5px 'IBM Plex Mono', monospace";
+        const tw = ctx.measureText(labelText).width;
+        const padX = 4;
+        const boxW = tw + padX * 2;
+        const boxH = 13;
+        ctx.fillStyle = "rgba(5, 7, 9, 0.92)";
+        ctx.fillRect(lx - boxW / 2, ly - 9.5, boxW, boxH);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 0.75;
+        ctx.strokeRect(lx - boxW / 2, ly - 9.5, boxW, boxH);
         ctx.fillStyle = color;
-        ctx.font = "700 10px 'IBM Plex Mono', monospace";
         ctx.textAlign = "center";
-        // Offset overlay labels below chord so they never collide with base weight labels above chord
-        ctx.fillText(labelText, midX, dashed ? midY + 14 : midY - 8);
+        ctx.fillText(labelText, lx, ly);
       }
       ctx.restore();
     };
@@ -258,6 +290,8 @@ export function MindCrystalCanvas({
 
       orderings.forEach((ord, idx) => {
         const phasedBead = beadPhase !== null ? (beadPhase + idx * 0.37) % 1 : null;
+        // Stagger label placement along chord [0.36 vs 0.64] when multiple chords exist to avoid crossing collisions
+        const labelU = orderings.length > 1 ? (idx % 2 === 0 ? 0.36 : 0.64) : 0.5;
         drawPartialChord(
           ord.dropped,
           ord.kept,
@@ -268,7 +302,8 @@ export function MindCrystalCanvas({
           drawT < 1,
           phasedBead,
           false,
-          haloPhase
+          haloPhase,
+          labelU
         );
       });
 
@@ -285,7 +320,8 @@ export function MindCrystalCanvas({
           drawT < 1,
           phasedBead,
           ov.mismatch,
-          haloPhase
+          haloPhase,
+          0.5
         );
       });
 
@@ -369,7 +405,7 @@ export function MindCrystalCanvas({
       id={id}
       ref={canvasRef}
       width={460}
-      height={252}
+      height={224}
       style={{ width: "100%", height: "auto", display: "block" }}
     />
   );

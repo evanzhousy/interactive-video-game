@@ -103,7 +103,48 @@ export function App() {
   const initialMode: CampaignMode = initialSave?.campaignMode ?? "full";
   const initialDailySeed = initialSave?.dailySeed ?? getDailyShiftSeed();
   const initialFuel = initialSave?.fuelLeft ?? getInitialFuel(initialMode);
-  const initialOverdraft = initialSave?.emergencyOverdraftUsed ?? false;
+  const initialRoster = getVisitorsForMode(initialMode, initialDailySeed);
+  const initialHistory = initialSave?.history ?? [];
+  const initialCrises = initialSave?.crisisHistory ?? [];
+
+  let resolvedInitialStage: Stage = initialSave?.stage ?? "intake";
+  let resolvedInitialIdx = Math.min(initialSave?.visitorIdx ?? 0, initialRoster.length - 1);
+  let resolvedInitialCrisis: InterNightCrisis | null = initialSave?.activeCrisisId
+    ? (INTER_NIGHT_CRISES.find((c) => c.id === initialSave.activeCrisisId) ?? null)
+    : resolvedInitialStage === "crisis"
+      ? INTER_NIGHT_CRISES[0]!
+      : null;
+  let resolvedInitialCurrentOverdraft = initialSave?.currentVisitorOverdraft ?? false;
+  let resolvedInitialPendingOverdraft = initialSave?.emergencyOverdraftUsed ?? false;
+
+  if (
+    resolvedInitialStage === "booth" &&
+    initialHistory.some((h) => h.visitorId === initialRoster[resolvedInitialIdx]?.id)
+  ) {
+    const scheduled =
+      initialRoster.length >= 8 && (initialMode === "full" || initialMode === "daily")
+        ? resolvedInitialIdx === 3
+          ? INTER_NIGHT_CRISES[0]
+          : resolvedInitialIdx === 5
+            ? INTER_NIGHT_CRISES[1]
+            : resolvedInitialIdx === 7
+              ? INTER_NIGHT_CRISES[2]
+              : undefined
+        : undefined;
+
+    if (initialMode === "demo" && resolvedInitialIdx >= initialRoster.length - 1) {
+      resolvedInitialStage = "demo_end";
+    } else if (scheduled && !initialCrises.some((c) => c.crisisId === scheduled.id)) {
+      resolvedInitialCrisis = scheduled;
+      resolvedInitialStage = "crisis";
+    } else if (resolvedInitialIdx < initialRoster.length - 1) {
+      resolvedInitialIdx += 1;
+      resolvedInitialCurrentOverdraft = resolvedInitialPendingOverdraft;
+      resolvedInitialPendingOverdraft = false;
+    } else {
+      resolvedInitialStage = "night5";
+    }
+  }
 
   const [lang, setLang] = useState<Locale>(initialSave?.lang ?? "zh");
   const [sfx, setSfx] = useState(true);
@@ -112,7 +153,7 @@ export function App() {
   const [onboardingDismissed, setOnboardingDismissed] = useState<boolean>(() =>
     loadOnboardingDismissed()
   );
-  const [stage, setStage] = useState<Stage>(initialSave?.stage ?? "intake");
+  const [stage, setStage] = useState<Stage>(resolvedInitialStage);
   const [campaignMode, setCampaignMode] = useState<CampaignMode>(initialMode);
   const [dailySeed, setDailySeed] = useState<string>(initialDailySeed);
 
@@ -132,19 +173,17 @@ export function App() {
   const [rolls, setRolls] = useState<VisitorRoll[]>(
     () => initialSave?.rolls ?? rollShiftForMode(campaignMode, activeVisitors, dailySeed)
   );
-  const [visitorIdx, setVisitorIdx] = useState(initialSave?.visitorIdx ?? 0);
-  const [history, setHistory] = useState<ShiftHistoryEntry[]>(initialSave?.history ?? []);
-  const [crisisHistory, setCrisisHistory] = useState<CrisisHistoryEntry[]>(
-    initialSave?.crisisHistory ?? []
-  );
-  const [activeCrisis, setActiveCrisis] = useState<InterNightCrisis | null>(() => {
-    if (initialSave?.activeCrisisId) {
-      return INTER_NIGHT_CRISES.find((c) => c.id === initialSave.activeCrisisId) ?? null;
-    }
-    return initialSave?.stage === "crisis" ? INTER_NIGHT_CRISES[0]! : null;
-  });
+  const [visitorIdx, setVisitorIdx] = useState(resolvedInitialIdx);
+  const [history, setHistory] = useState<ShiftHistoryEntry[]>(initialHistory);
+  const [crisisHistory, setCrisisHistory] = useState<CrisisHistoryEntry[]>(initialCrises);
+  const [activeCrisis, setActiveCrisis] = useState<InterNightCrisis | null>(resolvedInitialCrisis);
   const [fuelLeft, setFuelLeft] = useState<number>(initialFuel);
-  const [emergencyOverdraftUsed, setEmergencyOverdraftUsed] = useState<boolean>(initialOverdraft);
+  const [emergencyOverdraftUsed, setEmergencyOverdraftUsed] = useState<boolean>(
+    resolvedInitialPendingOverdraft
+  );
+  const [currentVisitorOverdraft, setCurrentVisitorOverdraft] = useState<boolean>(
+    resolvedInitialCurrentOverdraft
+  );
   const [boggartUsedIds, setBoggartUsedIds] = useState<string[]>(
     initialSave?.boggartUsedIds ?? []
   );
@@ -154,6 +193,7 @@ export function App() {
 
   const safeIdx = Math.min(visitorIdx, activeVisitors.length - 1);
   const visitor = activeVisitors[safeIdx]!;
+  const sensorsBlinded = visitor.night === 3;
   const currentRoll = rolls[safeIdx] ?? {
     visitorId: visitor.id,
     isMimic: false,
@@ -177,7 +217,7 @@ export function App() {
   const shiftEpochRef = useRef(0);
   const mainRef = useRef<HTMLElement | null>(null);
 
-  const initialPwrBudget = getSensorPowerBudget(initialFuel, initialOverdraft);
+  const initialPwrBudget = getSensorPowerBudget(initialFuel, resolvedInitialCurrentOverdraft);
   const [turnsLeft, setTurnsLeft] = useState(4);
   const [powerLeft, setPowerLeft] = useState(initialPwrBudget);
   const [maxPower, setMaxPower] = useState(initialPwrBudget);
@@ -219,6 +259,7 @@ export function App() {
         crisisHistory,
         fuelLeft,
         emergencyOverdraftUsed,
+        currentVisitorOverdraft,
         boggartUsedIds
       });
     }
@@ -228,6 +269,7 @@ export function App() {
     boggartUsedIds,
     campaignMode,
     crisisHistory,
+    currentVisitorOverdraft,
     dailySeed,
     emergencyOverdraftUsed,
     fuelLeft,
@@ -271,6 +313,7 @@ export function App() {
     const v = roster[idx]!;
     const pwrBudget = getSensorPowerBudget(nextFuel, nextOverdraft);
     setVisitorIdx(idx);
+    setCurrentVisitorOverdraft(nextOverdraft);
     setIsRephrasing(false);
     setTurnsLeft(4);
     setPowerLeft(pwrBudget);
@@ -278,6 +321,8 @@ export function App() {
     setBpm(v.baseBpm);
     setClipState("idle");
     setReaction("IDLE: COLD_BREATH");
+    setStrobeTrigger(0);
+    setThermalTrigger(0);
     setSensorToast(null);
     setTranscript([
       { speaker: "npc", text: v.openingLine, meta: `N${v.night} · INTERCOM CH-01` }
@@ -401,7 +446,7 @@ export function App() {
 
   const handleTriggerSensor = useCallback(
     (kind: "strobe" | "thermal") => {
-      if (powerLeft <= 0 || verdictState !== "NONE") return;
+      if (sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE") return;
       setPowerLeft((p) => p - 1);
       if (kind === "strobe") {
         playBoothSfx("strobe", sfx);
@@ -417,7 +462,7 @@ export function App() {
         setSensorToast(`[THERMAL] ${tl(msg, lang)}`);
       }
     },
-    [currentRoll.isMimic, lang, powerLeft, sfx, verdictState, visitor.sensors]
+    [currentRoll.isMimic, lang, powerLeft, sensorsBlinded, sfx, verdictState, visitor.sensors]
   );
 
   const handleAskProbe = useCallback(
@@ -690,7 +735,9 @@ export function App() {
   };
 
   const handleSignShiftLog = (excuseIdx: number) => {
-    if (logSigned || verdictState === "NONE") return;
+    if (logSigned || verdictState === "NONE" || history.some((h) => h.visitorId === visitor.id)) {
+      return;
+    }
     playBoothSfx("ptt", sfx);
     setLogSigned(true);
     setHistory((prev) => [
@@ -1248,7 +1295,7 @@ export function App() {
                             <Button
                               id="btn-strobe"
                               className="ctrl-btn"
-                              disabled={powerLeft <= 0 || verdictState !== "NONE"}
+                              disabled={sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE"}
                               focusableWhenDisabled
                               aria-keyshortcuts={strobeHint.ariaKeyshortcuts}
                               onClick={() => handleTriggerSensor("strobe")}
@@ -1277,7 +1324,7 @@ export function App() {
                             <Button
                               id="btn-thermal"
                               className="ctrl-btn"
-                              disabled={powerLeft <= 0 || verdictState !== "NONE"}
+                              disabled={sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE"}
                               focusableWhenDisabled
                               aria-keyshortcuts={thermalHint.ariaKeyshortcuts}
                               onClick={() => handleTriggerSensor("thermal")}
@@ -1304,14 +1351,6 @@ export function App() {
                       CH-01 // {reaction}
                     </span>
                   </div>
-
-                  <IsometricAirlockSchematic
-                    verdictState={verdictState}
-                    night={visitor.night}
-                    fuelLeft={fuelLeft}
-                    powerLeft={powerLeft}
-                    maxPower={maxPower}
-                  />
                 </section>
 
                 <IntercomPanel
@@ -1327,24 +1366,36 @@ export function App() {
                 />
               </div>
 
-              <OrdamorDossier
-                visitor={visitor}
-                roll={currentRoll}
-                lang={lang}
-                activeTab={activeTab}
-                onSelectTab={setActiveTab}
-                verdictState={verdictState}
-                turnsUsed={4 - turnsLeft}
-                offAxisCount={offAxisCount}
-                logSigned={logSigned}
-                onSignShiftLog={handleSignShiftLog}
-                onNextVisitor={handleNextVisitor}
-                isLastVisitor={safeIdx >= activeVisitors.length - 1}
-                spoilerOpen={spoilerOpen}
-                onToggleSpoiler={() => setSpoilerOpen((o) => !o)}
-                lastPipelinePayload={lastPipelinePayload}
-                motionPaused={motionPaused}
-              />
+              <div className="right-stack">
+                <OrdamorDossier
+                  visitor={visitor}
+                  roll={currentRoll}
+                  lang={lang}
+                  activeTab={activeTab}
+                  onSelectTab={setActiveTab}
+                  verdictState={verdictState}
+                  turnsUsed={4 - turnsLeft}
+                  offAxisCount={offAxisCount}
+                  logSigned={logSigned}
+                  onSignShiftLog={handleSignShiftLog}
+                  onNextVisitor={handleNextVisitor}
+                  isLastVisitor={safeIdx >= activeVisitors.length - 1}
+                  spoilerOpen={spoilerOpen}
+                  onToggleSpoiler={() => setSpoilerOpen((o) => !o)}
+                  lastPipelinePayload={lastPipelinePayload}
+                  motionPaused={motionPaused}
+                />
+
+                <section className="panel airlock-dock-panel" aria-label="Airlock Telemetry">
+                  <IsometricAirlockSchematic
+                    verdictState={verdictState}
+                    night={visitor.night}
+                    fuelLeft={fuelLeft}
+                    powerLeft={powerLeft}
+                    maxPower={maxPower}
+                  />
+                </section>
+              </div>
             </div>
           </>
         ) : null}
