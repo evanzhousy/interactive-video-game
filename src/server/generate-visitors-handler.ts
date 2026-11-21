@@ -36,7 +36,7 @@ export async function defaultGatewayGenerateJson({
 
   const result = await generateText({
     model: provider(gateway.model),
-    system: systemPrompt,
+    instructions: systemPrompt,
     prompt: userPrompt,
     maxOutputTokens: 4500,
     temperature: 0.85,

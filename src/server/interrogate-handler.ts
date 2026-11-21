@@ -232,18 +232,16 @@ export function defaultGatewayTextStream({
 
   const result = streamText({
     model: provider(gateway.model),
-    messages: [
-      {
-        role: "system",
-        content: systemPrompt,
-        providerOptions: {
-          anthropic: {
-            cacheControl: { type: "ephemeral" }
-          }
+    instructions: {
+      role: "system",
+      content: systemPrompt,
+      providerOptions: {
+        anthropic: {
+          cacheControl: { type: "ephemeral" }
         }
-      },
-      ...messages
-    ],
+      }
+    },
+    messages,
     maxOutputTokens: 240,
     temperature: 0.72,
     abortSignal
