@@ -2,6 +2,7 @@
 import { Button } from "@ui-sdk/react/button";
 import { Tabs, TabsIndicator, TabsList, TabsPanel, TabsTab } from "@ui-sdk/react/tabs";
 import { Toggle } from "@ui-sdk/react/toggle";
+import { useState } from "react";
 import { SPECIALIST_LABELS, VISITOR_SPECIALIST_ROLES } from "../../game/economy.js";
 import { UI_STRINGS, VALUE_I18N, tl } from "../../game/i18n.js";
 import { SHIFT_EXCUSES } from "../../game/night5.js";
@@ -86,6 +87,7 @@ export function OrdamorDossier({
   lastPipelinePayload,
   motionPaused = false
 }: Props) {
+  const [selectedPipelineStage, setSelectedPipelineStage] = useState<string | null>(null);
   const gap = justificationGap(visitor.profile);
   const routes = escapeRoutes(visitor.profile);
   const primaryOrderingNeed = routes.find((r) => r.kind === "ordering" && r.needs)?.needs;
@@ -527,7 +529,22 @@ export function OrdamorDossier({
               flashEnabled={flashEnabledInTrace}
               hasPayload={hasPipelineTrace}
               lang={lang}
+              activeStage={selectedPipelineStage}
+              onSelectStage={(id) => setSelectedPipelineStage((prev) => (prev === id ? null : id))}
             />
+            {selectedPipelineStage ? (
+              <div className="pipeline-stage-note">
+                {selectedPipelineStage === "axis"
+                  ? tl({ zh: "[01 AXIS] 识别问题所属轴向（v-1 / v-2 / sig-1 / boggart）。", en: "[01 AXIS] Classifies question axis (v-1 / v-2 / sig-1 / boggart).", ja: "[01 AXIS] 質問の軸（v-1 / v-2 / sig-1 / boggart）を判定。" }, lang)
+                  : selectedPipelineStage === "stance"
+                    ? tl({ zh: "[02 STANCE] 由 ORDAMOR v6 规则引擎决定访客坚持の価値取向与基准台词。", en: "[02 STANCE] ORDAMOR v6 deterministically picks stance & canonical line.", ja: "[02 STANCE] ORDAMOR v6 が立場と基準文を決定。" }, lang)
+                    : selectedPipelineStage === "firewall"
+                      ? tl({ zh: "[FIREWALL] 强制剥离 isMimic / defectMode / lineKey，严禁向 LLM 泄密。", en: "[FIREWALL] Strips isMimic / defectMode / lineKey before LLM call.", ja: "[FIREWALL] isMimic / defectMode / lineKey を遮断。" }, lang)
+                      : selectedPipelineStage === "clean"
+                        ? tl({ zh: "[03 CLEAN] 仅发送脱敏后的角色口吻、标准台词与立场选择。", en: "[03 CLEAN] Sends sanitized persona voice, canonical line & stance only.", ja: "[03 CLEAN] 無害化済みの口調・基準文・立場のみ送信。" }, lang)
+                        : tl({ zh: "[05 OUTPUT] 在线 Flash 润色或 0ms 本地确定性回退。", en: "[05 OUTPUT] Live Flash rephrase or 0ms canonical fallback.", ja: "[05 OUTPUT] Flash 改稿または 0ms ローカルフォールバック。" }, lang)}
+              </div>
+            ) : null}
             <pre
               className="code-inspector"
               id="inspector-json"

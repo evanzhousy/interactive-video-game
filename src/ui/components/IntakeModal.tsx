@@ -14,11 +14,13 @@ import { IsometricOutpostBanner } from "./Schematics.js";
 
 interface Props {
   lang: Locale;
+  operatorName?: string;
   onComplete: (baseline: PlayerCompactProfile, answers: IntakeOption[]) => void;
 }
 
-export function IntakeModal({ lang, onComplete }: Props) {
+export function IntakeModal({ lang, operatorName = "", onComplete }: Props) {
   const [answers, setAnswers] = useState<IntakeOption[]>([]);
+  const displayOp = operatorName.trim() ? `#09 · ${operatorName.trim()}` : "#09";
 
   const step = answers.length;
   const done = step >= INTAKE_QUESTIONS.length;
@@ -39,7 +41,7 @@ export function IntakeModal({ lang, onComplete }: Props) {
           )}
         </span>
         <span className="tech-stamp">
-          {tl({ zh: "表单 ORD-09", en: "FORM ORD-09", ja: "様式 ORD-09" }, lang)}
+          {tl({ zh: `表单 ORD-09 // ${displayOp}`, en: `FORM ORD-09 // ${displayOp}`, ja: `様式 ORD-09 // ${displayOp}` }, lang)}
         </span>
       </div>
       <div className="intake-progress-row">

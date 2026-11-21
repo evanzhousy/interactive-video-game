@@ -18,6 +18,7 @@ export interface BoothInterrogateClientParams {
   campaignMode: CampaignMode;
   visitorId: string;
   customVisitor?: VisitorSpec;
+  operatorName?: string;
   locale: Locale;
   question: string;
   hintAxis: InterrogateAxisKey;
@@ -27,6 +28,7 @@ export interface BoothInterrogateClientParams {
 
 export interface Night5InterrogateClientParams {
   stage: "night5";
+  operatorName?: string;
   locale: Locale;
   question: string;
   hintAxis: Night5ProbeId;
@@ -92,6 +94,7 @@ export async function streamInterrogateTurn<TAxis extends string>(
           campaignMode: params.campaignMode,
           visitorId: params.visitorId,
           ...(wireVisitor ? { customVisitor: wireVisitor } : {}),
+          ...(params.operatorName ? { operatorName: params.operatorName } : {}),
           locale: params.locale,
           question: params.question,
           hintAxis: params.hintAxis,
@@ -99,6 +102,7 @@ export async function streamInterrogateTurn<TAxis extends string>(
         }
       : {
           stage: "night5" as const,
+          ...(params.operatorName ? { operatorName: params.operatorName } : {}),
           locale: params.locale,
           question: params.question,
           hintAxis: params.hintAxis,

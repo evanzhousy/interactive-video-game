@@ -30,6 +30,7 @@ export interface TranscriptLine {
 interface Props {
   visitor: VisitorSpec;
   lang: Locale;
+  operatorName?: string;
   turnsLeft: number;
   chatterLeft?: number;
   fuelLeft?: number;
@@ -45,6 +46,7 @@ interface Props {
 export function IntercomPanel({
   visitor,
   lang,
+  operatorName = "",
   turnsLeft,
   chatterLeft = 3,
   fuelLeft = 5,
@@ -146,7 +148,7 @@ export function IntercomPanel({
                 return (
                   <div key={i} className="msg-player">
                     <span style={{ fontFamily: "var(--font-mono)", color: "var(--text-muted)" }}>
-                      [OP #09]:{" "}
+                      [OP #09{operatorName.trim() ? ` · ${operatorName.trim()}` : ""}]:{" "}
                     </span>
                     {tl(item.text, lang)}
                   </div>

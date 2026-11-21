@@ -53,12 +53,15 @@ import {
   hydrateSavedShift,
   loadCompendium,
   loadOnboardingDismissed,
+  loadOperatorName,
   loadSavedShift,
   recordRunCompletion,
   saveOnboardingDismissed,
+  saveOperatorName,
   saveShiftState,
   type AchievementId,
-  type CompendiumState
+  type CompendiumState,
+  type SavedShiftState
 } from "../game/storage.js";
 import type {
   EndingId,
@@ -100,13 +103,14 @@ import {
 } from "./components/Icons.js";
 import { IntakeModal } from "./components/IntakeModal.js";
 import { IntercomPanel, type TranscriptLine } from "./components/IntercomPanel.js";
+import { LobbyScreen } from "./components/LobbyScreen.js";
 import { Night5Audit } from "./components/Night5Audit.js";
 import { OnboardingGuide } from "./components/OnboardingGuide.js";
 import { OrdamorDossier, type DossierTab } from "./components/OrdamorDossier.js";
 import { IsometricAirlockSchematic } from "./components/Schematics.js";
 import { ViewportCanvas } from "./components/ViewportCanvas.js";
 
-type Stage = "intake" | "booth" | "crisis" | "demo_end" | "night5";
+type Stage = "lobby" | "intake" | "booth" | "crisis" | "demo_end" | "night5";
 
 const CORE_TURNS_MAX = 4;
 const CHATTER_BUDGET_MAX = 3;
@@ -148,7 +152,7 @@ export function App() {
   const initialHistory = initialSave?.history ?? [];
   const initialCrises = initialSave?.crisisHistory ?? [];
 
-  let resolvedInitialStage: Stage = initialSave?.stage ?? "intake";
+  let resolvedInitialStage: Stage = initialSave?.stage ?? "lobby";
   let resolvedInitialIdx = Math.min(initialSave?.visitorIdx ?? 0, initialRoster.length - 1);
   let resolvedInitialCrisis: InterNightCrisis | null = initialSave?.activeCrisisId
     ? (INTER_NIGHT_CRISES.find((c) => c.id === initialSave.activeCrisisId) ?? null)
@@ -189,6 +193,10 @@ export function App() {
   }
 
   const [lang, setLang] = useState<Locale>(initialSave?.lang ?? "zh");
+  const [operatorName, setOperatorName] = useState<string>(
+    () => initialSave?.operatorName ?? loadOperatorName()
+  );
+  const [savedShiftSnapshot, setSavedShiftSnapshot] = useState<SavedShiftState | null>(initialSave);
   const [sfx, setSfx] = useState(true);
   const [ambience, setAmbience] = useState(true);
   const [voice, setVoice] = useState(true);
@@ -314,6 +322,119 @@ export function App() {
     chatter_remaining: CHATTER_BUDGET_MAX
   });
 
+  const applySavedShift = useCallback(
+    (saved: SavedShiftState) => {
+      const savedRoster = getVisitorsForMode(
+        saved.campaignMode,
+        saved.campaignMode === "seeded"
+          ? (saved.runSeed ?? getDailyShiftSeed())
+          : (saved.dailySeed ?? getDailyShiftSeed())
+      );
+      let nextIdx = Math.min(saved.visitorIdx, savedRoster.length - 1);
+      let nextStage: Stage = saved.stage;
+      let nextCrisis: InterNightCrisis | null = saved.activeCrisisId
+        ? (INTER_NIGHT_CRISES.find((c) => c.id === saved.activeCrisisId) ?? null)
+        : nextStage === "crisis"
+          ? INTER_NIGHT_CRISES[0]!
+          : null;
+      let nextCurrentOverdraft = Boolean(saved.currentVisitorOverdraft);
+      let nextPendingOverdraft = Boolean(saved.emergencyOverdraftUsed);
+      const savedHist = saved.history ?? [];
+      const savedCrises = saved.crisisHistory ?? [];
+
+      if (
+        nextStage === "booth" &&
+        savedHist.some((h) => h.visitorId === savedRoster[nextIdx]?.id)
+      ) {
+        const scheduled =
+          savedRoster.length >= 8 &&
+          (saved.campaignMode === "full" ||
+            saved.campaignMode === "daily" ||
+            saved.campaignMode === "seeded")
+            ? nextIdx === 3
+              ? INTER_NIGHT_CRISES[0]
+              : nextIdx === 5
+                ? INTER_NIGHT_CRISES[1]
+                : nextIdx === 7
+                  ? INTER_NIGHT_CRISES[2]
+                  : undefined
+            : undefined;
+        if (saved.campaignMode === "demo" && nextIdx >= savedRoster.length - 1) {
+          nextStage = "demo_end";
+        } else if (scheduled && !savedCrises.some((c) => c.crisisId === scheduled.id)) {
+          nextCrisis = scheduled;
+          nextStage = "crisis";
+        } else if (nextIdx < savedRoster.length - 1) {
+          nextIdx += 1;
+          nextCurrentOverdraft = nextPendingOverdraft;
+          nextPendingOverdraft = false;
+        } else {
+          nextStage = "night5";
+        }
+      }
+
+      const nextVisitor = savedRoster[nextIdx]!;
+      const nextSeed =
+        saved.runSeed ??
+        (saved.campaignMode === "daily"
+          ? (saved.dailySeed ?? getDailyShiftSeed())
+          : generateRunSeed(saved.campaignMode));
+      const nextFuel = saved.fuelLeft ?? getInitialFuel(saved.campaignMode);
+      const pwrBudget = getSensorPowerBudget(nextFuel, nextCurrentOverdraft);
+
+      setLang(saved.lang);
+      if (saved.operatorName) {
+        setOperatorName(saved.operatorName);
+        saveOperatorName(saved.operatorName);
+      }
+      setCampaignMode(saved.campaignMode);
+      if (saved.dailySeed) setDailySeed(saved.dailySeed);
+      setRunSeed(nextSeed);
+      setSeedDraft(nextSeed);
+      setBaseline(saved.baseline);
+      setIntakeAnswers(saved.intakeAnswers);
+      setRolls(saved.rolls);
+      setVisitorIdx(nextIdx);
+      setHistory(savedHist);
+      setCrisisHistory(savedCrises);
+      setActiveCrisis(nextCrisis);
+      setFuelLeft(nextFuel);
+      setEmergencyOverdraftUsed(nextPendingOverdraft);
+      setCurrentVisitorOverdraft(nextCurrentOverdraft);
+      setBoggartUsedIds(saved.boggartUsedIds);
+      setVerdictState("NONE");
+      setLogSigned(false);
+      setActiveTab("baseline");
+
+      if (saved.activeSession && saved.activeSession.visitorId === nextVisitor.id) {
+        setTurnsLeft(saved.activeSession.turnsLeft);
+        setChatterLeft(saved.activeSession.chatterLeft);
+        setBpm(saved.activeSession.bpm);
+        setHeartbeatEvents(saved.activeSession.heartbeatEvents);
+        setStressReplayUnlocked(saved.activeSession.stressReplayUnlocked);
+        setTranscript(saved.activeSession.transcript);
+        setOffAxisCount(saved.activeSession.offAxisCount);
+        setPowerLeft(saved.activeSession.powerLeft);
+        setMaxPower(saved.activeSession.maxPower);
+      } else {
+        setTurnsLeft(CORE_TURNS_MAX);
+        setChatterLeft(CHATTER_BUDGET_MAX);
+        setBpm(deriveHeartbeatProfile(nextVisitor, nextSeed).baseBpm);
+        setHeartbeatEvents([]);
+        setStressReplayUnlocked(false);
+        setTranscript([
+          { speaker: "npc", text: nextVisitor.openingLine, meta: `N${nextVisitor.night} · INTERCOM CH-01` }
+        ]);
+        setOffAxisCount(0);
+        setPowerLeft(pwrBudget);
+        setMaxPower(pwrBudget);
+      }
+      setSavedShiftSnapshot(saved);
+      setStage(nextStage);
+    },
+    []
+  );
+
   // Hydrate client IndexedDB records on mount when IndexedDB holds newer data than localStorage
   useEffect(() => {
     let cancelled = false;
@@ -323,39 +444,8 @@ export function App() {
     });
     if (!initialSave) {
       void hydrateSavedShift().then((dbShift) => {
-        if (cancelled || !dbShift || stage !== "intake") return;
-        const dbRoster = getVisitorsForMode(dbShift.campaignMode, dbShift.dailySeed ?? getDailyShiftSeed());
-        const dbIdx = Math.min(dbShift.visitorIdx, dbRoster.length - 1);
-        const dbVisitor = dbRoster[dbIdx]!;
-        const dbSeed =
-          dbShift.runSeed ??
-          (dbShift.campaignMode === "daily"
-            ? (dbShift.dailySeed ?? getDailyShiftSeed())
-            : generateRunSeed(dbShift.campaignMode));
-        setLang(dbShift.lang);
-        setCampaignMode(dbShift.campaignMode);
-        if (dbShift.dailySeed) setDailySeed(dbShift.dailySeed);
-        setRunSeed(dbSeed);
-        setBaseline(dbShift.baseline);
-        setIntakeAnswers(dbShift.intakeAnswers);
-        setRolls(dbShift.rolls);
-        setVisitorIdx(dbIdx);
-        setHistory(dbShift.history);
-        setCrisisHistory(dbShift.crisisHistory ?? []);
-        if (typeof dbShift.fuelLeft === "number") setFuelLeft(dbShift.fuelLeft);
-        setBoggartUsedIds(dbShift.boggartUsedIds);
-        if (dbShift.activeSession && dbShift.activeSession.visitorId === dbVisitor.id) {
-          setTurnsLeft(dbShift.activeSession.turnsLeft);
-          setChatterLeft(dbShift.activeSession.chatterLeft);
-          setBpm(dbShift.activeSession.bpm);
-          setHeartbeatEvents(dbShift.activeSession.heartbeatEvents);
-          setStressReplayUnlocked(dbShift.activeSession.stressReplayUnlocked);
-          setTranscript(dbShift.activeSession.transcript);
-          setOffAxisCount(dbShift.activeSession.offAxisCount);
-          setPowerLeft(dbShift.activeSession.powerLeft);
-          setMaxPower(dbShift.activeSession.maxPower);
-        }
-        setStage(dbShift.stage);
+        if (cancelled || !dbShift) return;
+        setSavedShiftSnapshot(dbShift);
       });
     }
     return () => {
@@ -368,10 +458,11 @@ export function App() {
   // Autosave mid-shift progress (IndexedDB + localStorage mirror)
   useEffect(() => {
     if (stage === "booth" || stage === "crisis" || stage === "demo_end" || stage === "night5") {
-      saveShiftState({
+      const snapshot: SavedShiftState = {
         version: 1,
         savedAt: new Date().toISOString(),
         lang,
+        operatorName: operatorName.trim() || undefined,
         campaignMode,
         dailySeed,
         runSeed,
@@ -402,7 +493,9 @@ export function App() {
                 maxPower
               }
             : undefined
-      });
+      };
+      saveShiftState(snapshot);
+      setSavedShiftSnapshot(snapshot);
     }
   }, [
     activeCrisis,
@@ -422,6 +515,7 @@ export function App() {
     lang,
     maxPower,
     offAxisCount,
+    operatorName,
     powerLeft,
     rolls,
     runSeed,
@@ -437,8 +531,10 @@ export function App() {
   // Continuous Arctic -46°C blizzard + metallic hull stress + Night 3 geomagnetic storm ambience
   useEffect(() => {
     setBoothAmbience(
-      ambience && sfx && (stage === "booth" || stage === "crisis" || stage === "night5"),
-      stage === "night5" ? 5 : visitor.night
+      ambience &&
+        sfx &&
+        (stage === "lobby" || stage === "booth" || stage === "crisis" || stage === "night5"),
+      stage === "night5" ? 5 : stage === "lobby" ? 1 : visitor.night
     );
   }, [ambience, sfx, stage, visitor.night]);
 
@@ -631,6 +727,7 @@ export function App() {
   const handleRestartFromIntake = () => {
     stopIntercomVoice();
     clearSavedShift();
+    setSavedShiftSnapshot(null);
     transitionStage(() => {
       setHistory([]);
       setCrisisHistory([]);
@@ -640,6 +737,12 @@ export function App() {
       setBoggartUsedIds([]);
       setStage("intake");
     }, "backward");
+  };
+
+  const handleReturnToLobby = () => {
+    stopIntercomVoice();
+    playBoothSfx("ptt", sfx);
+    transitionStage(() => setStage("lobby"), "backward");
   };
 
   const handleSwitchCampaignMode = (nextMode: CampaignMode) => {
@@ -923,6 +1026,7 @@ export function App() {
           campaignMode,
           visitorId: visitor.id,
           ...(campaignMode === "seeded" ? { customVisitor: visitor } : {}),
+          ...(operatorName.trim() ? { operatorName: operatorName.trim() } : {}),
           locale: lang,
           question: questionStr,
           hintAxis: probeKey,
@@ -1016,6 +1120,7 @@ export function App() {
       heartbeatEvents.length,
       isRephrasing,
       lang,
+      operatorName,
       runSeed,
       sfx,
       transcript,
@@ -1260,6 +1365,7 @@ export function App() {
 
   const handleResolveNight5Ending = (ending: EndingId): AchievementId[] => {
     clearSavedShift();
+    setSavedShiftSnapshot(null);
     const { next, newlyUnlockedAchievements } = recordRunCompletion({
       current: compendium,
       ending,
@@ -1272,13 +1378,26 @@ export function App() {
   };
 
   return (
-    <div className="booth-shell" data-motion={motionPaused ? "paused" : "active"}>
+    <div
+      className={`booth-shell ${stage === "lobby" ? "is-lobby" : ""}`.trim()}
+      data-motion={motionPaused ? "paused" : "active"}
+    >
       <OverlayHost />
+      {stage !== "lobby" ? (
       <header className="topbar">
         <div className="topbar-brand">
-          <span className="station-stamp">GATE-0</span>
+          <Button
+            id="btn-return-lobby"
+            className="station-stamp station-stamp-btn"
+            onClick={handleReturnToLobby}
+            title={tl({ zh: "返回主大厅（进度已自动保存）", en: "Return to Lobby (autosaved)", ja: "ロビーへ戻る（自動保存済）" }, lang)}
+          >
+            GATE-0
+          </Button>
           <h1 className="topbar-title">ORD-OS // 2036</h1>
-          <span className="topbar-subtitle">SVALBARD -46°C · OP#09</span>
+          <span className="topbar-subtitle">
+            SVALBARD -46°C · OP#09{operatorName.trim() ? ` · ${operatorName.trim()}` : ""}
+          </span>
         </div>
 
         <div className="stepper" aria-label="Visitor progress">
@@ -1457,7 +1576,9 @@ export function App() {
           </Tooltip>
         </div>
       </header>
+      ) : null}
 
+      {stage !== "lobby" ? (
       <Collapsible open={sysDrawerOpen} onOpenChange={setSysDrawerOpen}>
         <CollapsiblePanel keepMounted>
           <div className="sys-console-bar" id="sys-console-drawer">
@@ -1542,6 +1663,7 @@ export function App() {
           </div>
         </CollapsiblePanel>
       </Collapsible>
+      ) : null}
 
       <FlashConfigDrawer
         open={flashDrawerOpen}
@@ -1558,7 +1680,7 @@ export function App() {
         compendium={compendium}
       />
 
-      {campaignMode === "seeded" ? (
+      {stage !== "lobby" && campaignMode === "seeded" ? (
         <div className="seeded-control-bar" id="seeded-control-bar">
           <span className="seeded-badge">
             {isGeneratingSeed
@@ -1620,10 +1742,52 @@ export function App() {
         </div>
       ) : null}
 
-      <main ref={mainRef} tabIndex={-1} className="booth-main">
+      <main ref={mainRef} tabIndex={-1} className={`booth-main ${stage === "lobby" ? "is-lobby" : ""}`.trim()}>
+        {stage === "lobby" ? (
+          <LobbyScreen
+            lang={lang}
+            onChangeLang={(next) => {
+              stopIntercomVoice();
+              setLang(next);
+            }}
+            operatorName={operatorName}
+            onChangeOperatorName={(next) => {
+              setOperatorName(next);
+              saveOperatorName(next);
+            }}
+            campaignMode={campaignMode}
+            onChangeCampaignMode={handleSwitchCampaignMode}
+            campaignModeItems={campaignModeItems}
+            seedDraft={seedDraft}
+            onChangeSeedDraft={setSeedDraft}
+            savedShift={savedShiftSnapshot}
+            compendium={compendium}
+            aiEnabled={flashConfig.enabled}
+            ambience={ambience}
+            onToggleAmbience={setAmbience}
+            motionPaused={motionPaused}
+            onToggleMotionPaused={setMotionPaused}
+            onStartNewShift={() => {
+              playBoothSfx("ptt", sfx);
+              transitionStage(() => setStage("intake"));
+            }}
+            onContinueShift={(save) => {
+              playBoothSfx("ptt", sfx);
+              transitionStage(() => applySavedShift(save));
+            }}
+            onClearSavedShift={() => {
+              clearSavedShift();
+              setSavedShiftSnapshot(null);
+            }}
+            onOpenArchive={() => setCompendiumOpen(true)}
+            onOpenAiConfig={() => setFlashDrawerOpen((o) => !o)}
+          />
+        ) : null}
+
         {stage === "intake" ? (
           <IntakeModal
             lang={lang}
+            operatorName={operatorName}
             onComplete={(profile, answers) => {
               playBoothSfx("ptt", sfx);
               setBaseline(profile);
@@ -1922,6 +2086,7 @@ export function App() {
                 <IntercomPanel
                   visitor={visitor}
                   lang={lang}
+                  operatorName={operatorName}
                   turnsLeft={turnsLeft}
                   chatterLeft={chatterLeft}
                   fuelLeft={fuelLeft}
@@ -1982,6 +2147,7 @@ export function App() {
             fuelLeft={fuelLeft}
             campaignMode={campaignMode}
             dailySeed={dailySeed}
+            operatorName={operatorName}
             aiEnabled={flashConfig.enabled && flashConfig.mode === "server_proxy"}
             aiFreeTextOnly={flashConfig.freeTextOnly}
             motionPaused={motionPaused}

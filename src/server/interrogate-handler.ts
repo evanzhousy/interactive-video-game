@@ -69,6 +69,7 @@ export interface ParsedBoothInterrogateRequest {
   campaignMode: CampaignMode;
   visitorId: string;
   customVisitor?: Omit<VisitorSpec, "defectPool" | "tellLevel">;
+  operatorName?: string;
   locale: Locale;
   question: string;
   hintAxis?: InterrogateAxisKey;
@@ -77,6 +78,7 @@ export interface ParsedBoothInterrogateRequest {
 
 export interface ParsedNight5InterrogateRequest {
   stage: "night5";
+  operatorName?: string;
   locale: Locale;
   question: string;
   hintAxis?: Night5ProbeId;
@@ -141,6 +143,10 @@ export function parseInterrogateRequest(
   }
 
   const history = sanitizeHistory(obj.history);
+  const operatorName =
+    typeof obj.operatorName === "string"
+      ? obj.operatorName.replace(/[\r\n\t]+/g, " ").trim().slice(0, 24) || undefined
+      : undefined;
 
   if (stage === "night5") {
     const baseline = obj.baseline as PlayerCompactProfile | undefined;
@@ -157,6 +163,7 @@ export function parseInterrogateRequest(
       ok: true,
       input: {
         stage: "night5",
+        ...(operatorName ? { operatorName } : {}),
         locale,
         question,
         hintAxis,
@@ -204,6 +211,7 @@ export function parseInterrogateRequest(
       campaignMode,
       visitorId,
       ...(customVisitor ? { customVisitor } : {}),
+      ...(operatorName ? { operatorName } : {}),
       locale,
       question,
       hintAxis,
@@ -297,7 +305,12 @@ export function createInterrogateSseResponse(
         }
       }
     }
-    const built = buildInterrogateSystemPrompt(visitor, roll, parsed.locale);
+    const built = buildInterrogateSystemPrompt(
+      visitor,
+      roll,
+      parsed.locale,
+      parsed.operatorName
+    );
     const fallbackAxis: InterrogateAxisKey =
       parsed.hintAxis && built.allowedAxes.includes(parsed.hintAxis)
         ? parsed.hintAxis
@@ -497,7 +510,8 @@ export function createInterrogateSseResponse(
     intakeAnswers: parsed.intakeAnswers,
     history: parsed.shiftHistory,
     crisisHistory: parsed.crisisHistory,
-    locale: parsed.locale
+    locale: parsed.locale,
+    operatorName: parsed.operatorName
   });
   const fallbackAxis: Night5ProbeId =
     parsed.hintAxis ?? classifyNight5Question(parsed.question);

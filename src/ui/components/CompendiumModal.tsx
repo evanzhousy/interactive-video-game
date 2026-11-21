@@ -13,10 +13,11 @@ import {
   ScrollAreaThumb,
   ScrollAreaViewport
 } from "@ui-sdk/react/scroll-area";
+import { useState } from "react";
 import { tl } from "../../game/i18n.js";
 import { ENDINGS } from "../../game/night5.js";
 import { ACHIEVEMENTS, ALL_ENDING_IDS, ENDING_HINTS, type CompendiumState } from "../../game/storage.js";
-import type { Locale } from "../../game/types.js";
+import type { EndingId, Locale } from "../../game/types.js";
 import { ArchiveIcon, LockSealIcon } from "./Icons.js";
 import { AchievementMedallionSvg, EndingConstellationSvg } from "./Schematics.js";
 
@@ -28,8 +29,15 @@ interface Props {
 }
 
 export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props) {
+  const [selectedEnding, setSelectedEnding] = useState<EndingId | null>(null);
   const unlockedEndings = new Set(compendium.unlockedEndings);
   const unlockedAch = new Set(compendium.unlockedAchievements);
+
+  const handleSelectEnding = (id: EndingId) => {
+    setSelectedEnding(id);
+    const card = document.querySelector(`[data-ending-card="${id}"]`);
+    card?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -64,7 +72,12 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
           </DialogClose>
         </div>
 
-        <EndingConstellationSvg unlockedEndings={unlockedEndings} lang={lang} />
+        <EndingConstellationSvg
+          unlockedEndings={unlockedEndings}
+          lang={lang}
+          selectedEnding={selectedEnding}
+          onSelectEnding={handleSelectEnding}
+        />
 
         <ScrollArea className="compendium-scroll-area" type="auto">
           <ScrollAreaViewport
@@ -94,7 +107,10 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
                       return (
                         <div
                           key={id}
-                          className={`dossier-section compendium-card ${isUnlocked ? "unlocked" : "locked"}`}
+                          data-ending-card={id}
+                          className={`dossier-section compendium-card ${isUnlocked ? "unlocked" : "locked"} ${
+                            selectedEnding === id ? "is-highlighted" : ""
+                          }`}
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", gap: "8px" }}>
                             <span

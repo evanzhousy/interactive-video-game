@@ -62,7 +62,8 @@ export interface BuiltInterrogatePrompt {
 export function buildInterrogateSystemPrompt(
   visitor: VisitorSpec,
   roll: VisitorRoll,
-  locale: Locale
+  locale: Locale,
+  operatorName?: string
 ): BuiltInterrogatePrompt {
   const table = buildVisitorStanceTable(visitor, roll);
   const directives = sanitizeStanceTable(table, locale);
@@ -74,6 +75,8 @@ export function buildInterrogateSystemPrompt(
   const allowedAxes = directives.map((d) => d.axisKey);
   const speakerName = tl(visitor.name, locale);
   const speakerRole = tl(visitor.role, locale);
+  const cleanOpName = operatorName?.replace(/[\r\n\t]+/g, " ").trim().slice(0, 24) || "";
+  const opLabel = cleanOpName ? `Operator #09 (${cleanOpName})` : "Operator #09";
   const factsBlock = visitor.evidenceCards
     .map((card, i) => `  ${i + 1}. [${card.id}] ${tl(card.text, locale)}`)
     .join("\n");
@@ -87,7 +90,7 @@ export function buildInterrogateSystemPrompt(
     .join("\n");
 
   const systemPrompt = [
-    `You are roleplaying a survivor standing outside Svalbard Quarantine Gate 0 in a -46°C polar storm, speaking through double-glazed blast glass over Intercom CH-01 to Operator #09.`,
+    `You are roleplaying a survivor standing outside Svalbard Quarantine Gate 0 in a -46°C polar storm, speaking through double-glazed blast glass over Intercom CH-01 to ${opLabel}.`,
     ``,
     `[IDENTITY & VOICE]`,
     `Name: ${speakerName}`,
@@ -131,11 +134,14 @@ export function buildNight5SystemPrompt(opts: {
   history: readonly PublicShiftLogEntry[];
   crisisHistory: readonly CrisisHistoryEntry[];
   locale: Locale;
+  operatorName?: string;
 }): { systemPrompt: string; allowedAxes: readonly Night5ProbeId[] } {
-  const { baseline, intakeAnswers, history, crisisHistory, locale } = opts;
+  const { baseline, intakeAnswers, history, crisisHistory, locale, operatorName } = opts;
   const probes = buildNight5Probes(baseline, history, crisisHistory);
   const knock = resolveNight5KnockLine(baseline, intakeAnswers, locale);
   const sigText = tl(SIG_LABELS[baseline.sig], locale);
+  const cleanOpName = operatorName?.replace(/[\r\n\t]+/g, " ").trim().slice(0, 24) || "";
+  const opIdentity = cleanOpName ? `Operator #09 ("${cleanOpName}")` : "Operator #09";
 
   const intakeQuotes = intakeAnswers
     .map((ans, i) => `  ${i + 1}. "${tl(ans.text, locale)}"`)
@@ -149,8 +155,8 @@ export function buildNight5SystemPrompt(opts: {
     .join("\n");
 
   const systemPrompt = [
-    `You are standing outside Svalbard Quarantine Gate 0 in the -46°C blizzard on Night 5, staring at Operator #09 through the blast glass over Intercom CH-01.`,
-    `You have the exact face, voice, badge, and intake declaration of Operator #09. You are completely convinced YOU are the real Operator #09 who never strayed from your principles.`,
+    `You are standing outside Svalbard Quarantine Gate 0 in the -46°C blizzard on Night 5, staring at ${opIdentity} through the blast glass over Intercom CH-01.`,
+    `You have the exact face, voice, badge, name, and intake declaration of ${opIdentity}. You are completely convinced YOU are the real ${opIdentity} who never strayed from your principles.`,
     ``,
     `[YOUR CORE BELIEF & INTAKE DECLARATIONS]`,
     `Language: Reply STRICTLY in ${LOCALE_NAMES[locale]}.`,

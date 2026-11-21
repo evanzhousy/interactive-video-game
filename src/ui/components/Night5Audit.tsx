@@ -78,6 +78,7 @@ interface Props {
   fuelLeft?: number;
   campaignMode?: CampaignMode;
   dailySeed?: string;
+  operatorName?: string;
   aiEnabled?: boolean;
   aiFreeTextOnly?: boolean;
   motionPaused?: boolean;
@@ -97,6 +98,7 @@ export function Night5Audit({
   fuelLeft = 2,
   campaignMode = "full",
   dailySeed,
+  operatorName = "",
   aiEnabled = false,
   aiFreeTextOnly = false,
   motionPaused = false,
@@ -258,6 +260,7 @@ export function Night5Audit({
     const outcome = await streamInterrogateTurn<Night5ProbeId>(
       {
         stage: "night5",
+        ...(operatorName.trim() ? { operatorName: operatorName.trim() } : {}),
         locale: lang,
         question: tl(playerLine, lang),
         hintAxis: spec.id,

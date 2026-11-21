@@ -58,8 +58,32 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       root.render(<App />);
     });
 
-    // Night 0 Intake (3 questions)
+    // Cinematic Lobby Screen: enter Operator Name, inspect Field Manual & Load Save dialogs, then start Night 0 Intake
+    expect(document.getElementById("lobby-screen")).not.toBeNull();
+    expect(document.querySelector("#lobby-screen video source")?.getAttribute("src")).toBe(
+      "./videos/lobby/bg.mp4"
+    );
+    await act(async () => {
+      const nameInput = document.getElementById("lobby-operator-name") as HTMLInputElement;
+      const nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+      nativeSetter?.call(nameInput, "Evan");
+      nameInput.dispatchEvent(new Event("input", { bubbles: true }));
+      nameInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await act(async () => {
+      (document.getElementById("btn-lobby-docs") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("lobby-docs-dialog")).not.toBeNull();
+    await act(async () => {
+      (document.getElementById("btn-close-docs-dialog") as HTMLButtonElement).click();
+    });
+    await act(async () => {
+      (document.getElementById("btn-lobby-start") as HTMLButtonElement).click();
+    });
+
+    // Night 0 Intake (3 questions) with operator callsign stamped on FORM ORD-09
     expect(document.getElementById("intake-panel")).not.toBeNull();
+    expect(document.getElementById("intake-panel")?.textContent).toContain("Evan");
     for (let i = 0; i < 3; i++) {
       await act(async () => {
         (document.querySelector(".option-card") as HTMLButtonElement).click();
@@ -306,12 +330,15 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       root.render(<App />);
     });
 
-    // Switch campaign mode to Steam Demo (4 visitors, 3🔥 fuel) via @ui-sdk/react/select
+    // Switch campaign mode to Steam Demo (4 visitors, 3🔥 fuel) from Lobby selector and start shift
     await act(async () => {
-      (document.getElementById("campaign-mode-select") as HTMLButtonElement).click();
+      (document.getElementById("lobby-mode-select") as HTMLButtonElement).click();
     });
     await act(async () => {
-      (document.querySelector('[data-mode="demo"]') as HTMLElement).click();
+      (document.querySelector('[data-lobby-mode="demo"]') as HTMLElement).click();
+    });
+    await act(async () => {
+      (document.getElementById("btn-lobby-start") as HTMLButtonElement).click();
     });
 
     for (let i = 0; i < 3; i++) {
@@ -371,6 +398,10 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
 
     await act(async () => {
       root.render(<App />);
+    });
+
+    await act(async () => {
+      (document.getElementById("btn-lobby-start") as HTMLButtonElement).click();
     });
 
     for (let i = 0; i < 3; i++) {

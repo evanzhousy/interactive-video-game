@@ -20,6 +20,40 @@ import type {
 export const SHIFT_SAVE_KEY = "gate0.shift.v1";
 export const COMPENDIUM_SAVE_KEY = "gate0.compendium.v1";
 export const ONBOARDING_DISMISSED_KEY = "gate0.onboarding.dismissed.v1";
+export const OPERATOR_NAME_KEY = "gate0.operator.v1";
+
+export function sanitizeOperatorName(raw: string): string {
+  return raw
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+    .slice(0, 24);
+}
+
+export function loadOperatorName(): string {
+  const store = getStorage();
+  if (!store) return "";
+  try {
+    return sanitizeOperatorName(store.getItem(OPERATOR_NAME_KEY) ?? "");
+  } catch {
+    return "";
+  }
+}
+
+export function saveOperatorName(name: string): void {
+  const store = getStorage();
+  if (!store) return;
+  const clean = sanitizeOperatorName(name);
+  try {
+    if (clean) {
+      store.setItem(OPERATOR_NAME_KEY, clean);
+    } else {
+      store.removeItem(OPERATOR_NAME_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
 
 export function loadOnboardingDismissed(): boolean {
   const store = getStorage();
@@ -211,6 +245,7 @@ export interface SavedShiftState {
   version: 1;
   savedAt: string;
   lang: Locale;
+  operatorName?: string;
   campaignMode: CampaignMode;
   dailySeed?: string;
   runSeed?: string;
@@ -280,6 +315,10 @@ function normalizeSavedShift(parsed: Partial<SavedShiftState> | null): SavedShif
     version: 1,
     savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : "",
     lang: parsed.lang === "en" || parsed.lang === "ja" ? parsed.lang : "zh",
+    operatorName:
+      typeof parsed.operatorName === "string" && parsed.operatorName.trim()
+        ? sanitizeOperatorName(parsed.operatorName)
+        : undefined,
     campaignMode: resolvedMode,
     dailySeed: typeof parsed.dailySeed === "string" ? parsed.dailySeed : undefined,
     runSeed: typeof parsed.runSeed === "string" ? parsed.runSeed : undefined,
@@ -349,6 +388,25 @@ export function clearSavedShift(): void {
     }
   }
   void clearShiftFromClientDb();
+}
+
+export function exportShiftSaveJson(state: SavedShiftState): string {
+  return JSON.stringify(state, null, 2);
+}
+
+export function importShiftSaveJson(rawText: string): SavedShiftState | null {
+  try {
+    const parsed = JSON.parse(rawText) as Partial<SavedShiftState>;
+    const normalized = normalizeSavedShift(parsed);
+    if (!normalized) return null;
+    saveShiftState(normalized);
+    if (normalized.operatorName) {
+      saveOperatorName(normalized.operatorName);
+    }
+    return normalized;
+  } catch {
+    return null;
+  }
 }
 
 export function loadCompendium(): CompendiumState {

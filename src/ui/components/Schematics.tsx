@@ -1,6 +1,10 @@
+import { Button } from "@ui-sdk/react/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@ui-sdk/react/tooltip";
 import { useId } from "react";
 import { SPECIALIST_LABELS, type SpecialistRole } from "../../game/economy.js";
 import { tl } from "../../game/i18n.js";
+import { ENDINGS } from "../../game/night5.js";
+import { ENDING_HINTS } from "../../game/storage.js";
 import type { EndingId, Locale } from "../../game/types.js";
 
 export function IsometricOutpostBanner({
@@ -991,6 +995,70 @@ export function IsometricAirlockSchematic({
           {night === 3 ? "[! EMI STORM]" : `${powerLeft}/${maxPower} PWR`}
         </text>
       </svg>
+
+      {/* Interactive @ui-sdk/react/tooltip telemetry hotspots aligned to the 3 schematic zones */}
+      <div className="schematic-hotspot-layer" role="group" aria-label={tl({ zh: "气闸遥测交互区", en: "Airlock telemetry zones", ja: "エアロック計測領域" }, lang)}>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                className="schematic-hotspot"
+                style={{ left: "1%", top: "6%", width: "45.5%", height: "88%" }}
+                aria-label={tl({ zh: "查看气闸舱室状态", en: "Inspect airlock chamber status", ja: "エアロック状態を確認" }, lang)}
+              />
+            }
+          />
+          <TooltipContent>
+            {verdictState === "NONE"
+              ? tl({ zh: `气闸 00 闭锁中 (${pressureLabel} · ${tempLabel})：等待裁决拉闸`, en: `Airlock 00 Sealed (${pressureLabel} · ${tempLabel}): Awaiting verdict`, ja: `エアロック00 閉鎖中 (${pressureLabel} · ${tempLabel})` }, lang)
+              : verdictState === "ADMIT"
+                ? tl({ zh: `内门已开启 (${pressureLabel} · ${tempLabel})：访客已放行进入内舱`, en: `Inner Hatch Open (${pressureLabel} · ${tempLabel}): Subject admitted`, ja: `内扉開放 (${pressureLabel} · ${tempLabel})：通過完了` }, lang)
+                : tl({ zh: "高温焚毁激活 (1,100°C)：气闸室已执行热灭菌净化", en: "Thermal Purge Active (1,100°C): Chamber sterilized", ja: "高温焼却稼働 (1,100°C)：滅菌完了" }, lang)}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                className="schematic-hotspot"
+                style={{ left: "48.5%", top: "6%", width: "50.5%", height: "43%" }}
+                aria-label={tl({ zh: "查看燃料槽余量", en: "Inspect thermal fuel rack", ja: "燃料槽残量を確認" }, lang)}
+              />
+            }
+          />
+          <TooltipContent>
+            {tl(
+              {
+                zh: `燃料槽余量：${fuelLeft} U（每次净化消耗 1 U；归零将触发 -46°C 低温降电）`,
+                en: `Thermal Rack: ${fuelLeft} U (PURGE costs 1 U; 0 U triggers -46°C brownout)`,
+                ja: `燃料槽残量：${fuelLeft} U（焼却ごとに1U消費、0で低温電圧低下）`
+              },
+              lang
+            )}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                type="button"
+                className="schematic-hotspot"
+                style={{ left: "48.5%", top: "51%", width: "50.5%", height: "43%" }}
+                aria-label={tl({ zh: "查看传感器电容组", en: "Inspect sensor capacitor bank", ja: "センサー蓄電バンクを確認" }, lang)}
+              />
+            }
+          />
+          <TooltipContent>
+            {night === 3
+              ? tl({ zh: "第 3 夜极地强磁暴：瞳孔强光与热成像传感器均受全屏噪点干扰", en: "Night 3 Geomagnetic Storm: Strobe and thermal sensors suffer EMI noise", ja: "第3夜磁気嵐：ストロボ・熱画像センサーがノイズ干渉中" }, lang)
+              : tl({ zh: `传感器电容组：${powerLeft}/${maxPower} PWR 可用（[S] 瞳孔强光 / [T] 神经热成像）`, en: `Capacitor Bank: ${powerLeft}/${maxPower} PWR ([S] Strobe / [T] Thermal)`, ja: `蓄電バンク：${powerLeft}/${maxPower} PWR（[S] ストロボ / [T] 熱画像）` }, lang)}
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   );
 }
@@ -1032,13 +1100,105 @@ export function PipelineFirewallSchematic({
   revealed,
   flashEnabled,
   hasPayload,
-  lang = "zh"
+  lang = "zh",
+  activeStage,
+  onSelectStage
 }: {
   revealed: boolean;
   flashEnabled: boolean;
   hasPayload: boolean;
   lang?: Locale;
+  activeStage?: string | null;
+  onSelectStage?: (stageId: string) => void;
 }) {
+  const stages = [
+    {
+      id: "axis",
+      left: "2.17%",
+      top: "19.15%",
+      width: "15.65%",
+      height: "44.68%",
+      label: tl({ zh: "阶段 01：意图轴检测", en: "Stage 01: Axis Intent Detection", ja: "段階01：質問軸検出" }, lang),
+      detail: tl(
+        {
+          zh: "将玩家自由输入或预设提问归类到 v-1 / v-2 / sig-1 / boggart / 离题。",
+          en: "Classifies player input into v-1, v-2, sig-1, boggart, or off-axis.",
+          ja: "プレイヤー入力を v-1 / v-2 / sig-1 / boggart / 軸外に分類。"
+        },
+        lang
+      )
+    },
+    {
+      id: "stance",
+      left: "22.61%",
+      top: "19.15%",
+      width: "17.83%",
+      height: "44.68%",
+      label: tl({ zh: "阶段 02：ORDAMOR v6 立场引擎", en: "Stage 02: ORDAMOR v6 Stance Engine", ja: "段階02：ORDAMOR v6 立場エンジン" }, lang),
+      detail: tl(
+        {
+          zh: "纯确定性规则计算当前访客该坚持哪项价值，以及使用哪句标准台词。",
+          en: "Deterministically computes which value wins and selects the canonical line.",
+          ja: "決定論的ルールで勝者価値と基準セリフを算出。"
+        },
+        lang
+      )
+    },
+    {
+      id: "firewall",
+      left: "43.04%",
+      top: "7.45%",
+      width: "11.30%",
+      height: "68.09%",
+      label: tl({ zh: "零泄露防火墙：剥离隐藏底牌", en: "Zero-Leakage Firewall: Strip Hidden Roll", ja: "ゼロ漏洩遮断壁：裏設定を除去" }, lang),
+      detail: tl(
+        {
+          zh: "强制剥离 isMimic、defectMode 与 lineKey（服务端若检测到偷渡直接返回 HTTP 400）。",
+          en: "Strips isMimic, defectMode, and lineKey (smuggling returns HTTP 400).",
+          ja: "isMimic / defectMode / lineKey を完全除去（混入時は HTTP 400）。"
+        },
+        lang
+      )
+    },
+    {
+      id: "clean",
+      left: "56.96%",
+      top: "19.15%",
+      width: "17.83%",
+      height: "44.68%",
+      label: tl({ zh: "阶段 03：脱敏 LLM 载荷", en: "Stage 03: Sanitized LLM Payload", ja: "段階03：無害化 LLM 入力" }, lang),
+      detail: tl(
+        {
+          zh: "仅向语言模型传递说话人、语气、标准台词与立场选择，模型无法得知真伪身份。",
+          en: "Passes only speaker, persona voice, canonical line, and stance—zero mimic knowledge.",
+          ja: "話者・口調・基準文・立場のみを送信し、擬態判定は一切渡さない。"
+        },
+        lang
+      )
+    },
+    {
+      id: "output",
+      left: "79.57%",
+      top: "19.15%",
+      width: "18.26%",
+      height: "44.68%",
+      label: tl({ zh: "阶段 05：Flash 改写或 0ms 本地回退", en: "Stage 05: Flash Rephrase / 0ms Local Fallback", ja: "段階05：Flash 改稿 / 0ms ローカル" }, lang),
+      detail: tl(
+        {
+          zh: flashEnabled
+            ? "已启用 Flash：自由输入将实时润色语气，超时或断网自动零阻塞回退。"
+            : "当前为 0ms 本地模式：直接输出经检验的标准台词。",
+          en: flashEnabled
+            ? "Flash active: free-text lines are rephrased with 0-block fallback."
+            : "0ms local mode: outputs deterministic canonical lines.",
+          ja: flashEnabled
+            ? "Flash稼働中：自由入力を即座にリライトし、失敗時は自動フォールバック。"
+            : "0ms ローカルモード：確定済みの基準セリフを出力。"
+        },
+        lang
+      )
+    }
+  ];
   return (
     <div className="pipeline-schematic-wrap">
       <svg
@@ -1236,16 +1396,41 @@ export function PipelineFirewallSchematic({
             : tl({ zh: "追踪: 待命", en: "TRACE: STANDBY", ja: "追跡: 待機" }, lang)}
         </text>
       </svg>
+
+      <div className="schematic-hotspot-layer" role="group" aria-label={tl({ zh: "管线阶段交互节点", en: "Interactive pipeline stages", ja: "パイプライン段階" }, lang)}>
+        {stages.map((st) => (
+          <Tooltip key={st.id}>
+            <TooltipTrigger
+              render={
+                <Button
+                  type="button"
+                  className={`schematic-hotspot ${activeStage === st.id ? "is-selected" : ""}`}
+                  style={{ left: st.left, top: st.top, width: st.width, height: st.height }}
+                  aria-label={st.label}
+                  onClick={() => onSelectStage?.(st.id)}
+                />
+              }
+            />
+            <TooltipContent>
+              <strong>{st.label}</strong> — {st.detail}
+            </TooltipContent>
+          </Tooltip>
+        ))}
+      </div>
     </div>
   );
 }
 
 export function EndingConstellationSvg({
   unlockedEndings,
-  lang
+  lang,
+  selectedEnding,
+  onSelectEnding
 }: {
   unlockedEndings: ReadonlySet<EndingId>;
   lang: Locale;
+  selectedEnding?: EndingId | null;
+  onSelectEnding?: (id: EndingId) => void;
 }) {
   const nodes: Array<{
     id: EndingId;
@@ -1407,6 +1592,44 @@ export function EndingConstellationSvg({
           </text>
         </g>
       </svg>
+
+      {/* Interactive @ui-sdk/react/button + Tooltip overlay for all 7 ending nodes */}
+      <div
+        className="schematic-hotspot-layer"
+        role="group"
+        aria-label={tl({ zh: "结局分支图交互节点", en: "Interactive ending constellation nodes", ja: "結末分岐ノード" }, lang)}
+      >
+        {nodes.map((node) => {
+          const on = unlockedEndings.has(node.id);
+          const isSelected = selectedEnding === node.id;
+          const title = on ? tl(ENDINGS[node.id].title, lang) : `[${node.id}] ${tl({ zh: "未解锁结局", en: "LOCKED ENDING", ja: "未解禁" }, lang)}`;
+          const desc = on ? tl(ENDINGS[node.id].body, lang) : tl(ENDING_HINTS[node.id], lang);
+          return (
+            <Tooltip key={node.id}>
+              <TooltipTrigger
+                render={
+                  <Button
+                    type="button"
+                    data-constellation-node={node.id}
+                    className={`schematic-hotspot ${isSelected ? "is-selected" : ""}`}
+                    style={{
+                      left: `${((node.x / 920) * 100).toFixed(2)}%`,
+                      top: `${((node.y / 108) * 100).toFixed(2)}%`,
+                      width: `${((156 / 920) * 100).toFixed(2)}%`,
+                      height: `${((24 / 108) * 100).toFixed(2)}%`
+                    }}
+                    aria-label={title}
+                    onClick={() => onSelectEnding?.(node.id)}
+                  />
+                }
+              />
+              <TooltipContent>
+                <strong>{title}</strong> — {desc.slice(0, 96)}{desc.length > 96 ? "…" : ""}
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
     </div>
   );
 }
