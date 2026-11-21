@@ -4247,22 +4247,27 @@ dialog::backdrop,
 /* Dramatic GTA Slanted Verdict Flash Ribbon ("INCINERATED" / "AIRLOCK CLEARED") */
 .gta-verdict-stinger {
   position: fixed;
-  top: 24%;
+  top: 23%;
   left: 0;
-  right: 0;
+  right: 392px;
   z-index: 32;
   pointer-events: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 16px 24px;
+  padding: 15px 24px;
   transform: skewY(-2.2deg);
   border-top: 2px solid var(--amber-crt);
   border-bottom: 2px solid var(--amber-crt);
-  background: linear-gradient(90deg, rgba(4, 6, 8, 0.1) 0%, rgba(6, 8, 10, 0.86) 24%, rgba(6, 8, 10, 0.86) 76%, rgba(4, 6, 8, 0.1) 100%);
+  background: linear-gradient(90deg, rgba(4, 6, 8, 0.1) 0%, rgba(6, 8, 10, 0.88) 20%, rgba(6, 8, 10, 0.88) 80%, rgba(4, 6, 8, 0.1) 100%);
   backdrop-filter: blur(4px);
   animation: gtaStingerSlam 380ms var(--ease-spring-snappy) 1 both;
+  transition: right 240ms var(--ease-mechanical);
+}
+
+.gta-booth-stage.dossier-collapsed .gta-verdict-stinger {
+  right: 0;
 }
 
 .gta-verdict-stinger.purge {
@@ -4921,6 +4926,10 @@ dialog::backdrop,
     left: 292px;
     right: 344px;
   }
+
+  .gta-verdict-stinger {
+    right: 344px;
+  }
 }
 
 @media (max-width: 960px) {
@@ -4991,5 +5000,9 @@ dialog::backdrop,
 
   .gta-dossier-rail.is-collapsed {
     display: none;
+  }
+
+  .gta-verdict-stinger {
+    right: 0;
   }
 }
