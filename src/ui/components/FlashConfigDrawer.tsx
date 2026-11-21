@@ -19,7 +19,6 @@ import {
 } from "@ui-sdk/react/select";
 import { useState } from "react";
 import { tl } from "../../game/i18n.js";
-import { VERCEL_PRODUCTION_REPHRASE_URL } from "../../game/rephrase.js";
 import type { FlashRephraseConfig, FlashTransportMode, Locale } from "../../game/types.js";
 import { BoltPowerIcon, CheckIcon, ChevronDownIcon, ClearIcon, LockSealIcon } from "./Icons.js";
 
@@ -34,7 +33,7 @@ interface Props {
 const TRANSPORT_ITEMS: Array<{ value: FlashTransportMode; label: string }> = [
   {
     value: "server_proxy",
-    label: "Server Proxy (/api/rephrase · Vercel / Vite .env)"
+    label: "Vercel AI Gateway (/api/interrogate · anthropic/claude-sonnet-5.5)"
   },
   {
     value: "custom_endpoint",
@@ -46,15 +45,12 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
   const [probeStatus, setProbeStatus] = useState<string | null>(null);
 
   const checkServerProxy = async () => {
-    const targetUrl = config.proxyPath || "/api/rephrase";
+    const targetUrl = "/api/interrogate";
     setProbeStatus(`Checking ${targetUrl}...`);
     try {
-      let res = await fetch(targetUrl, { method: "GET" });
-      if ((res.status === 404 || res.status === 405) && targetUrl !== VERCEL_PRODUCTION_REPHRASE_URL) {
-        res = await fetch(VERCEL_PRODUCTION_REPHRASE_URL, { method: "GET" });
-      }
+      const res = await fetch(targetUrl, { method: "GET" });
       if (!res.ok) {
-        setProbeStatus(`HTTP ${res.status} (static host — switch to Custom Endpoint or deploy on Vercel)`);
+        setProbeStatus(`HTTP ${res.status} (deploy on Vercel or run pnpm dev with AI_GATEWAY_API_KEY)`);
         return;
       }
       const data = (await res.json()) as {
@@ -66,7 +62,7 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
         setProbeStatus(`READY · provider=${data.provider} · model=${data.model}`);
       } else {
         setProbeStatus(
-          "UNCONFIGURED (no API key in server env — falls back cleanly to pre-written canonical lines)"
+          `UNCONFIGURED (no AI_GATEWAY_API_KEY / VERCEL_OIDC_TOKEN — deterministic fallback active · target=${data.model ?? "anthropic/claude-sonnet-5.5"})`
         );
       }
     } catch {
@@ -88,7 +84,15 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
                 fontWeight: 700
               }}
             >
-              <BoltPowerIcon /> FLASH ONLINE FREE-TEXT REPHRASE LAYER (ZERO IDENTITY LEAKAGE)
+              <BoltPowerIcon />{" "}
+              {tl(
+                {
+                  zh: "CLAUDE 多轮审讯引擎 · Vercel AI Gateway（零身份泄露边界）",
+                  en: "CLAUDE MULTI-TURN INTERROGATION · VERCEL AI GATEWAY (ZERO LEAKAGE)",
+                  ja: "CLAUDE 対話尋問エンジン · Vercel AI Gateway（ゼロ漏洩境界）"
+                },
+                lang
+              )}
             </span>
             <Button className="ctrl-btn" onClick={() => onOpenChange(false)}>
               {tl({ zh: "收起面板", en: "Close", ja: "閉じる" }, lang)}
@@ -111,9 +115,9 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
               <span>
                 {tl(
                   {
-                    zh: "启用在线 Flash 改写（超时/断网 0 阻塞回退）",
-                    en: "Enable Flash rephrase (0-block canonical fallback)",
-                    ja: "Flashオンライン改稿を有効化（自動フォールバック）"
+                    zh: "启用在线 Claude Sonnet 5.5 多轮审讯（超时/断网自动回退）",
+                    en: "Enable live Claude Sonnet 5.5 interrogation (auto canonical fallback)",
+                    ja: "Claude Sonnet 5.5 リアルタイム尋問を有効化（自動フォールバック）"
                   },
                   lang
                 )}
@@ -178,7 +182,7 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
                   onClick={checkServerProxy}
                 >
                   {tl(
-                    { zh: "检测服务端状态", en: "Check /api/rephrase", ja: "サーバー状態確認" },
+                    { zh: "检测 Gateway 状态", en: "Check /api/interrogate", ja: "Gateway 状態確認" },
                     lang
                   )}
                 </Button>
@@ -258,7 +262,14 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
             >
               <LockSealIcon />
               <span>
-                GUARD // ZERO-LEAKAGE BOUNDARY: isMimic · defectMode · lineKey = HTTP 400
+                {tl(
+                  {
+                    zh: "安全边界 // 零泄露隔离：isMimic · defectMode · lineKey = HTTP 400",
+                    en: "GUARD // ZERO-LEAKAGE BOUNDARY: isMimic · defectMode · lineKey = HTTP 400",
+                    ja: "境界防御 // ゼロ漏洩ガード：isMimic · defectMode · lineKey = HTTP 400"
+                  },
+                  lang
+                )}
               </span>
             </div>
           </div>

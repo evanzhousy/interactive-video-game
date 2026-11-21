@@ -5,10 +5,12 @@ import type { EndingId, Locale } from "../../game/types.js";
 
 export function IsometricOutpostBanner({
   step,
-  totalSteps
+  totalSteps,
+  lang = "zh"
 }: {
   step: number;
   totalSteps: number;
+  lang?: Locale;
 }) {
   const uid = useId().replace(/:/g, "");
   const surfaceActive = step <= 1;
@@ -128,7 +130,14 @@ export function IsometricOutpostBanner({
           fontFamily="monospace"
           fontWeight={surfaceActive ? "700" : "400"}
         >
-          SURFACE // -46°C POLAR SHELF
+          {tl(
+            {
+              zh: "地表 // -46°C 极地冰架",
+              en: "SURFACE // -46°C POLAR SHELF",
+              ja: "地表 // -46°C 極地棚氷"
+            },
+            lang
+          )}
         </text>
 
         {/* Cable Tunnel: Surface -> Gate 0 (Static dashed rail + Glowing Traveling Beam) */}
@@ -206,7 +215,14 @@ export function IsometricOutpostBanner({
           fontFamily="monospace"
           fontWeight="700"
         >
-          GATE-0 // AIRLOCK BOOTH
+          {tl(
+            {
+              zh: "0号闸门 // 隔离气闸岗亭",
+              en: "GATE-0 // AIRLOCK BOOTH",
+              ja: "第0ゲート // エアロック"
+            },
+            lang
+          )}
         </text>
 
         {/* Sub-glacial Elevator Shaft: Gate-0 -> Nautilus-0 */}
@@ -266,7 +282,14 @@ export function IsometricOutpostBanner({
           fontFamily="monospace"
           fontWeight={subActive ? "700" : "400"}
         >
-          -180M // NAUTILUS-0 BERTH
+          {tl(
+            {
+              zh: "-180M // 鹦鹉螺-0 潜艇泊位",
+              en: "-180M // NAUTILUS-0 BERTH",
+              ja: "-180M // ノーチラス-0 停泊区"
+            },
+            lang
+          )}
         </text>
 
         {/* Top-Right Intake Sequence Nodes */}
@@ -321,21 +344,25 @@ export function ViewportHudOverlay({
   visitorId,
   night,
   bpm,
+  bpmDelta = null,
   clipState,
   verdictState
 }: {
   visitorId: string;
   night: number;
   bpm: number;
+  bpmDelta?: number | null;
   clipState: string;
   verdictState: "NONE" | "ADMIT" | "PURGE";
 }) {
   const uid = useId().replace(/:/g, "");
-  const highPulse = bpm >= 105;
-  const elevatedPulse = bpm >= 84;
-  const stateLabel = clipState.toUpperCase();
-  const stateColor =
-    verdictState === "PURGE"
+  const ecgBlinded = night === 3;
+  const highPulse = !ecgBlinded && bpm >= 105;
+  const elevatedPulse = !ecgBlinded && bpm >= 84;
+  const stateLabel = ecgBlinded ? "SIGNAL LOST" : clipState.toUpperCase();
+  const stateColor = ecgBlinded
+    ? "#ff9c8f"
+    : verdictState === "PURGE"
       ? "#ff9c8f"
       : verdictState === "ADMIT"
         ? "#86e8b8"
@@ -343,8 +370,18 @@ export function ViewportHudOverlay({
           ? "#eba834"
           : "#9ec6d4";
   const ecgPeriod = `${Math.max(0.75, (60 / Math.max(55, bpm)) * 1.6).toFixed(2)}s`;
-  const bpmFillW = Math.round(Math.max(12, Math.min(100, ((bpm - 50) / 95) * 100)) * 1.46);
+  const bpmFillW = ecgBlinded
+    ? 0
+    : Math.round(Math.max(12, Math.min(100, ((bpm - 50) / 95) * 100)) * 1.46);
   const bpmBarColor = highPulse ? "#e04634" : elevatedPulse ? "#eba834" : "#49b882";
+  const deltaText =
+    ecgBlinded || bpmDelta === null
+      ? ""
+      : bpmDelta > 0
+        ? ` +${bpmDelta}`
+        : bpmDelta < 0
+          ? ` ${bpmDelta}`
+          : " ±0";
 
   return (
     <svg
@@ -462,40 +499,54 @@ export function ViewportHudOverlay({
           width="162"
           height="42"
           fill="rgba(6,8,9,0.82)"
-          stroke={highPulse ? "rgba(224,70,52,0.7)" : "rgba(235,168,52,0.48)"}
+          stroke={ecgBlinded || highPulse ? "rgba(224,70,52,0.75)" : "rgba(235,168,52,0.48)"}
           strokeWidth="1"
         />
-        <polyline
-          points="8,21 20,21 24,13 28,27 32,8 37,24 41,21 56,21"
-          fill="none"
-          stroke="rgba(235,168,52,0.22)"
-          strokeWidth="1.2"
-        />
-        <polyline
-          points="8,21 20,21 24,13 28,27 32,8 37,24 41,21 56,21"
-          pathLength={100}
-          className="svg-ecg-trace"
-          style={{ ["--ecg-period" as string]: ecgPeriod }}
-          fill="none"
-          stroke={highPulse ? "#e04634" : "#eba834"}
-          strokeWidth="1.6"
-        />
+        {ecgBlinded ? (
+          <polyline
+            points="8,21 24,21 26,18 28,24 31,21 56,21"
+            fill="none"
+            stroke="#e04634"
+            strokeDasharray="3 2"
+            strokeWidth="1.4"
+          />
+        ) : (
+          <>
+            <polyline
+              points="8,21 20,21 24,13 28,27 32,8 37,24 41,21 56,21"
+              fill="none"
+              stroke="rgba(235,168,52,0.22)"
+              strokeWidth="1.2"
+            />
+            <polyline
+              points="8,21 20,21 24,13 28,27 32,8 37,24 41,21 56,21"
+              pathLength={100}
+              className="svg-ecg-trace"
+              style={{ ["--ecg-period" as string]: ecgPeriod }}
+              fill="none"
+              stroke={highPulse ? "#e04634" : "#eba834"}
+              strokeWidth="1.6"
+            />
+          </>
+        )}
         <text
           x="64"
           y="16"
-          fill={highPulse ? "#ff9c8f" : "#e4e8eb"}
+          fill={ecgBlinded || highPulse ? "#ff9c8f" : "#e4e8eb"}
           fontSize="10"
           fontFamily="monospace"
           fontWeight="700"
         >
-          {bpm} BPM
+          {ecgBlinded ? "--- BPM" : `${bpm} BPM${deltaText}`}
         </text>
         <text x="64" y="28" fill={stateColor} fontSize="8.5" fontFamily="monospace">
           {stateLabel}
         </text>
         {/* Live Stress / Pulse Gauge Strip */}
         <rect x="8" y="34" width="146" height="3.5" fill="rgba(198,176,138,0.14)" />
-        <rect x="8" y="34" width={bpmFillW} height="3.5" fill={bpmBarColor} className="svg-node-breathe" />
+        {!ecgBlinded ? (
+          <rect x="8" y="34" width={bpmFillW} height="3.5" fill={bpmBarColor} className="svg-node-breathe" />
+        ) : null}
       </g>
 
       {/* Compact Lens + Subject Stamp Below ECG Box */}
@@ -521,12 +572,14 @@ export function Night5HudOverlay({
   gap,
   flinchActive = false,
   finalAction = "NONE",
-  rebuttedCount = 0
+  rebuttedCount = 0,
+  lang = "zh"
 }: {
   gap: number;
   flinchActive?: boolean;
   finalAction?: "NONE" | "PURGE" | "ADMIT" | "STEP_OUT";
   rebuttedCount?: number;
+  lang?: Locale;
 }) {
   const uid = useId().replace(/:/g, "");
   const gapPct = Math.round(gap * 100);
@@ -577,7 +630,7 @@ export function Night5HudOverlay({
         />
         <circle cx="10" cy="10" r="3" fill={flinchActive ? "#e04634" : "#eba834"} className="svg-low-fuel-cell" />
         <text x="19" y="13" fill="#e4e8eb" fontSize="8.5" fontFamily="monospace" fontWeight="700">
-          CAM-01 // MIRROR AUDIT
+          {tl({ zh: "CAM-01 // 镜像自审", en: "CAM-01 // MIRROR AUDIT", ja: "CAM-01 // 鏡像監査" }, lang)}
         </text>
       </g>
 
@@ -610,10 +663,17 @@ export function Night5HudOverlay({
           strokeWidth="1"
         />
         <text x="8" y="14" fill="#eba834" fontSize="9" fontFamily="monospace" fontWeight="700">
-          FACIAL MATCH // 99.98%
+          {tl({ zh: "面部匹配 // 99.98%", en: "FACIAL MATCH // 99.98%", ja: "顔一致率 // 99.98%" }, lang)}
         </text>
         <text x="8" y="26" fill="#9ec6d4" fontSize="7.8" fontFamily="monospace">
-          SAY/DO GAP {gapPct}% · EXPOSED {rebuttedCount}
+          {tl(
+            {
+              zh: `言行差 ${gapPct}% · 破绽 ${rebuttedCount}`,
+              en: `SAY/DO GAP ${gapPct}% · EXPOSED ${rebuttedCount}`,
+              ja: `言行差 ${gapPct}% · 矛盾 ${rebuttedCount}`
+            },
+            lang
+          )}
         </text>
         <line x1="8" y1="42" x2="178" y2="42" stroke="rgba(198,176,138,0.14)" strokeWidth="0.7" />
         {/* Moving Phase Scope Cursor */}
@@ -662,13 +722,15 @@ export function IsometricAirlockSchematic({
   night,
   fuelLeft,
   powerLeft,
-  maxPower
+  maxPower,
+  lang = "zh"
 }: {
   verdictState: "NONE" | "ADMIT" | "PURGE";
   night: number;
   fuelLeft: number;
   powerLeft: number;
   maxPower: number;
+  lang?: Locale;
 }) {
   const uid = useId().replace(/:/g, "");
   const chamberColor =
@@ -711,13 +773,17 @@ export function IsometricAirlockSchematic({
 
         {/* Zone 1: Spatial Isometric Airlock Chamber Mechanics */}
         <text x="10" y="15" fill="#7c8a94" fontSize="8.2" fontFamily="monospace">
-          AIRLOCK // 00
+          {tl({ zh: "气闸 // 00", en: "AIRLOCK // 00", ja: "エアロック // 00" }, lang)}
         </text>
         <text x="10" y="27" fill="#9ec6d4" fontSize="7.5" fontFamily="monospace">
           {pressureLabel}
         </text>
         <text x="10" y="67" fill={chamberColor} fontSize="8.4" fontFamily="monospace" fontWeight="700">
-          {verdictState === "NONE" ? "LOCK: SEALED" : verdictState === "ADMIT" ? "HATCH: OPEN" : "BURN: ACTIVE"}
+          {verdictState === "NONE"
+            ? tl({ zh: "闸门: 闭锁", en: "LOCK: SEALED", ja: "閉鎖: LOCKED" }, lang)
+            : verdictState === "ADMIT"
+              ? tl({ zh: "内门: 开启", en: "HATCH: OPEN", ja: "内扉: OPEN" }, lang)
+              : tl({ zh: "焚毁: 启动", en: "BURN: ACTIVE", ja: "焼却: ACTIVE" }, lang)}
         </text>
 
         {/* Exterior Cold Shelf Vector */}
@@ -842,7 +908,7 @@ export function IsometricAirlockSchematic({
 
         {/* Zone 2: Thermal Coil Canister Rack (Overflow-Safe; alerts only on <= 1 fuel) */}
         <text x="270" y="26" fill="#a2aeb6" fontSize="8.6" fontFamily="monospace" fontWeight="700">
-          THERMAL RACK
+          {tl({ zh: "燃料槽", en: "THERMAL RACK", ja: "燃料槽" }, lang)}
         </text>
         {Array.from({ length: visibleFuelSlots }, (_, idx) => {
           const lit = idx < fuelLeft;
@@ -887,7 +953,7 @@ export function IsometricAirlockSchematic({
 
         {/* Zone 3: Sensor Capacitor Bank (Live Charge Pulse) */}
         <text x="270" y="56" fill="#a2aeb6" fontSize="8.6" fontFamily="monospace" fontWeight="700">
-          CAP BANK
+          {tl({ zh: "电容组", en: "CAP BANK", ja: "蓄電バンク" }, lang)}
         </text>
         {Array.from({ length: capSlots }, (_, idx) => {
           const lit = idx < powerLeft;
@@ -965,11 +1031,13 @@ export function CommsWaveformSvg({ active = false }: { active?: boolean }) {
 export function PipelineFirewallSchematic({
   revealed,
   flashEnabled,
-  hasPayload
+  hasPayload,
+  lang = "zh"
 }: {
   revealed: boolean;
   flashEnabled: boolean;
   hasPayload: boolean;
+  lang?: Locale;
 }) {
   return (
     <div className="pipeline-schematic-wrap">
@@ -1071,16 +1139,18 @@ export function PipelineFirewallSchematic({
           strokeWidth="1.4"
         />
         <text x="224" y="20" textAnchor="middle" fill="#ff9c8f" fontSize="7.4" fontFamily="monospace" fontWeight="700">
-          FIREWALL
+          {tl({ zh: "防火墙", en: "FIREWALL", ja: "遮断壁" }, lang)}
         </text>
         <text x="224" y="34" textAnchor="middle" fill="#e4e8eb" fontSize="6.8" fontFamily="monospace">
-          STRIP
+          {tl({ zh: "剥离", en: "STRIP", ja: "除去" }, lang)}
         </text>
         <text x="224" y="46" textAnchor="middle" fill="#ff9c8f" fontSize="6.6" fontFamily="monospace">
-          HIDDEN
+          {tl({ zh: "底牌", en: "HIDDEN", ja: "裏設定" }, lang)}
         </text>
         <text x="224" y="61" textAnchor="middle" fill={revealed ? "#eba834" : "#86e8b8"} fontSize="6.8" fontFamily="monospace" fontWeight="700">
-          {revealed ? "DEBUG" : "SEALED"}
+          {revealed
+            ? tl({ zh: "调试", en: "DEBUG", ja: "デバッグ" }, lang)
+            : tl({ zh: "已封存", en: "SEALED", ja: "封印済" }, lang)}
         </text>
 
         {/* Stage 3: Sanitized LLM Payload */}
@@ -1151,10 +1221,19 @@ export function PipelineFirewallSchematic({
 
         {/* Footer Rule Legend */}
         <text x="10" y="84" fill="#6c7983" fontSize="7.2" fontFamily="monospace">
-          BOUNDARY // ENGINE ROLL NEVER CROSSES STAGE 02 -&gt; 03
+          {tl(
+            {
+              zh: "硬边界 // 引擎底牌永不跨过 02 -> 03 隔离墙",
+              en: "BOUNDARY // ENGINE ROLL NEVER CROSSES STAGE 02 -> 03",
+              ja: "硬境界 // 内部判定は 02 -> 03 を絶対に越えない"
+            },
+            lang
+          )}
         </text>
         <text x="450" y="84" textAnchor="end" fill={hasPayload ? "#eba834" : "#6c7983"} fontSize="7.2" fontFamily="monospace">
-          {hasPayload ? "TRACE: ACTIVE" : "TRACE: STANDBY"}
+          {hasPayload
+            ? tl({ zh: "追踪: 激活", en: "TRACE: ACTIVE", ja: "追跡: 稼働" }, lang)
+            : tl({ zh: "追踪: 待命", en: "TRACE: STANDBY", ja: "追跡: 待機" }, lang)}
         </text>
       </svg>
     </div>
@@ -1321,7 +1400,7 @@ export function EndingConstellationSvg({
           <rect x="0" y="0" width="182" height="54" fill="#0b0e11" stroke="rgba(235,168,52,0.38)" />
           <circle cx="171" cy="11" r="2.2" fill="#eba834" className="svg-node-breathe" />
           <text x="12" y="20" fill="#6c7983" fontSize="8" fontFamily="monospace">
-            UNLOCKED ARCHIVE
+            {tl({ zh: "已解锁终局档案", en: "UNLOCKED ARCHIVE", ja: "解禁済アーカイブ" }, lang)}
           </text>
           <text x="12" y="42" fill="#eba834" fontSize="16" fontFamily="monospace" fontWeight="700">
             0{unlockedEndings.size} / 07
@@ -1390,14 +1469,19 @@ export function IsometricLockedModule({
   id,
   tier,
   night,
-  kind
+  kind,
+  lang = "zh"
 }: {
   id: string;
   tier: 2 | 4;
   night: 2 | 4;
   kind: "crystal" | "boggart";
+  lang?: Locale;
 }) {
-  const title = kind === "crystal" ? "MIND CRYSTAL ARCS" : "DISPOSAL SIG + TRAP";
+  const title =
+    kind === "crystal"
+      ? tl({ zh: "心智晶格弧线", en: "MIND CRYSTAL ARCS", ja: "心理結晶アーク" }, lang)
+      : tl({ zh: "处置签名 + 拆前提陷阱", en: "DISPOSAL SIG + TRAP", ja: "処置署名 + 前提罠" }, lang);
   const accent = kind === "crystal" ? "#eba834" : "#e04634";
   return (
     <div className="iso-lock-card" id={id}>
@@ -1439,7 +1523,14 @@ export function IsometricLockedModule({
       </svg>
       <div className="iso-lock-meta">
         <span className="iso-lock-code">
-          LOCKED // TIER-0{tier} · N{night}
+          {tl(
+            {
+              zh: `未解锁 // ${tier}阶 · 第${night}夜`,
+              en: `LOCKED // TIER-0${tier} · N${night}`,
+              ja: `未解禁 // 階層0${tier} · 第${night}夜`
+            },
+            lang
+          )}
         </span>
         <span className="iso-lock-title">{title}</span>
       </div>
@@ -2045,10 +2136,12 @@ export function BoggartTrapSchematic({ lang }: { lang: Locale }) {
 
 export function IsometricCrisisBanner({
   crisisId,
-  fuelLeft
+  fuelLeft,
+  lang = "zh"
 }: {
   crisisId: string;
   fuelLeft: number;
+  lang?: Locale;
 }) {
   const uid = useId().replace(/:/g, "");
   return (
@@ -2075,7 +2168,7 @@ export function IsometricCrisisBanner({
           <polygon points="104,22 54,40 54,66 104,48" fill="#080b0e" stroke="#eba834" />
           <circle cx="54" cy="11" r="2.2" fill="#eba834" className="svg-node-breathe" />
           <text x="54" y="25" textAnchor="middle" fill="#eba834" fontSize="8.5" fontFamily="monospace" fontWeight="700">
-            BOOTH #09
+            {tl({ zh: "0号岗亭", en: "BOOTH #09", ja: "第0ブース" }, lang)}
           </text>
           <text x="54" y="79" textAnchor="middle" fill="#7c8a94" fontSize="7.6" fontFamily="monospace">
             FUEL: {fuelLeft} UNIT
@@ -2180,13 +2273,13 @@ export function IsometricCrisisBanner({
           <rect x="0" y="0" width="132" height="58" fill="#0d1115" stroke="rgba(158,198,212,0.5)" />
           <circle cx="122" cy="10" r="2.5" fill="#e04634" className="svg-low-fuel-cell" />
           <text x="66" y="21" textAnchor="middle" fill="#9ec6d4" fontSize="8.4" fontFamily="monospace" fontWeight="700">
-            ORD-OS // DO LOG
+            {tl({ zh: "ORD-OS // 行为档案", en: "ORD-OS // DO LOG", ja: "ORD-OS // 行動記録" }, lang)}
           </text>
           <text x="66" y="36" textAnchor="middle" fill="#eba834" fontSize="7.6" fontFamily="monospace">
-            PERMANENT RECORD
+            {tl({ zh: "永久不可篡改", en: "PERMANENT RECORD", ja: "永久改竄不可" }, lang)}
           </text>
           <text x="66" y="49" textAnchor="middle" fill="#6c7983" fontSize="7.2" fontFamily="monospace">
-            AUDITED ON NIGHT 5
+            {tl({ zh: "第 5 夜终局审计", en: "AUDITED ON NIGHT 5", ja: "第5夜監査対象" }, lang)}
           </text>
         </g>
       </svg>

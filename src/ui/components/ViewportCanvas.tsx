@@ -12,6 +12,7 @@ interface Props {
   visitor: VisitorSpec;
   clipState: ClipState;
   bpm: number;
+  bpmDelta?: number | null;
   strobeTrigger: number;
   thermalTrigger: number;
   verdictState: "NONE" | "ADMIT" | "PURGE";
@@ -23,6 +24,7 @@ export function ViewportCanvas({
   visitor,
   clipState,
   bpm,
+  bpmDelta = null,
   strobeTrigger,
   thermalTrigger,
   verdictState,
@@ -471,6 +473,7 @@ export function ViewportCanvas({
         visitorId={visitor.id}
         night={visitor.night}
         bpm={bpm}
+        bpmDelta={bpmDelta}
         clipState={activeState}
         verdictState={verdictState}
       />

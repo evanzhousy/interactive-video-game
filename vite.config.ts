@@ -1,6 +1,8 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv, type Plugin } from "vite";
+import { handleGenerateVisitorsWebRequest } from "./src/server/generate-visitors-handler.js";
+import { handleInterrogateWebRequest } from "./src/server/interrogate-handler.js";
 import {
   executeServerRephrase,
   resolveServerFlashProvider
@@ -27,6 +29,67 @@ function readRequestBody(req: IncomingMessage, maxBytes = 16_384): Promise<strin
 function flashRephraseDevPlugin(env: Record<string, string | undefined>): Plugin {
   const handler = async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const pathname = req.url?.split("?")[0];
+    if (pathname === "/api/generate-visitors") {
+      try {
+        const method = req.method ?? "GET";
+        const body = method === "POST" ? await readRequestBody(req, 16_384) : undefined;
+        const webReq = new Request(`http://localhost:5173${req.url ?? "/api/generate-visitors"}`, {
+          method,
+          headers: {
+            "content-type": String(req.headers["content-type"] ?? "application/json")
+          },
+          body
+        });
+        const webRes = await handleGenerateVisitorsWebRequest(webReq, env);
+        res.statusCode = webRes.status;
+        webRes.headers.forEach((value, key) => {
+          res.setHeader(key, value);
+        });
+        res.end(await webRes.text());
+      } catch {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: false, error: "MALFORMED_REQUEST" }));
+      }
+      return;
+    }
+
+    if (pathname === "/api/interrogate") {
+      try {
+        const method = req.method ?? "GET";
+        const body =
+          method === "POST" ? await readRequestBody(req, 65_536) : undefined;
+        const webReq = new Request(`http://localhost:5173${req.url ?? "/api/interrogate"}`, {
+          method,
+          headers: {
+            "content-type": String(req.headers["content-type"] ?? "application/json")
+          },
+          body
+        });
+        const webRes = await handleInterrogateWebRequest(webReq, env);
+        res.statusCode = webRes.status;
+        webRes.headers.forEach((value, key) => {
+          res.setHeader(key, value);
+        });
+        if (!webRes.body) {
+          res.end();
+          return;
+        }
+        const reader = webRes.body.getReader();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          res.write(Buffer.from(value));
+        }
+        res.end();
+      } catch {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ status: "ERROR", error: "MALFORMED_REQUEST" }));
+      }
+      return;
+    }
+
     if (pathname !== "/api/rephrase") {
       next();
       return;

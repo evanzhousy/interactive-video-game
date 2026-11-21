@@ -70,7 +70,7 @@ export function evaluateSubmarineReadiness(
   let rolesToCheck: SpecialistRole[];
   let requiredCrewCount: number;
 
-  if (mode === "full" || mode === "daily") {
+  if (mode === "full" || mode === "daily" || mode === "seeded") {
     rolesToCheck = [...REQUIRED_SUB_ROLES];
     requiredCrewCount = 3;
   } else {

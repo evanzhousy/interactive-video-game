@@ -28,8 +28,19 @@ export function IntakeModal({ lang, onComplete }: Props) {
   return (
     <section className="panel modal-stage" id="intake-panel">
       <div className="section-kicker intake-header-row">
-        <span>ORD-OS // NIGHT 0 · OPERATOR #09 PSYCHOLOGICAL BASELINE INTAKE</span>
-        <span className="tech-stamp">FORM ORD-09</span>
+        <span>
+          {tl(
+            {
+              zh: "ORD-OS // 第 0 夜 · #09 值班员入职心理基线测验",
+              en: "ORD-OS // NIGHT 0 · OPERATOR #09 PSYCHOLOGICAL BASELINE INTAKE",
+              ja: "ORD-OS // 第0夜 · #09 検疫官心理ベースライン測定"
+            },
+            lang
+          )}
+        </span>
+        <span className="tech-stamp">
+          {tl({ zh: "表单 ORD-09", en: "FORM ORD-09", ja: "様式 ORD-09" }, lang)}
+        </span>
       </div>
       <div className="intake-progress-row">
         <Progress
@@ -50,11 +61,19 @@ export function IntakeModal({ lang, onComplete }: Props) {
       <IsometricOutpostBanner
         step={done ? INTAKE_QUESTIONS.length : step + 1}
         totalSteps={INTAKE_QUESTIONS.length}
+        lang={lang}
       />
       {!done ? (
         <div style={{ marginTop: "12px" }}>
           <div style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--amber-crt)", letterSpacing: "0.06em" }}>
-            QUERY // 0{step + 1} OF 0{INTAKE_QUESTIONS.length}
+            {tl(
+              {
+                zh: `问题 // 0${step + 1} / 0${INTAKE_QUESTIONS.length}`,
+                en: `QUERY // 0${step + 1} OF 0${INTAKE_QUESTIONS.length}`,
+                ja: `質問 // 0${step + 1} / 0${INTAKE_QUESTIONS.length}`
+              },
+              lang
+            )}
           </div>
           <p style={{ fontSize: "0.95rem", margin: "10px 0 12px" }}>
             {tl(INTAKE_QUESTIONS[step]!.prompt, lang)}
@@ -76,7 +95,16 @@ export function IntakeModal({ lang, onComplete }: Props) {
         baseline && (
           <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px" }}>
             <div className="dossier-section" style={{ marginBottom: 0 }}>
-              <div className="section-kicker">OPERATOR #09 SELF-REPORTED BASELINE (SAY)</div>
+              <div className="section-kicker">
+                {tl(
+                  {
+                    zh: "#09 值班员入职自述基线 (SAY)",
+                    en: "OPERATOR #09 SELF-REPORTED BASELINE (SAY)",
+                    ja: "#09 検疫官・自己申告ベースライン (SAY)"
+                  },
+                  lang
+                )}
+              </div>
               <div style={{ fontSize: "0.86rem" }}>
                 <strong style={{ color: "var(--amber-crt)" }}>
                   {VALUE_I18N[baseline.kept][lang]}
@@ -85,15 +113,21 @@ export function IntakeModal({ lang, onComplete }: Props) {
               </div>
             </div>
             <div className="audit-pipeline-strip" aria-label="ORD-OS Audit Pipeline">
-              <span className="pipe-node active">N0 // SAY</span>
+              <span className="pipe-node active">
+                {tl({ zh: "N0 // 入职口述 SAY", en: "N0 // SAY", ja: "N0 // 建前 SAY" }, lang)}
+              </span>
               <svg aria-hidden="true" className="svg-flow-arrow" width="18" height="10" viewBox="0 0 18 10" fill="none">
                 <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />
               </svg>
-              <span className="pipe-node">N1–N4 // DO LOGS</span>
+              <span className="pipe-node">
+                {tl({ zh: "N1–N4 // 行为记录 DO", en: "N1–N4 // DO LOGS", ja: "N1–N4 // 行動記録 DO" }, lang)}
+              </span>
               <svg aria-hidden="true" className="svg-flow-arrow" style={{ animationDelay: "0.4s" }} width="18" height="10" viewBox="0 0 18 10" fill="none">
                 <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />
               </svg>
-              <span className="pipe-node danger">N5 // MIRROR AUDIT</span>
+              <span className="pipe-node danger">
+                {tl({ zh: "N5 // 镜像终局审计", en: "N5 // MIRROR AUDIT", ja: "N5 // 鏡像自己監査" }, lang)}
+              </span>
             </div>
             <Button
               id="btn-start-shift"

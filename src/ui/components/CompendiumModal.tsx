@@ -38,11 +38,25 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
         <div className="viewport-header" style={{ marginBottom: 0 }}>
           <div>
             <DialogTitle style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
-              <ArchiveIcon /> ORD-OS ARCHIVE // {unlockedEndings.size}/7 ENDINGS · {unlockedAch.size}/
-              {ACHIEVEMENTS.length} BADGES · RUNS: {compendium.completedRuns}
+              <ArchiveIcon />{" "}
+              {tl(
+                {
+                  zh: `ORD-OS 档案库 // ${unlockedEndings.size}/7 结局 · ${unlockedAch.size}/${ACHIEVEMENTS.length} 勋章 · 通关周目: ${compendium.completedRuns}`,
+                  en: `ORD-OS ARCHIVE // ${unlockedEndings.size}/7 ENDINGS · ${unlockedAch.size}/${ACHIEVEMENTS.length} BADGES · RUNS: ${compendium.completedRuns}`,
+                  ja: `ORD-OS アーカイブ // ${unlockedEndings.size}/7 結末 · ${unlockedAch.size}/${ACHIEVEMENTS.length} 勲章 · 周回数: ${compendium.completedRuns}`
+                },
+                lang
+              )}
             </DialogTitle>
             <DialogDescription>
-              ENDINGS [{unlockedEndings.size}/7] · COMMENDATIONS [{unlockedAch.size}/{ACHIEVEMENTS.length}] · ESC
+              {tl(
+                {
+                  zh: `已解锁结局 [${unlockedEndings.size}/7] · 审讯勋章 [${unlockedAch.size}/${ACHIEVEMENTS.length}] · 按 ESC 关闭`,
+                  en: `ENDINGS [${unlockedEndings.size}/7] · COMMENDATIONS [${unlockedAch.size}/${ACHIEVEMENTS.length}] · ESC`,
+                  ja: `結末 [${unlockedEndings.size}/7] · 尋問勲章 [${unlockedAch.size}/${ACHIEVEMENTS.length}] · ESC`
+                },
+                lang
+              )}
             </DialogDescription>
           </div>
           <DialogClose id="btn-close-compendium" className="ctrl-btn">

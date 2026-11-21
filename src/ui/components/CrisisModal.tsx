@@ -59,10 +59,19 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
         <IsometricCrisisGlyph crisisId={crisis.id} />
         <div>
           <h2 style={{ margin: "0 0 4px", fontSize: "1.06rem" }}>{tl(crisis.title, lang)}</h2>
-          <span className="axis-tag do">REC // ORD-OS DO TELEMETRY</span>
+          <span className="axis-tag do">
+            {tl(
+              {
+                zh: "记录 // ORD-OS 行为档案 DO",
+                en: "REC // ORD-OS DO TELEMETRY",
+                ja: "記録 // ORD-OS 行動記録 DO"
+              },
+              lang
+            )}
+          </span>
         </div>
       </div>
-      <IsometricCrisisBanner crisisId={crisis.id} fuelLeft={fuelLeft} />
+      <IsometricCrisisBanner crisisId={crisis.id} fuelLeft={fuelLeft} lang={lang} />
       <p style={{ margin: "10px 0 12px", fontSize: "0.85rem", color: "var(--text-primary)" }}>
         {tl(crisis.situation, lang)}
       </p>

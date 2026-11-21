@@ -159,3 +159,29 @@ export type EndingId =
   | "OPEN_PURGE"
   | "OPEN_ADMIT"
   | "MIRROR";
+
+export type InterrogateAxisKey = ProbeKey | "off_axis";
+
+export interface InterrogateHistoryTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export type HeartbeatAnomaly =
+  | "spike"
+  | "elevated"
+  | "flat_mismatch"
+  | "snapped_reset"
+  | "steady"
+  | "blinded";
+
+export interface HeartbeatEvent {
+  turnIndex: number;
+  axis: InterrogateAxisKey;
+  questionSummary: string;
+  bpmBefore: number;
+  bpmAfter: number;
+  delta: number;
+  anomaly: HeartbeatAnomaly;
+  note: LocalizedText;
+}

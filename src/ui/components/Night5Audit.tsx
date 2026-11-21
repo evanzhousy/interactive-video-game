@@ -15,6 +15,7 @@ import { useEffect, useRef, useState } from "react";
 import { playBoothSfx, speakIntercomLine, stopIntercomVoice } from "../../game/audio.js";
 import type { CrisisHistoryEntry } from "../../game/crises.js";
 import { tl } from "../../game/i18n.js";
+import { streamInterrogateTurn } from "../../game/interrogate-client.js";
 import {
   getNight5FrameSrc,
   getNight5VideoCandidates,
@@ -36,7 +37,13 @@ import {
   type PlayerCompactProfile
 } from "../../game/night5.js";
 import { ACHIEVEMENTS, type AchievementId } from "../../game/storage.js";
-import type { EndingId, Locale, LocalizedText, ShiftHistoryEntry } from "../../game/types.js";
+import type {
+  EndingId,
+  InterrogateHistoryTurn,
+  Locale,
+  LocalizedText,
+  ShiftHistoryEntry
+} from "../../game/types.js";
 import type { CampaignMode } from "../../game/visitors/index.js";
 import {
   BoltPowerIcon,
@@ -71,6 +78,8 @@ interface Props {
   fuelLeft?: number;
   campaignMode?: CampaignMode;
   dailySeed?: string;
+  aiEnabled?: boolean;
+  aiFreeTextOnly?: boolean;
   motionPaused?: boolean;
   onResolveEnding: (ending: EndingId) => AchievementId[];
   onStartNewRun: () => void;
@@ -88,6 +97,8 @@ export function Night5Audit({
   fuelLeft = 2,
   campaignMode = "full",
   dailySeed,
+  aiEnabled = false,
+  aiFreeTextOnly = false,
   motionPaused = false,
   onResolveEnding,
   onStartNewRun,
@@ -104,6 +115,8 @@ export function Night5Audit({
   const [usedProbes, setUsedProbes] = useState<Night5ProbeId[]>([]);
   const [rebuttedCount, setRebuttedCount] = useState(0);
   const [flinchActive, setFlinchActive] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingText, setStreamingText] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [copiedReport, setCopiedReport] = useState(false);
   const [scrollController] = useState(() => createScrollAreaController());
@@ -153,7 +166,7 @@ export function Night5Audit({
 
   useEffect(() => {
     scrollController.scrollToEnd({ behavior: "instant" });
-  }, [scrollController, chatItems.length]);
+  }, [scrollController, chatItems.length, streamingText]);
 
   useEffect(() => {
     const videos = [idleVideoRef.current, verdictVideoRef.current];
@@ -171,8 +184,8 @@ export function Night5Audit({
     }
   }, [motionPaused, idleVideoReady, verdictVideoReady, finalAction]);
 
-  const handleFireProbe = (probeId: Night5ProbeId, customQuestion?: string) => {
-    if (n5TurnsLeft <= 0 || endingKey !== null) return;
+  const handleFireProbe = async (probeId: Night5ProbeId, customQuestion?: string) => {
+    if (n5TurnsLeft <= 0 || endingKey !== null || isStreaming) return;
     const isOffAxis = probeId === "n5_off_axis";
     const spec = isOffAxis
       ? getNight5OffAxisProbe()
@@ -198,29 +211,102 @@ export function Night5Audit({
       ? { zh: customQuestion, en: customQuestion, ja: customQuestion }
       : spec.label;
 
+    const shouldStreamAi = aiEnabled && (Boolean(customQuestion) || !aiFreeTextOnly);
+
     setN5TurnsLeft((t) => t - 1);
     if (!isOffAxis) {
       setUsedProbes((prev) => [...prev, spec.id]);
     }
 
-    if (spec.exposedContradiction) {
+    if (!shouldStreamAi) {
+      if (spec.exposedContradiction) {
+        playBoothSfx("heartbeat", sfx);
+        setRebuttedCount((c) => Math.min(3, c + 1));
+        setFlinchActive(true);
+        setTimeout(() => setFlinchActive(false), 520);
+      }
+
+      setChatItems((prev) => [
+        ...prev,
+        { speaker: "player", text: playerLine },
+        { speaker: "doppelganger", text: spec.doppelgangerReply },
+        { speaker: "ordos", text: spec.ordOsNote, exposed: spec.exposedContradiction }
+      ]);
+
+      speakIntercomLine({
+        visitorId: "OP-09",
+        locale: lang,
+        text: tl(spec.doppelgangerReply, lang),
+        lineId: voiceLineId,
+        isDynamicFlash: true,
+        enabled: voice
+      });
+      return;
+    }
+
+    const convoHistory: InterrogateHistoryTurn[] = chatItems
+      .filter((item) => item.speaker === "player" || item.speaker === "doppelganger")
+      .map((item) => ({
+        role: item.speaker === "player" ? "user" : "assistant",
+        content: tl(item.text, lang)
+      }));
+
+    setIsStreaming(true);
+    setStreamingText("");
+    setChatItems((prev) => [...prev, { speaker: "player", text: playerLine }]);
+
+    const outcome = await streamInterrogateTurn<Night5ProbeId>(
+      {
+        stage: "night5",
+        locale: lang,
+        question: tl(playerLine, lang),
+        hintAxis: spec.id,
+        history: convoHistory,
+        baseline,
+        intakeAnswers,
+        shiftHistory: history,
+        crisisHistory,
+        fallbackLine: tl(spec.doppelgangerReply, lang)
+      },
+      {
+        onDelta: (_piece, acc) => setStreamingText(acc)
+      }
+    );
+
+    setIsStreaming(false);
+    setStreamingText(null);
+
+    const resolvedSpec =
+      outcome.axis === "n5_off_axis"
+        ? getNight5OffAxisProbe()
+        : (probes.find((p) => p.id === outcome.axis) ?? spec);
+    const alreadyCounted = usedProbes.includes(resolvedSpec.id);
+    if (resolvedSpec.id !== spec.id && resolvedSpec.id !== "n5_off_axis" && !alreadyCounted) {
+      setUsedProbes((prev) => (prev.includes(resolvedSpec.id) ? prev : [...prev, resolvedSpec.id]));
+    }
+    const newlyExposed = resolvedSpec.exposedContradiction && !alreadyCounted;
+    if (newlyExposed) {
       playBoothSfx("heartbeat", sfx);
       setRebuttedCount((c) => Math.min(3, c + 1));
       setFlinchActive(true);
       setTimeout(() => setFlinchActive(false), 520);
     }
 
+    const finalReply: LocalizedText =
+      outcome.source === "llm"
+        ? { ...resolvedSpec.doppelgangerReply, [lang]: outcome.text }
+        : resolvedSpec.doppelgangerReply;
+
     setChatItems((prev) => [
       ...prev,
-      { speaker: "player", text: playerLine },
-      { speaker: "doppelganger", text: spec.doppelgangerReply },
-      { speaker: "ordos", text: spec.ordOsNote, exposed: spec.exposedContradiction }
+      { speaker: "doppelganger", text: finalReply },
+      { speaker: "ordos", text: resolvedSpec.ordOsNote, exposed: resolvedSpec.exposedContradiction }
     ]);
 
     speakIntercomLine({
       visitorId: "OP-09",
       locale: lang,
-      text: tl(spec.doppelgangerReply, lang),
+      text: tl(finalReply, lang),
       lineId: voiceLineId,
       isDynamicFlash: true,
       enabled: voice
@@ -230,9 +316,9 @@ export function Night5Audit({
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const val = draft.trim();
-    if (!val || n5TurnsLeft <= 0 || endingKey !== null) return;
+    if (!val || n5TurnsLeft <= 0 || endingKey !== null || isStreaming) return;
     const detected = classifyNight5Question(val);
-    handleFireProbe(detected, val);
+    void handleFireProbe(detected, val);
     setDraft("");
   };
 
@@ -311,7 +397,14 @@ export function Night5Audit({
     <section className="panel" id="night5-panel">
       <div className="viewport-header">
         <span style={{ color: "var(--amber-crt)", fontWeight: 700 }}>
-          NIGHT 5 // SELF-AUDIT · OPERATOR #09 DOPPELGÄNGER AT GATE 0
+          {tl(
+            {
+              zh: "第 5 夜 // 终局自审 · 门外站着 #09 号值班员替身",
+              en: "NIGHT 5 // SELF-AUDIT · OPERATOR #09 DOPPELGÄNGER AT GATE 0",
+              ja: "第5夜 // 自己監査 · 第0ゲート外の #09 ドッペルゲンガー"
+            },
+            lang
+          )}
         </span>
         <Button className="ctrl-btn" onClick={onClose}>
           {tl({ zh: "返回岗亭", en: "Back to Booth", ja: "ブースへ戻る" }, lang)}
@@ -322,7 +415,14 @@ export function Night5Audit({
         <div className="left-stack">
           <div className="dossier-section" style={{ marginBottom: 0 }}>
             <div className="section-kicker">
-              GATE CAM 01 // SUBJECT: OPERATOR #09 [FACIAL MATCH 99.98%] ·{" "}
+              {tl(
+                {
+                  zh: "01 号闸机监控 // 目标：#09 值班员 [面部重合度 99.98%] · ",
+                  en: "GATE CAM 01 // SUBJECT: OPERATOR #09 [FACIAL MATCH 99.98%] · ",
+                  ja: "ゲートカメラ 01 // 対象：#09 検疫官 [顔一致率 99.98%] · "
+                },
+                lang
+              )}
               {idleVideoReady || verdictVideoReady ? "LIVE I2V STREAM" : "35MM AI LIVE"}
             </div>
             <div className="viewport-frame n5-doppelganger-frame" id="night5-viewport">
@@ -393,6 +493,7 @@ export function Night5Audit({
                 flinchActive={flinchActive}
                 finalAction={finalAction}
                 rebuttedCount={rebuttedCount}
+                lang={lang}
               />
               {finalAction === "PURGE" ? (
                 <div className="n5-verdict-overlay purge">
@@ -414,7 +515,14 @@ export function Night5Audit({
 
           <div className="dossier-section" style={{ marginBottom: 0 }}>
             <div className="section-kicker">
-              OPERATOR #09: NIGHT 0 SAY (AMBER) vs SHIFT + CRISIS DO (DASHED)
+              {tl(
+                {
+                  zh: "#09 值班员：第 0 夜口述 (琥珀) vs 班次+危机实做 (虚线)",
+                  en: "OPERATOR #09: NIGHT 0 SAY (AMBER) vs SHIFT + CRISIS DO (DASHED)",
+                  ja: "#09 検疫官：第0夜建前 (琥珀) vs 実行動 (破線)"
+                },
+                lang
+              )}
             </div>
             <MindCrystalCanvas
               id="player-audit-canvas"
@@ -436,15 +544,35 @@ export function Night5Audit({
 
         <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
           <div className="dossier-section" style={{ marginBottom: 0 }}>
-            <div className="section-kicker">SAY vs DO GAP // NAUTILUS-0 MANIFEST</div>
+            <div className="section-kicker">
+              {tl(
+                {
+                  zh: "言行差 (SAY vs DO) // 鹦鹉螺-0 潜艇舱单",
+                  en: "SAY vs DO GAP // NAUTILUS-0 MANIFEST",
+                  ja: "言行不一致 (SAY vs DO) // ノーチラス-0 乗員表"
+                },
+                lang
+              )}
+            </div>
             <div className="n5-gap-meter">
               <div className="n5-gap-header">
                 <span>
-                  SAY: <strong style={{ color: "var(--amber-crt)" }}>{tl(SIG_LABELS[audit.baseline.sig], lang)}</strong>
+                  {tl({ zh: "口述 SAY:", en: "SAY:", ja: "建前 SAY:" }, lang)}{" "}
+                  <strong style={{ color: "var(--amber-crt)" }}>{tl(SIG_LABELS[audit.baseline.sig], lang)}</strong>
                   {" · "}
-                  DO: <strong style={{ color: "var(--frost-cyan)" }}>{tl(SIG_LABELS[audit.live.sig], lang)}</strong>
+                  {tl({ zh: "实做 DO:", en: "DO:", ja: "実行動 DO:" }, lang)}{" "}
+                  <strong style={{ color: "var(--frost-cyan)" }}>{tl(SIG_LABELS[audit.live.sig], lang)}</strong>
                 </span>
-                <span className="n5-gap-pct">GAP {Math.round(audit.gap * 100)}%</span>
+                <span className="n5-gap-pct">
+                  {tl(
+                    {
+                      zh: `言行差 ${Math.round(audit.gap * 100)}%`,
+                      en: `GAP ${Math.round(audit.gap * 100)}%`,
+                      ja: `乖離 ${Math.round(audit.gap * 100)}%`
+                    },
+                    lang
+                  )}
+                </span>
               </div>
               <div className="n5-gap-track" aria-hidden="true">
                 <div
@@ -454,9 +582,25 @@ export function Night5Audit({
               </div>
               <div className="n5-stat-row">
                 <span className="metric-chip">
-                  VERDICTS {audit.correctVerdicts}/{audit.totalVisitors}
+                  {tl(
+                    {
+                      zh: `准确裁决 ${audit.correctVerdicts}/${audit.totalVisitors}`,
+                      en: `VERDICTS ${audit.correctVerdicts}/${audit.totalVisitors}`,
+                      ja: `正答判定 ${audit.correctVerdicts}/${audit.totalVisitors}`
+                    },
+                    lang
+                  )}
                 </span>
-                <span className="metric-chip">PURGED {audit.wrongPurges}</span>
+                <span className="metric-chip">
+                  {tl(
+                    {
+                      zh: `误杀 ${audit.wrongPurges}`,
+                      en: `PURGED ${audit.wrongPurges}`,
+                      ja: `誤焼却 ${audit.wrongPurges}`
+                    },
+                    lang
+                  )}
+                </span>
                 <span className="metric-chip amber">
                   <FlameFuelIcon /> FUEL {fuelLeft}
                 </span>
@@ -492,7 +636,14 @@ export function Night5Audit({
           <div className="dossier-section" id="n5-interrogation-box" style={{ marginBottom: 0 }}>
             <div className="viewport-header" style={{ marginBottom: "6px" }}>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
-                INTERCOM CH-01 // DOUBLE AUDIT ({n5TurnsLeft}/4)
+                {tl(
+                  {
+                    zh: `对讲 CH-01 // 替身质证 (${n5TurnsLeft}/4)`,
+                    en: `INTERCOM CH-01 // DOUBLE AUDIT (${n5TurnsLeft}/4)`,
+                    ja: `通話 CH-01 // 鏡像尋問 (${n5TurnsLeft}/4)`
+                  },
+                  lang
+                )}
                 <CommsWaveformSvg active={flinchActive} />
               </span>
               <span style={{ display: "inline-flex", alignItems: "center", gap: "8px" }}>
@@ -561,6 +712,18 @@ export function Night5Audit({
                       </div>
                     );
                   })}
+                  {isStreaming && streamingText ? (
+                    <div className="msg-npc streaming" id="n5-streaming-bubble">
+                      <div className="msg-meta">
+                        <span>[OUTSIDE GLASS · #09 DOUBLE]</span>
+                        <span>STREAMING // CH-01</span>
+                      </div>
+                      <div>
+                        {streamingText}
+                        <span className="stream-caret" aria-hidden="true">▌</span>
+                      </div>
+                    </div>
+                  ) : null}
                 </ScrollAreaContent>
               </ScrollAreaViewport>
               <ScrollAreaScrollbar orientation="vertical">
@@ -576,9 +739,9 @@ export function Night5Audit({
                   <Button
                     key={p.id}
                     data-n5-probe={p.id}
-                    disabled={n5TurnsLeft <= 0 || endingKey !== null || alreadyUsed}
+                    disabled={n5TurnsLeft <= 0 || endingKey !== null || alreadyUsed || isStreaming}
                     className="probe-chip"
-                    onClick={() => handleFireProbe(p.id)}
+                    onClick={() => void handleFireProbe(p.id)}
                   >
                     <span className="opt-index">0{idx + 1}</span>
                     <span>{cleanLabel}</span>
@@ -664,7 +827,9 @@ export function Night5Audit({
               >
                 <IsometricLeverGlyph kind="purge" />
                 <div className="lever-copy">
-                  <span className="lever-tag">[SW-02 // PURGE]</span>
+                  <span className="lever-tag">
+                    {tl({ zh: "[SW-02 // 净化]", en: "[SW-02 // PURGE]", ja: "[SW-02 // 焼却]" }, lang)}
+                  </span>
                   <span>{tl({ zh: "净化替身", en: "Purge Double", ja: "影を焼却" }, lang)}</span>
                 </div>
               </Button>
@@ -678,7 +843,9 @@ export function Night5Audit({
               >
                 <IsometricLeverGlyph kind="admit" />
                 <div className="lever-copy">
-                  <span className="lever-tag">[SW-01 // ADMIT]</span>
+                  <span className="lever-tag">
+                    {tl({ zh: "[SW-01 // 放行]", en: "[SW-01 // ADMIT]", ja: "[SW-01 // 通過]" }, lang)}
+                  </span>
                   <span>{tl({ zh: "放进岗亭", en: "Admit Double", ja: "中へ入れる" }, lang)}</span>
                 </div>
               </Button>
@@ -693,7 +860,9 @@ export function Night5Audit({
               >
                 <IsometricLeverGlyph kind="step_out" />
                 <div className="lever-copy">
-                  <span className="lever-tag">[SW-03 // EXIT]</span>
+                  <span className="lever-tag">
+                    {tl({ zh: "[SW-03 // 走出]", en: "[SW-03 // EXIT]", ja: "[SW-03 // 脱出]" }, lang)}
+                  </span>
                   <span>{tl({ zh: "走出气闸", en: "Step Out", ja: "外へ出る" }, lang)}</span>
                 </div>
               </Button>

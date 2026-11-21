@@ -355,6 +355,60 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       (document.getElementById("btn-crisis-continue") as HTMLButtonElement).click();
     });
     expect(document.getElementById("main-booth")?.textContent).toContain("V-05");
+    // Night 3 geomagnetic storm blinds ECG as well as strobe/thermal/stress-replay
+    expect(document.querySelector("#quarantine-viewport")?.textContent).toContain("--- BPM");
+    expect(document.querySelector("#quarantine-viewport")?.textContent).toContain("SIGNAL LOST");
+    expect(document.getElementById("btn-stress-replay")?.getAttribute("aria-disabled")).toBe("true");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("tracks chatter budget separately from core turns and unlocks 1 PWR ECG Stress Replay", async () => {
+    const container = document.getElementById("root")!;
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    for (let i = 0; i < 3; i++) {
+      await act(async () => {
+        (document.querySelector(".option-card") as HTMLButtonElement).click();
+      });
+    }
+    await act(async () => {
+      (document.getElementById("btn-start-shift") as HTMLButtonElement).click();
+    });
+
+    // Before asking any question, Stress Replay is disabled
+    expect(document.getElementById("btn-stress-replay")?.getAttribute("aria-disabled")).toBe("true");
+    expect(document.getElementById("chatter-budget-pill")?.textContent).toContain("3/3");
+
+    // Firing trivia (off-axis) consumes chatter budget (2/3) WITHOUT reducing core turns (still 4/4)
+    await act(async () => {
+      (document.querySelector('[data-probe="trivia"]') as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("chatter-budget-pill")?.textContent).toContain("2/3");
+    expect(document.getElementById("intercom-panel")?.textContent).toContain("4/4");
+
+    // Firing core conflict probe (dilemma) consumes 1 core turn (3/4) and records cardiac trace
+    await act(async () => {
+      (document.querySelector('[data-probe="dilemma"]') as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("intercom-panel")?.textContent).toContain("3/4");
+
+    // Unlock ECG Stress Replay (1 PWR) -> renders per-turn trace with T1 and T2
+    expect(document.getElementById("btn-stress-replay")?.getAttribute("aria-disabled")).toBeNull();
+    await act(async () => {
+      (document.getElementById("btn-stress-replay") as HTMLButtonElement).click();
+    });
+    const replayPanel = document.getElementById("stress-replay-panel");
+    expect(replayPanel).not.toBeNull();
+    expect(replayPanel?.textContent).toContain("T1");
+    expect(replayPanel?.textContent).toContain("T2");
+    expect(document.getElementById("main-booth")?.textContent).toContain("1/2 PWR");
 
     await act(async () => {
       root.unmount();

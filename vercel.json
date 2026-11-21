@@ -4,6 +4,12 @@
   "buildCommand": "pnpm build",
   "outputDirectory": "dist",
   "functions": {
+    "api/interrogate.ts": {
+      "maxDuration": 30
+    },
+    "api/generate-visitors.ts": {
+      "maxDuration": 45
+    },
     "api/rephrase.ts": {
       "maxDuration": 15
     }

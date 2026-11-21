@@ -52,7 +52,9 @@ export function OnboardingGuide({
         >
           <SubHullIcon />
           <div>
-            <div className="node-code">01 // SAY ≠ DO</div>
+            <div className="node-code">
+              {tl({ zh: "01 // 言行比对 (SAY ≠ DO)", en: "01 // SAY ≠ DO", ja: "01 // 言行比較 (SAY ≠ DO)" }, lang)}
+            </div>
             <div className="node-sub">
               {tl({ zh: "比对 [neverWon] 与 [o-01]", en: "Contrast SAY vs [o-01]", ja: "建前と [o-01] を比較" }, lang)}
             </div>
@@ -69,7 +71,9 @@ export function OnboardingGuide({
         >
           <StrobeTargetIcon />
           <div>
-            <div className="node-code">02 // PTT [1-3] · [S/T]</div>
+            <div className="node-code">
+              {tl({ zh: "02 // 对讲 [1-3] · 扫描 [S/T]", en: "02 // PTT [1-3] · [S/T]", ja: "02 // 尋問 [1-3] · 計測 [S/T]" }, lang)}
+            </div>
             <div className="node-sub">
               {tl({ zh: "追问冲突轴 · 扫描体征", en: "Probe axis · Scan", ja: "対立軸尋問・計測" }, lang)}
             </div>
@@ -86,7 +90,9 @@ export function OnboardingGuide({
         >
           <ClipboardDataIcon />
           <div>
-            <div className="node-code">03 // VERDICT + LOG</div>
+            <div className="node-code">
+              {tl({ zh: "03 // 拉闸裁决 + 签字", en: "03 // VERDICT + LOG", ja: "03 // 判定・署名" }, lang)}
+            </div>
             <div className="node-sub">
               {step === 3 && logSigned
                 ? tl({ zh: "已签 · 呼叫下位 →", en: "Signed · Next →", ja: "署名済 · 次へ →" }, lang)

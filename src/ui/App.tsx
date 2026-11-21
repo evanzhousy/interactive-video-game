@@ -1,6 +1,7 @@
 import "./agent-bridge.js";
 import { Button } from "@ui-sdk/react/button";
 import { Collapsible, CollapsiblePanel } from "@ui-sdk/react/collapsible";
+import { Input, InputGroup } from "@ui-sdk/react/input";
 import { Meter, MeterIndicator, MeterTrack } from "@ui-sdk/react/meter";
 import { OverlayHost } from "@ui-sdk/react/overlays";
 import {
@@ -30,7 +31,10 @@ import {
   type InterNightCrisis
 } from "../game/crises.js";
 import { getInitialFuel, getSensorPowerBudget } from "../game/economy.js";
+import { deriveHeartbeatProfile, stepHeartbeat } from "../game/heartbeat.js";
 import { UI_STRINGS, tl } from "../game/i18n.js";
+import { streamInterrogateTurn } from "../game/interrogate-client.js";
+import { DEFAULT_INTERROGATE_MODEL } from "../game/interrogate-prompt.js";
 import type { ClipState, VoiceLineVariant } from "../game/media.js";
 import {
   SHIFT_EXCUSES,
@@ -38,12 +42,15 @@ import {
   type PlayerCompactProfile
 } from "../game/night5.js";
 import {
-  requestFlashRephrase,
-  resolveInitialFlashConfig
+  DEFAULT_FLASH_CONFIG,
+  requestFlashRephrase
 } from "../game/rephrase.js";
+import { loadOrGenerateSeededVisitors } from "../game/seeded-client.js";
 import { buildRephraseInput, decideStance } from "../game/stance.js";
 import {
   clearSavedShift,
+  hydrateCompendium,
+  hydrateSavedShift,
   loadCompendium,
   loadOnboardingDismissed,
   loadSavedShift,
@@ -56,6 +63,9 @@ import {
 import type {
   EndingId,
   FlashRephraseConfig,
+  HeartbeatEvent,
+  InterrogateAxisKey,
+  InterrogateHistoryTurn,
   Locale,
   ProbeKey,
   ShiftHistoryEntry,
@@ -64,9 +74,9 @@ import type {
 } from "../game/types.js";
 import {
   ALL_VISITORS,
+  generateRunSeed,
   getDailyShiftSeed,
   getVisitorsForMode,
-  rollShift,
   rollShiftForMode,
   type CampaignMode
 } from "../game/visitors/index.js";
@@ -98,12 +108,43 @@ import { ViewportCanvas } from "./components/ViewportCanvas.js";
 
 type Stage = "intake" | "booth" | "crisis" | "demo_end" | "night5";
 
+const CORE_TURNS_MAX = 4;
+const CHATTER_BUDGET_MAX = 3;
+
+function resolveInitialInterrogateConfig(): FlashRephraseConfig {
+  const host = typeof window !== "undefined" ? (window.location?.hostname ?? "") : "";
+  if (host.endsWith(".vercel.app")) {
+    return {
+      ...DEFAULT_FLASH_CONFIG,
+      enabled: true,
+      mode: "server_proxy",
+      proxyPath: "/api/interrogate",
+      model: DEFAULT_INTERROGATE_MODEL,
+      freeTextOnly: false
+    };
+  }
+  return {
+    ...DEFAULT_FLASH_CONFIG,
+    enabled: false,
+    mode: "server_proxy",
+    proxyPath: "/api/interrogate",
+    model: DEFAULT_INTERROGATE_MODEL,
+    freeTextOnly: true
+  };
+}
+
 export function App() {
   const initialSave = useRef(loadSavedShift()).current;
   const initialMode: CampaignMode = initialSave?.campaignMode ?? "full";
   const initialDailySeed = initialSave?.dailySeed ?? getDailyShiftSeed();
+  const initialRunSeed =
+    initialSave?.runSeed ??
+    (initialMode === "daily" ? initialDailySeed : generateRunSeed(initialMode));
   const initialFuel = initialSave?.fuelLeft ?? getInitialFuel(initialMode);
-  const initialRoster = getVisitorsForMode(initialMode, initialDailySeed);
+  const initialRoster = getVisitorsForMode(
+    initialMode,
+    initialMode === "seeded" ? initialRunSeed : initialDailySeed
+  );
   const initialHistory = initialSave?.history ?? [];
   const initialCrises = initialSave?.crisisHistory ?? [];
 
@@ -117,12 +158,13 @@ export function App() {
   let resolvedInitialCurrentOverdraft = initialSave?.currentVisitorOverdraft ?? false;
   let resolvedInitialPendingOverdraft = initialSave?.emergencyOverdraftUsed ?? false;
 
-  if (
-    resolvedInitialStage === "booth" &&
-    initialHistory.some((h) => h.visitorId === initialRoster[resolvedInitialIdx]?.id)
-  ) {
-    const scheduled =
-      initialRoster.length >= 8 && (initialMode === "full" || initialMode === "daily")
+    if (
+      resolvedInitialStage === "booth" &&
+      initialHistory.some((h) => h.visitorId === initialRoster[resolvedInitialIdx]?.id)
+    ) {
+      const scheduled =
+        initialRoster.length >= 8 &&
+        (initialMode === "full" || initialMode === "daily" || initialMode === "seeded")
         ? resolvedInitialIdx === 3
           ? INTER_NIGHT_CRISES[0]
           : resolvedInitialIdx === 5
@@ -156,8 +198,18 @@ export function App() {
   const [stage, setStage] = useState<Stage>(resolvedInitialStage);
   const [campaignMode, setCampaignMode] = useState<CampaignMode>(initialMode);
   const [dailySeed, setDailySeed] = useState<string>(initialDailySeed);
+  const [runSeed, setRunSeed] = useState<string>(initialRunSeed);
+  const [seedDraft, setSeedDraft] = useState<string>(initialRunSeed);
+  const [seededRoster, setSeededRoster] = useState<VisitorSpec[] | null>(null);
+  const [seededSource, setSeededSource] = useState<
+    "idb_cache" | "llm" | "procedural_fallback" | null
+  >(null);
+  const [isGeneratingSeed, setIsGeneratingSeed] = useState(false);
 
-  const activeVisitors = getVisitorsForMode(campaignMode, dailySeed);
+  const activeVisitors =
+    campaignMode === "seeded"
+      ? (seededRoster ?? getVisitorsForMode("seeded", runSeed))
+      : getVisitorsForMode(campaignMode, dailySeed);
 
   const [baseline, setBaseline] = useState<PlayerCompactProfile>(
     initialSave?.baseline ?? {
@@ -171,7 +223,7 @@ export function App() {
   );
 
   const [rolls, setRolls] = useState<VisitorRoll[]>(
-    () => initialSave?.rolls ?? rollShiftForMode(campaignMode, activeVisitors, dailySeed)
+    () => initialSave?.rolls ?? rollShiftForMode(campaignMode, activeVisitors, initialRunSeed)
   );
   const [visitorIdx, setVisitorIdx] = useState(resolvedInitialIdx);
   const [history, setHistory] = useState<ShiftHistoryEntry[]>(initialHistory);
@@ -201,7 +253,7 @@ export function App() {
   };
 
   const [flashConfig, setFlashConfig] = useState<FlashRephraseConfig>(() =>
-    resolveInitialFlashConfig()
+    resolveInitialInterrogateConfig()
   );
   const [sysDrawerOpen, setSysDrawerOpen] = useState(false);
   const [motionPaused, setMotionPaused] = useState(false);
@@ -214,33 +266,106 @@ export function App() {
   }, [motionPaused]);
   const [flashDrawerOpen, setFlashDrawerOpen] = useState(false);
   const [isRephrasing, setIsRephrasing] = useState(false);
+  const [streamingReply, setStreamingReply] = useState<string | null>(null);
+  const [signalGlitch, setSignalGlitch] = useState(false);
   const shiftEpochRef = useRef(0);
   const mainRef = useRef<HTMLElement | null>(null);
 
+  const savedSessionMatch =
+    initialSave?.activeSession && initialSave.activeSession.visitorId === visitor.id
+      ? initialSave.activeSession
+      : null;
+
   const initialPwrBudget = getSensorPowerBudget(initialFuel, resolvedInitialCurrentOverdraft);
-  const [turnsLeft, setTurnsLeft] = useState(4);
-  const [powerLeft, setPowerLeft] = useState(initialPwrBudget);
-  const [maxPower, setMaxPower] = useState(initialPwrBudget);
-  const [bpm, setBpm] = useState(visitor.baseBpm);
+  const [turnsLeft, setTurnsLeft] = useState(savedSessionMatch?.turnsLeft ?? CORE_TURNS_MAX);
+  const [chatterLeft, setChatterLeft] = useState(
+    savedSessionMatch?.chatterLeft ?? CHATTER_BUDGET_MAX
+  );
+  const [powerLeft, setPowerLeft] = useState(savedSessionMatch?.powerLeft ?? initialPwrBudget);
+  const [maxPower, setMaxPower] = useState(savedSessionMatch?.maxPower ?? initialPwrBudget);
+  const [bpm, setBpm] = useState(
+    () => savedSessionMatch?.bpm ?? deriveHeartbeatProfile(visitor, initialRunSeed).baseBpm
+  );
+  const [lastBpmDelta, setLastBpmDelta] = useState<number | null>(null);
+  const [heartbeatEvents, setHeartbeatEvents] = useState<HeartbeatEvent[]>(
+    savedSessionMatch?.heartbeatEvents ?? []
+  );
+  const [stressReplayUnlocked, setStressReplayUnlocked] = useState<boolean>(
+    savedSessionMatch?.stressReplayUnlocked ?? false
+  );
   const [clipState, setClipState] = useState<ClipState>("idle");
   const [reaction, setReaction] = useState("IDLE: COLD_BREATH");
   const [strobeTrigger, setStrobeTrigger] = useState(0);
   const [thermalTrigger, setThermalTrigger] = useState(0);
   const [sensorToast, setSensorToast] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<TranscriptLine[]>([
-    { speaker: "npc", text: visitor.openingLine, meta: `N${visitor.night} · INTERCOM CH-01` }
-  ]);
-  const [offAxisCount, setOffAxisCount] = useState(0);
+  const [transcript, setTranscript] = useState<TranscriptLine[]>(
+    savedSessionMatch?.transcript ?? [
+      { speaker: "npc", text: visitor.openingLine, meta: `N${visitor.night} · INTERCOM CH-01` }
+    ]
+  );
+  const [offAxisCount, setOffAxisCount] = useState(savedSessionMatch?.offAxisCount ?? 0);
   const [verdictState, setVerdictState] = useState<"NONE" | "ADMIT" | "PURGE">("NONE");
   const [logSigned, setLogSigned] = useState(false);
   const [activeTab, setActiveTab] = useState<DossierTab>("baseline");
   const [spoilerOpen, setSpoilerOpen] = useState(false);
   const [lastPipelinePayload, setLastPipelinePayload] = useState<Record<string, unknown>>({
     status: "AWAITING_INTERROGATION",
-    turns_remaining: 4
+    turns_remaining: CORE_TURNS_MAX,
+    chatter_remaining: CHATTER_BUDGET_MAX
   });
 
-  // Autosave mid-shift progress whenever stage / visitorIdx / history / crisis / fuel updates
+  // Hydrate client IndexedDB records on mount when IndexedDB holds newer data than localStorage
+  useEffect(() => {
+    let cancelled = false;
+    void hydrateCompendium().then((dbComp) => {
+      if (cancelled) return;
+      setCompendium((prev) => (dbComp.completedRuns > prev.completedRuns ? dbComp : prev));
+    });
+    if (!initialSave) {
+      void hydrateSavedShift().then((dbShift) => {
+        if (cancelled || !dbShift || stage !== "intake") return;
+        const dbRoster = getVisitorsForMode(dbShift.campaignMode, dbShift.dailySeed ?? getDailyShiftSeed());
+        const dbIdx = Math.min(dbShift.visitorIdx, dbRoster.length - 1);
+        const dbVisitor = dbRoster[dbIdx]!;
+        const dbSeed =
+          dbShift.runSeed ??
+          (dbShift.campaignMode === "daily"
+            ? (dbShift.dailySeed ?? getDailyShiftSeed())
+            : generateRunSeed(dbShift.campaignMode));
+        setLang(dbShift.lang);
+        setCampaignMode(dbShift.campaignMode);
+        if (dbShift.dailySeed) setDailySeed(dbShift.dailySeed);
+        setRunSeed(dbSeed);
+        setBaseline(dbShift.baseline);
+        setIntakeAnswers(dbShift.intakeAnswers);
+        setRolls(dbShift.rolls);
+        setVisitorIdx(dbIdx);
+        setHistory(dbShift.history);
+        setCrisisHistory(dbShift.crisisHistory ?? []);
+        if (typeof dbShift.fuelLeft === "number") setFuelLeft(dbShift.fuelLeft);
+        setBoggartUsedIds(dbShift.boggartUsedIds);
+        if (dbShift.activeSession && dbShift.activeSession.visitorId === dbVisitor.id) {
+          setTurnsLeft(dbShift.activeSession.turnsLeft);
+          setChatterLeft(dbShift.activeSession.chatterLeft);
+          setBpm(dbShift.activeSession.bpm);
+          setHeartbeatEvents(dbShift.activeSession.heartbeatEvents);
+          setStressReplayUnlocked(dbShift.activeSession.stressReplayUnlocked);
+          setTranscript(dbShift.activeSession.transcript);
+          setOffAxisCount(dbShift.activeSession.offAxisCount);
+          setPowerLeft(dbShift.activeSession.powerLeft);
+          setMaxPower(dbShift.activeSession.maxPower);
+        }
+        setStage(dbShift.stage);
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+    // Run once on initial mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Autosave mid-shift progress (IndexedDB + localStorage mirror)
   useEffect(() => {
     if (stage === "booth" || stage === "crisis" || stage === "demo_end" || stage === "night5") {
       saveShiftState({
@@ -249,6 +374,7 @@ export function App() {
         lang,
         campaignMode,
         dailySeed,
+        runSeed,
         stage,
         activeCrisisId: activeCrisis?.id,
         baseline,
@@ -260,25 +386,52 @@ export function App() {
         fuelLeft,
         emergencyOverdraftUsed,
         currentVisitorOverdraft,
-        boggartUsedIds
+        boggartUsedIds,
+        activeSession:
+          stage === "booth" && verdictState === "NONE"
+            ? {
+                visitorId: visitor.id,
+                turnsLeft,
+                chatterLeft,
+                bpm,
+                heartbeatEvents,
+                stressReplayUnlocked,
+                transcript,
+                offAxisCount,
+                powerLeft,
+                maxPower
+              }
+            : undefined
       });
     }
   }, [
     activeCrisis,
     baseline,
     boggartUsedIds,
+    bpm,
     campaignMode,
+    chatterLeft,
     crisisHistory,
     currentVisitorOverdraft,
     dailySeed,
     emergencyOverdraftUsed,
     fuelLeft,
+    heartbeatEvents,
     history,
     intakeAnswers,
     lang,
+    maxPower,
+    offAxisCount,
+    powerLeft,
     rolls,
+    runSeed,
     safeIdx,
-    stage
+    stage,
+    stressReplayUnlocked,
+    transcript,
+    turnsLeft,
+    verdictState,
+    visitor.id
   ]);
 
   // Continuous Arctic -46°C blizzard + metallic hull stress + Night 3 geomagnetic storm ambience
@@ -307,18 +460,26 @@ export function App() {
     roster: readonly VisitorSpec[] = activeVisitors,
     speakOpening = true,
     nextFuel = fuelLeft,
-    nextOverdraft = false
+    nextOverdraft = false,
+    seedOverride = runSeed
   ) => {
     shiftEpochRef.current += 1;
     const v = roster[idx]!;
     const pwrBudget = getSensorPowerBudget(nextFuel, nextOverdraft);
+    const hbProfile = deriveHeartbeatProfile(v, seedOverride);
     setVisitorIdx(idx);
     setCurrentVisitorOverdraft(nextOverdraft);
     setIsRephrasing(false);
-    setTurnsLeft(4);
+    setStreamingReply(null);
+    setSignalGlitch(false);
+    setTurnsLeft(CORE_TURNS_MAX);
+    setChatterLeft(CHATTER_BUDGET_MAX);
     setPowerLeft(pwrBudget);
     setMaxPower(pwrBudget);
-    setBpm(v.baseBpm);
+    setBpm(hbProfile.baseBpm);
+    setLastBpmDelta(null);
+    setHeartbeatEvents([]);
+    setStressReplayUnlocked(false);
     setClipState("idle");
     setReaction("IDLE: COLD_BREATH");
     setStrobeTrigger(0);
@@ -332,7 +493,11 @@ export function App() {
     setLogSigned(false);
     setActiveTab("baseline");
     setSpoilerOpen(false);
-    setLastPipelinePayload({ status: "AWAITING_INTERROGATION", turns_remaining: 4 });
+    setLastPipelinePayload({
+      status: "AWAITING_INTERROGATION",
+      turns_remaining: CORE_TURNS_MAX,
+      chatter_remaining: CHATTER_BUDGET_MAX
+    });
 
     if (speakOpening) {
       speakIntercomLine({
@@ -392,14 +557,63 @@ export function App() {
     [motionPaused]
   );
 
+  const loadSeededRoster = useCallback(
+    async (targetSeed: string, targetLang: Locale = lang, resetToFirst = false) => {
+      const clean = targetSeed.trim() || generateRunSeed("seeded");
+      setIsGeneratingSeed(true);
+      const result = await loadOrGenerateSeededVisitors({
+        seed: clean,
+        locale: targetLang,
+        allowOnline: flashConfig.enabled && flashConfig.mode === "server_proxy"
+      });
+      setIsGeneratingSeed(false);
+      setSeededRoster(result.visitors);
+      setSeededSource(result.source);
+      setRunSeed(result.seed);
+      setSeedDraft(result.seed);
+      if (resetToFirst) {
+        const initFuel = getInitialFuel("seeded");
+        setRolls(rollShiftForMode("seeded", result.visitors, result.seed));
+        setHistory([]);
+        setCrisisHistory([]);
+        setActiveCrisis(null);
+        setFuelLeft(initFuel);
+        setEmergencyOverdraftUsed(false);
+        setBoggartUsedIds([]);
+        resetVisitorState(0, result.visitors, stage === "booth", initFuel, false, result.seed);
+      }
+      return result.visitors;
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [flashConfig.enabled, flashConfig.mode, lang, stage]
+  );
+
+  // Hydrate cached/AI seeded roster when entering or restoring `seeded` mode
+  useEffect(() => {
+    if (campaignMode !== "seeded") return;
+    void loadSeededRoster(runSeed, lang, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaignMode, lang]);
+
   const startNewShift = (modeOverride: CampaignMode = campaignMode) => {
-    const freshSeed = getDailyShiftSeed();
-    const roster = getVisitorsForMode(modeOverride, freshSeed);
+    const freshDailySeed = getDailyShiftSeed();
+    const freshRunSeed =
+      modeOverride === "daily"
+        ? freshDailySeed
+        : modeOverride === "seeded"
+          ? (seedDraft.trim() || generateRunSeed("seeded"))
+          : generateRunSeed(modeOverride);
+    const roster =
+      modeOverride === "seeded"
+        ? (seededRoster ?? getVisitorsForMode("seeded", freshRunSeed))
+        : getVisitorsForMode(modeOverride, freshDailySeed);
     const initFuel = getInitialFuel(modeOverride);
     playBoothSfx("ptt", sfx);
     transitionStage(() => {
-      setDailySeed(freshSeed);
-      setRolls(rollShiftForMode(modeOverride, roster, freshSeed));
+      setDailySeed(freshDailySeed);
+      setRunSeed(freshRunSeed);
+      setSeedDraft(freshRunSeed);
+      setRolls(rollShiftForMode(modeOverride, roster, freshRunSeed));
       setHistory([]);
       setCrisisHistory([]);
       setActiveCrisis(null);
@@ -407,8 +621,11 @@ export function App() {
       setEmergencyOverdraftUsed(false);
       setBoggartUsedIds([]);
       setStage("booth");
-      resetVisitorState(0, roster, true, initFuel, false);
+      resetVisitorState(0, roster, true, initFuel, false, freshRunSeed);
     });
+    if (modeOverride === "seeded") {
+      void loadSeededRoster(freshRunSeed, lang, false);
+    }
   };
 
   const handleRestartFromIntake = () => {
@@ -426,12 +643,22 @@ export function App() {
   };
 
   const handleSwitchCampaignMode = (nextMode: CampaignMode) => {
-    const freshSeed = getDailyShiftSeed();
-    setDailySeed(freshSeed);
+    const freshDailySeed = getDailyShiftSeed();
+    const freshRunSeed = nextMode === "daily" ? freshDailySeed : generateRunSeed(nextMode);
+    setDailySeed(freshDailySeed);
+    setRunSeed(freshRunSeed);
+    setSeedDraft(freshRunSeed);
     setCampaignMode(nextMode);
-    const roster = getVisitorsForMode(nextMode, freshSeed);
+    if (nextMode !== "seeded") {
+      setSeededRoster(null);
+      setSeededSource(null);
+    }
+    const roster = getVisitorsForMode(
+      nextMode,
+      nextMode === "seeded" ? freshRunSeed : freshDailySeed
+    );
     const initFuel = getInitialFuel(nextMode);
-    setRolls(rollShiftForMode(nextMode, roster, freshSeed));
+    setRolls(rollShiftForMode(nextMode, roster, freshRunSeed));
     setHistory([]);
     setCrisisHistory([]);
     setActiveCrisis(null);
@@ -441,7 +668,10 @@ export function App() {
     if (stage === "crisis" || stage === "demo_end") {
       transitionStage(() => setStage("booth"));
     }
-    resetVisitorState(0, roster, stage === "booth", initFuel, false);
+    resetVisitorState(0, roster, stage === "booth", initFuel, false, freshRunSeed);
+    if (nextMode === "seeded") {
+      void loadSeededRoster(freshRunSeed, lang, true);
+    }
   };
 
   const handleTriggerSensor = useCallback(
@@ -465,67 +695,131 @@ export function App() {
     [currentRoll.isMimic, lang, powerLeft, sensorsBlinded, sfx, verdictState, visitor.sensors]
   );
 
+  const handleUnlockStressReplay = useCallback(() => {
+    if (
+      sensorsBlinded ||
+      powerLeft <= 0 ||
+      verdictState !== "NONE" ||
+      stressReplayUnlocked ||
+      heartbeatEvents.length === 0
+    ) {
+      return;
+    }
+    playBoothSfx("heartbeat", sfx);
+    setPowerLeft((p) => p - 1);
+    setStressReplayUnlocked(true);
+    setSensorToast(
+      tl(
+        {
+          zh: "[ECG REPLAY] 已解锁本场心率应激回放：对照各轮脉搏跃升与言辞张力。",
+          en: "[ECG REPLAY] Cardiac stress replay unlocked: cross-check per-turn pulse shifts against statements.",
+          ja: "[ECG REPLAY] 心拍ストレス再生を解錠：各ターンの脈拍変化と発言を照合せよ。"
+        },
+        lang
+      )
+    );
+  }, [heartbeatEvents.length, lang, powerLeft, sensorsBlinded, sfx, stressReplayUnlocked, verdictState]);
+
   const handleAskProbe = useCallback(
     async (probeKey: ProbeKey | "off_axis", customText?: string) => {
       if (turnsLeft <= 0 || verdictState !== "NONE" || isRephrasing) return;
       playBoothSfx("ptt", sfx);
-
-      if (probeKey === "boggart_trap") {
-        setBoggartUsedIds((prev) => (prev.includes(visitor.id) ? prev : [...prev, visitor.id]));
-      }
+      setSignalGlitch(false);
 
       const epochAtStart = shiftEpochRef.current;
-      const probe = probeKey !== "off_axis" ? visitor.probes[probeKey] : undefined;
-      const onAxis = Boolean(probe && probe.axis !== null);
+      const initialProbe = probeKey !== "off_axis" ? visitor.probes[probeKey] : undefined;
       const playerText = customText
         ? { zh: customText, en: customText, ja: customText }
-        : probe?.label ?? { zh: customText ?? "", en: customText ?? "", ja: customText ?? "" };
+        : initialProbe?.label ?? { zh: customText ?? "", en: customText ?? "", ja: customText ?? "" };
+      const questionStr = tl(playerText, lang);
 
-      const stance = decideStance(visitor, currentRoll, probeKey);
-      const canonicalReply =
-        probeKey === "off_axis" || !probe
-          ? visitor.offAxisReply
-          : !onAxis
-            ? probe.human
-            : probe[stance.lineKey] ?? probe.human;
+      const resolveForAxis = (axisKey: InterrogateAxisKey) => {
+        const probe = axisKey !== "off_axis" ? visitor.probes[axisKey] : undefined;
+        const onAxis = Boolean(probe && probe.axis !== null);
+        const stance = decideStance(visitor, currentRoll, axisKey);
+        const isFlawedAxis = onAxis && stance.lineKey !== "human";
+        const canonicalReply =
+          axisKey === "off_axis" || !probe
+            ? visitor.offAxisReply
+            : !onAxis
+              ? probe.human
+              : probe[stance.lineKey] ?? probe.human;
+        const resolvedLineId: VoiceLineVariant =
+          axisKey === "off_axis" || !probe
+            ? "off_axis"
+            : !onAxis
+              ? `${axisKey}_human`
+              : `${axisKey}_${stance.lineKey}`;
+        return { probe, onAxis, stance, isFlawedAxis, canonicalReply, resolvedLineId };
+      };
 
-      const resolvedLineId: VoiceLineVariant =
-        probeKey === "off_axis" || !probe
-          ? "off_axis"
-          : !onAxis
-            ? `${probeKey}_human`
-            : `${probeKey}_${stance.lineKey}`;
+      const applyTurnTelemetry = (axisKey: InterrogateAxisKey) => {
+        const resolved = resolveForAxis(axisKey);
+        if (axisKey === "boggart_trap") {
+          setBoggartUsedIds((prev) => (prev.includes(visitor.id) ? prev : [...prev, visitor.id]));
+        }
 
-      const nextClip: ClipState = onAxis ? "flinch" : "lean_in";
-      const reactionClip = onAxis ? "flinch_eyes_dart" : "angry_lean_in";
-      const bpmDelta = onAxis ? 10 : 4;
+        const hb = stepHeartbeat({
+          visitor,
+          roll: currentRoll,
+          runSeed,
+          currentBpm: bpm,
+          turnIndex: heartbeatEvents.length + 1,
+          axis: axisKey,
+          onAxis: resolved.onAxis,
+          isFlawedAxis: resolved.isFlawedAxis,
+          questionText: questionStr
+        });
 
-      setTurnsLeft((t) => t - 1);
-      setBpm((b) => Math.min(148, b + bpmDelta));
-      setClipState(nextClip);
-      setReaction(`CLIP: ${reactionClip.toUpperCase()}`);
-      if (onAxis) playBoothSfx("heartbeat", sfx);
-      if (!onAxis) setOffAxisCount((c) => c + 1);
+        if (resolved.onAxis) {
+          setTurnsLeft((t) => Math.max(0, t - 1));
+        } else if (chatterLeft > 0) {
+          setChatterLeft((c) => Math.max(0, c - 1));
+          setOffAxisCount((c) => c + 1);
+        } else {
+          setTurnsLeft((t) => Math.max(0, t - 1));
+          setOffAxisCount((c) => c + 1);
+        }
 
-      const llmInput = buildRephraseInput(
-        visitor,
-        tl(playerText, lang),
-        stance,
-        lang,
-        tl(canonicalReply, lang)
-      );
+        const nextClip: ClipState = resolved.onAxis ? "flinch" : "lean_in";
+        const reactionClip = resolved.onAxis ? "flinch_eyes_dart" : "angry_lean_in";
 
-      const shouldInvokeFlash =
+        setBpm(hb.bpmAfter);
+        setLastBpmDelta(hb.blinded ? null : hb.delta);
+        setHeartbeatEvents((prev) => [...prev, hb.event]);
+        setClipState(nextClip);
+        setReaction(`CLIP: ${reactionClip.toUpperCase()}`);
+        if (!hb.blinded && (hb.anomaly === "spike" || hb.anomaly === "elevated")) {
+          playBoothSfx("heartbeat", sfx);
+        }
+
+        const bpmTag = hb.blinded
+          ? "ECG LOST"
+          : `${hb.delta >= 0 ? "+" : ""}${hb.delta} BPM`;
+
+        return { ...resolved, hb, reactionClip, bpmTag };
+      };
+
+      const shouldInvokeAi =
         flashConfig.enabled && (Boolean(customText) || !flashConfig.freeTextOnly);
 
-      if (!shouldInvokeFlash) {
+      if (!shouldInvokeAi) {
+        const tel = applyTurnTelemetry(probeKey);
+        const llmInput = buildRephraseInput(
+          visitor,
+          questionStr,
+          tel.stance,
+          lang,
+          tl(tel.canonicalReply, lang)
+        );
+
         setTranscript((prev) => {
           const next: TranscriptLine[] = [
             ...prev,
             { speaker: "player", text: playerText },
-            { speaker: "npc", text: canonicalReply, meta: `+${bpmDelta} BPM · ${reactionClip}` }
+            { speaker: "npc", text: tel.canonicalReply, meta: `${tel.bpmTag} · ${tel.reactionClip}` }
           ];
-          if (!onAxis) {
+          if (!tel.onAxis) {
             next.push({ speaker: "system", text: UI_STRINGS.offAxisSystemNote });
           }
           return next;
@@ -534,25 +828,27 @@ export function App() {
         speakIntercomLine({
           visitorId: visitor.id,
           locale: lang,
-          text: tl(canonicalReply, lang),
-          lineId: resolvedLineId,
+          text: tl(tel.canonicalReply, lang),
+          lineId: tel.resolvedLineId,
           enabled: voice
         });
 
-        const { lineKey: _hiddenKey, ...publicStance } = stance;
+        const { lineKey: _hiddenKey, ...publicStance } = tel.stance;
         setLastPipelinePayload({
           "1_axis_detection": {
-            question: tl(playerText, lang),
+            question: questionStr,
             detected: probeKey,
-            on_axis: onAxis
+            on_axis: tel.onAxis
           },
           "2_stance_engine": publicStance,
-          "3_llm_visible_input": llmInput,
-          "4_offline_profile_anchor": {
-            orderings: visitor.profile.valueOrderings.map((o) => o.id),
-            signatures: visitor.profile.disposalSignatures.map((s) => s.id)
+          "3_heartbeat_physics": {
+            blinded: tel.hb.blinded,
+            bpm_before: tel.hb.bpmBefore,
+            bpm_after: tel.hb.bpmAfter,
+            delta: tel.hb.delta
           },
-          "5_flash_rephrase": {
+          "4_llm_visible_input": llmInput,
+          "5_ai_gateway": {
             enabled: flashConfig.enabled,
             invoked: false,
             source: "offline_canonical"
@@ -561,21 +857,104 @@ export function App() {
         return;
       }
 
-      // Online Flash rephrase flow: append player line immediately, then stream/resolve NPC line
+      // Online AI Interrogation flow
       setIsRephrasing(true);
+      setStreamingReply("");
       setTranscript((prev) => [...prev, { speaker: "player", text: playerText }]);
 
-      const outcome = await requestFlashRephrase(llmInput, flashConfig);
+      if (flashConfig.mode === "custom_endpoint") {
+        const tel = applyTurnTelemetry(probeKey);
+        const llmInput = buildRephraseInput(
+          visitor,
+          questionStr,
+          tel.stance,
+          lang,
+          tl(tel.canonicalReply, lang)
+        );
+        const outcome = await requestFlashRephrase(llmInput, flashConfig);
+        if (shiftEpochRef.current !== epochAtStart) return;
+        setIsRephrasing(false);
+        setStreamingReply(null);
+
+        const finalReply =
+          outcome.source === "flash"
+            ? { ...tel.canonicalReply, [lang]: outcome.line }
+            : tel.canonicalReply;
+        const aiTag =
+          outcome.source === "flash"
+            ? `CUSTOM // ${outcome.latencyMs}ms`
+            : `FALLBACK (${outcome.fallbackReason ?? "CANONICAL"})`;
+
+        setTranscript((prev) => {
+          const next: TranscriptLine[] = [
+            ...prev,
+            { speaker: "npc", text: finalReply, meta: `${tel.bpmTag} · ${tel.reactionClip} · ${aiTag}` }
+          ];
+          if (!tel.onAxis) {
+            next.push({ speaker: "system", text: UI_STRINGS.offAxisSystemNote });
+          }
+          return next;
+        });
+
+        speakIntercomLine({
+          visitorId: visitor.id,
+          locale: lang,
+          text: tl(finalReply, lang),
+          lineId: tel.resolvedLineId,
+          isDynamicFlash: outcome.source === "flash",
+          enabled: voice
+        });
+        return;
+      }
+
+      // Primary path: Vercel AI Gateway streaming via /api/interrogate (`anthropic/claude-sonnet-5.5`)
+      const initialResolved = resolveForAxis(probeKey);
+      const convoHistory: InterrogateHistoryTurn[] = transcript
+        .filter((item) => item.speaker === "player" || item.speaker === "npc")
+        .map((item) => ({
+          role: item.speaker === "player" ? "user" : "assistant",
+          content: tl(item.text, lang)
+        }));
+
+      const outcome = await streamInterrogateTurn<InterrogateAxisKey>(
+        {
+          stage: "booth",
+          runSeed,
+          campaignMode,
+          visitorId: visitor.id,
+          ...(campaignMode === "seeded" ? { customVisitor: visitor } : {}),
+          locale: lang,
+          question: questionStr,
+          hintAxis: probeKey,
+          history: convoHistory,
+          fallbackLine: tl(initialResolved.canonicalReply, lang)
+        },
+        {
+          onDelta: (_piece, acc) => {
+            if (shiftEpochRef.current === epochAtStart) {
+              setStreamingReply(acc);
+            }
+          }
+        },
+        { endpoint: "/api/interrogate" }
+      );
+
       if (shiftEpochRef.current !== epochAtStart) return;
       setIsRephrasing(false);
+      setStreamingReply(null);
+      if (outcome.signalGlitch) {
+        setSignalGlitch(true);
+      }
 
+      const finalAxis: InterrogateAxisKey = outcome.axis;
+      const tel = applyTurnTelemetry(finalAxis);
       const finalReply =
-        outcome.source === "flash"
-          ? { ...canonicalReply, [lang]: outcome.line }
-          : canonicalReply;
-      const flashTag =
-        outcome.source === "flash"
-          ? `FLASH // ${outcome.latencyMs}ms`
+        outcome.source === "llm"
+          ? { ...tel.canonicalReply, [lang]: outcome.text }
+          : tel.canonicalReply;
+      const aiTag =
+        outcome.source === "llm"
+          ? `CLAUDE // ${outcome.latencyMs}ms`
           : `FALLBACK (${outcome.fallbackReason ?? "CANONICAL"})`;
 
       setTranscript((prev) => {
@@ -584,10 +963,10 @@ export function App() {
           {
             speaker: "npc",
             text: finalReply,
-            meta: `+${bpmDelta} BPM · ${reactionClip} · ${flashTag}`
+            meta: `${tel.bpmTag} · ${tel.reactionClip} · ${aiTag}`
           }
         ];
-        if (!onAxis) {
+        if (!tel.onAxis) {
           next.push({ speaker: "system", text: UI_STRINGS.offAxisSystemNote });
         }
         return next;
@@ -597,36 +976,54 @@ export function App() {
         visitorId: visitor.id,
         locale: lang,
         text: tl(finalReply, lang),
-        lineId: resolvedLineId,
-        isDynamicFlash: outcome.source === "flash",
+        lineId: tel.resolvedLineId,
+        isDynamicFlash: outcome.source === "llm",
         enabled: voice
       });
 
-      const { lineKey: _hiddenKey, ...publicStance } = stance;
+      const { lineKey: _hiddenKey, ...publicStance } = tel.stance;
       setLastPipelinePayload({
         "1_axis_detection": {
-          question: tl(playerText, lang),
-          detected: probeKey,
-          on_axis: onAxis
+          question: questionStr,
+          hint: probeKey,
+          resolved: finalAxis,
+          on_axis: tel.onAxis
         },
         "2_stance_engine": publicStance,
-        "3_llm_visible_input": llmInput,
-        "4_offline_profile_anchor": {
-          orderings: visitor.profile.valueOrderings.map((o) => o.id),
-          signatures: visitor.profile.disposalSignatures.map((s) => s.id)
+        "3_heartbeat_physics": {
+          blinded: tel.hb.blinded,
+          bpm_before: tel.hb.bpmBefore,
+          bpm_after: tel.hb.bpmAfter,
+          delta: tel.hb.delta
         },
-        "5_flash_rephrase": {
+        "4_ai_gateway": {
           enabled: true,
-          invoked: true,
-          mode: flashConfig.mode,
+          endpoint: "/api/interrogate",
           source: outcome.source,
           latency_ms: outcome.latencyMs,
-          model: outcome.model ?? null,
-          fallback_reason: outcome.fallbackReason ?? null
+          model: outcome.model ?? DEFAULT_INTERROGATE_MODEL,
+          fallback_reason: outcome.fallbackReason ?? null,
+          history_turns: convoHistory.length
         }
       });
     },
-    [currentRoll, flashConfig, isRephrasing, lang, sfx, turnsLeft, verdictState, visitor, voice]
+    [
+      bpm,
+      campaignMode,
+      chatterLeft,
+      currentRoll,
+      flashConfig,
+      heartbeatEvents.length,
+      isRephrasing,
+      lang,
+      runSeed,
+      sfx,
+      transcript,
+      turnsLeft,
+      verdictState,
+      visitor,
+      voice
+    ]
   );
 
   // Desktop Steam / Keyboard Tactical Shortcuts via @ui-sdk/react/shortcuts
@@ -663,6 +1060,10 @@ export function App() {
     when: () => boothShortcutsEnabled,
     description: "Neural Thermal"
   });
+  useShortcut("r", () => handleUnlockStressReplay(), {
+    when: () => boothShortcutsEnabled,
+    description: "ECG Stress Replay"
+  });
   useShortcut("[", () => cycleDossierTab(-1), {
     when: () => boothShortcutsEnabled,
     description: "Previous Dossier Tab"
@@ -674,6 +1075,7 @@ export function App() {
 
   const strobeHint = useShortcutHint("s");
   const thermalHint = useShortcutHint("t");
+  const replayHint = useShortcutHint("r");
 
   const campaignModeItems: Array<{ value: CampaignMode; label: string }> = [
     {
@@ -687,6 +1089,17 @@ export function App() {
           zh: `今日排班 (${dailySeed})`,
           en: `Daily Shift (${dailySeed})`,
           ja: `日替わり当直 (${dailySeed})`
+        },
+        lang
+      )
+    },
+    {
+      value: "seeded",
+      label: tl(
+        {
+          zh: "随机种子战役 (8人 · AI生成)",
+          en: "Seeded Shift (8 · AI Generated)",
+          ja: "ランダムシード (8名 · AI生成)"
         },
         lang
       )
@@ -759,7 +1172,10 @@ export function App() {
       return;
     }
 
-    if (activeVisitors.length >= 8 && (campaignMode === "full" || campaignMode === "daily")) {
+    if (
+      activeVisitors.length >= 8 &&
+      (campaignMode === "full" || campaignMode === "daily" || campaignMode === "seeded")
+    ) {
       const scheduledCrisis =
         safeIdx === 3
           ? INTER_NIGHT_CRISES[0]
@@ -825,7 +1241,8 @@ export function App() {
   const handleUpgradeDemoToFullShift = () => {
     stopIntercomVoice();
     playBoothSfx("ptt", sfx);
-    const fullRolls = rollShift(ALL_VISITORS);
+    const upgradeSeed = generateRunSeed("full");
+    const fullRolls = rollShiftForMode("full", ALL_VISITORS, upgradeSeed);
     const mergedRolls = [
       ...rolls.slice(0, 4),
       ...fullRolls.slice(4)
@@ -833,6 +1250,7 @@ export function App() {
     const bonusFuel = fuelLeft + 2;
     transitionStage(() => {
       setCampaignMode("full");
+      setRunSeed(upgradeSeed);
       setRolls(mergedRolls);
       setFuelLeft(bonusFuel);
       setActiveCrisis(INTER_NIGHT_CRISES[0]!);
@@ -1044,7 +1462,9 @@ export function App() {
         <CollapsiblePanel keepMounted>
           <div className="sys-console-bar" id="sys-console-drawer">
             <div className="sys-console-group">
-              <span className="sys-group-label">AUDIO // COMMS</span>
+              <span className="sys-group-label">
+                {tl({ zh: "音频 // 通信", en: "AUDIO // COMMS", ja: "音声 // 通信" }, lang)}
+              </span>
               <Toggle
                 id="btn-voice-toggle"
                 pressed={voice}
@@ -1088,18 +1508,22 @@ export function App() {
             </div>
 
             <div className="sys-console-group">
-              <span className="sys-group-label">AI // BUS</span>
+              <span className="sys-group-label">
+                {tl({ zh: "AI // 总线", en: "AI // BUS", ja: "AI // バス" }, lang)}
+              </span>
               <Button
                 id="btn-flash-toggle"
                 className={`ctrl-btn ${flashConfig.enabled ? "amber" : ""}`}
                 onClick={() => setFlashDrawerOpen((o) => !o)}
               >
-                <BoltPowerIcon /> FLASH: {flashConfig.enabled ? "ON" : "OFF"}
+                <BoltPowerIcon /> CLAUDE: {flashConfig.enabled ? "ON" : "OFF"}
               </Button>
             </div>
 
             <div className="sys-console-group">
-              <span className="sys-group-label">SHIFT // OPS</span>
+              <span className="sys-group-label">
+                {tl({ zh: "班次 // 操作", en: "SHIFT // OPS", ja: "シフト // 操作" }, lang)}
+              </span>
               <Button id="btn-reroll-shift" className="ctrl-btn" onClick={() => startNewShift()}>
                 {tl(UI_STRINGS.reroll, lang)}
               </Button>
@@ -1133,6 +1557,68 @@ export function App() {
         lang={lang}
         compendium={compendium}
       />
+
+      {campaignMode === "seeded" ? (
+        <div className="seeded-control-bar" id="seeded-control-bar">
+          <span className="seeded-badge">
+            {isGeneratingSeed
+              ? tl(
+                  {
+                    zh: "⚡ CLAUDE 正在按种子生成 8 名 Ordamor 档案...",
+                    en: "⚡ GENERATING 8 ORDAMOR DOSSIERS VIA CLAUDE...",
+                    ja: "⚡ CLAUDE がシードから8名の調書を生成中..."
+                  },
+                  lang
+                )
+              : seededSource === "idb_cache"
+                ? "SEED // IDB CACHE"
+                : seededSource === "llm"
+                  ? "SEED // CLAUDE SONNET 5.5"
+                  : "SEED // ORDAMOR PROCEDURAL"}
+          </span>
+          <form
+            className="seeded-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void loadSeededRoster(seedDraft, lang, true);
+            }}
+          >
+            <InputGroup className="seeded-input-group">
+              <Input
+                id="seed-input"
+                type="text"
+                className="ask-input"
+                value={seedDraft}
+                onValueChange={setSeedDraft}
+                disabled={isGeneratingSeed}
+                aria-label="Campaign Seed"
+                placeholder="SVALBARD-2036"
+              />
+            </InputGroup>
+            <Button
+              id="btn-seed-random"
+              type="button"
+              className="ctrl-btn"
+              disabled={isGeneratingSeed}
+              onClick={() => {
+                const next = generateRunSeed("seeded");
+                setSeedDraft(next);
+                void loadSeededRoster(next, lang, true);
+              }}
+            >
+              {tl({ zh: "🎲 新种子", en: "🎲 Random", ja: "🎲 新シード" }, lang)}
+            </Button>
+            <Button
+              id="btn-seed-load"
+              type="submit"
+              className="ctrl-btn amber"
+              disabled={isGeneratingSeed}
+            >
+              {tl({ zh: "生成 / 载入", en: "Load Seed", ja: "生成 / 読込" }, lang)}
+            </Button>
+          </form>
+        </div>
+      ) : null}
 
       <main ref={mainRef} tabIndex={-1} className="booth-main">
         {stage === "intake" ? (
@@ -1194,7 +1680,9 @@ export function App() {
                 <section className="panel">
                   <div className="viewport-header">
                     <span>
-                      CAM-01 // N{visitor.night} · {visitor.id} {visitor.name.en.toUpperCase()}
+                      {lang === "zh"
+                        ? `CAM-01 // 第${visitor.night}夜 · ${visitor.id} ${tl(visitor.name, lang)}`
+                        : `CAM-01 // N${visitor.night} · ${visitor.id} ${tl(visitor.name, lang).toUpperCase()}`}
                     </span>
                     <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
                       <Tooltip>
@@ -1255,6 +1743,7 @@ export function App() {
                     visitor={visitor}
                     clipState={clipState}
                     bpm={bpm}
+                    bpmDelta={lastBpmDelta}
                     strobeTrigger={strobeTrigger}
                     thermalTrigger={thermalTrigger}
                     verdictState={verdictState}
@@ -1286,6 +1775,38 @@ export function App() {
                   ) : null}
 
                   {sensorToast ? <div className="sensor-toast">{sensorToast}</div> : null}
+
+                  {stressReplayUnlocked && heartbeatEvents.length > 0 && !sensorsBlinded ? (
+                    <div className="stress-replay-panel" id="stress-replay-panel">
+                      <div className="stress-replay-header">
+                        <span>
+                          {tl(
+                            {
+                              zh: "ECG 应激回放 // 逐轮心率佐证",
+                              en: "ECG STRESS REPLAY // PER-TURN CARDIAC TRACE",
+                              ja: "ECG ストレス再生 // ターン別心拍記録"
+                            },
+                            lang
+                          )}
+                        </span>
+                        <span>{heartbeatEvents.length} TURNS</span>
+                      </div>
+                      <div className="stress-replay-rows">
+                        {heartbeatEvents.map((ev) => (
+                          <div
+                            key={ev.turnIndex}
+                            className={`stress-replay-row anomaly-${ev.anomaly}`}
+                          >
+                            <span className="sr-turn">T{ev.turnIndex}</span>
+                            <span className="sr-bpm">
+                              {ev.bpmBefore}→{ev.bpmAfter} ({ev.delta >= 0 ? `+${ev.delta}` : ev.delta})
+                            </span>
+                            <span className="sr-note">{tl(ev.note, lang)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="sensor-bar">
                     <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -1346,6 +1867,51 @@ export function App() {
                           <TooltipShortcut />
                         </TooltipContent>
                       </Tooltip>
+
+                      <Tooltip shortcut="r">
+                        <TooltipTrigger
+                          render={
+                            <Button
+                              id="btn-stress-replay"
+                              className={`ctrl-btn ${stressReplayUnlocked ? "amber" : ""}`}
+                              disabled={
+                                sensorsBlinded ||
+                                powerLeft <= 0 ||
+                                verdictState !== "NONE" ||
+                                stressReplayUnlocked ||
+                                heartbeatEvents.length === 0
+                              }
+                              focusableWhenDisabled
+                              aria-keyshortcuts={replayHint.ariaKeyshortcuts}
+                              onClick={handleUnlockStressReplay}
+                            />
+                          }
+                        >
+                          <BoltPowerIcon />{" "}
+                          <span>
+                            {tl(
+                              {
+                                zh: stressReplayUnlocked ? "回放已开" : "应激回放",
+                                en: stressReplayUnlocked ? "Replay On" : "ECG Replay",
+                                ja: stressReplayUnlocked ? "再生中" : "心拍再生"
+                              },
+                              lang
+                            )}
+                          </span>{" "}
+                          <kbd className="kbd-chip" aria-hidden="true">R</kbd>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {tl(
+                            {
+                              zh: "消耗 1 PWR 解锁逐轮心率应激曲线与异常标注（需先提问至少 1 轮）",
+                              en: "Spend 1 PWR to reveal per-turn cardiac stress anomalies (requires >=1 question)",
+                              ja: "1 PWR消費でターン別心拍ストレス異常を表示（1回以上質問後）"
+                            },
+                            lang
+                          )}{" "}
+                          <TooltipShortcut />
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                     <span className="telemetry-readout">
                       CH-01 // {reaction}
@@ -1357,9 +1923,12 @@ export function App() {
                   visitor={visitor}
                   lang={lang}
                   turnsLeft={turnsLeft}
+                  chatterLeft={chatterLeft}
                   fuelLeft={fuelLeft}
                   verdictDone={verdictState !== "NONE"}
                   isRephrasing={isRephrasing}
+                  streamingText={streamingReply}
+                  signalGlitch={signalGlitch}
                   transcript={transcript}
                   onAskProbe={handleAskProbe}
                   onExecuteVerdict={handleVerdict}
@@ -1393,6 +1962,7 @@ export function App() {
                     fuelLeft={fuelLeft}
                     powerLeft={powerLeft}
                     maxPower={maxPower}
+                    lang={lang}
                   />
                 </section>
               </div>
@@ -1412,6 +1982,8 @@ export function App() {
             fuelLeft={fuelLeft}
             campaignMode={campaignMode}
             dailySeed={dailySeed}
+            aiEnabled={flashConfig.enabled && flashConfig.mode === "server_proxy"}
+            aiFreeTextOnly={flashConfig.freeTextOnly}
             motionPaused={motionPaused}
             onResolveEnding={handleResolveNight5Ending}
             onStartNewRun={handleRestartFromIntake}

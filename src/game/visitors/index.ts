@@ -1,4 +1,5 @@
 import type { VisitorRoll, VisitorSpec } from "../types.js";
+import { generateProceduralVisitors } from "../seeded-visitors.js";
 import { V01_ELENA } from "./v01-elena.js";
 import { V02_LEO } from "./v02-leo.js";
 import { V03_ARTHUR } from "./v03-arthur.js";
@@ -34,7 +35,7 @@ export const SLICE_VISITORS: readonly VisitorSpec[] = [V01_ELENA, V04_MARCUS, V0
 /** Default active campaign roster (all 8 survivors). */
 export const VISITORS: readonly VisitorSpec[] = ALL_VISITORS;
 
-export type CampaignMode = "full" | "demo" | "daily" | "slice";
+export type CampaignMode = "full" | "demo" | "daily" | "slice" | "seeded";
 
 /**
  * Deterministic 32-bit FNV-1a + Mulberry32 PRNG for globally synchronized Daily Shifts.
@@ -60,12 +61,15 @@ export function getDailyShiftSeed(date: Date = new Date()): string {
 
 export function getVisitorsForMode(
   mode: CampaignMode,
-  dailySeed: string = getDailyShiftSeed()
+  seed: string = getDailyShiftSeed()
 ): readonly VisitorSpec[] {
   if (mode === "slice") return SLICE_VISITORS;
   if (mode === "demo") return DEMO_VISITORS;
+  if (mode === "seeded") {
+    return generateProceduralVisitors(seed || "SVALBARD-2036");
+  }
   if (mode === "daily") {
-    const rng = createSeededRng(`order:${dailySeed}`);
+    const rng = createSeededRng(`order:${seed}`);
     const pairs: Array<[VisitorSpec, VisitorSpec]> = [
       [V01_ELENA, V02_LEO],
       [V03_ARTHUR, V04_MARCUS],
@@ -191,13 +195,47 @@ export function rollShift(
   });
 }
 
+export function generateRunSeed(mode: CampaignMode = "full", date: Date = new Date()): string {
+  if (mode === "daily") {
+    return getDailyShiftSeed(date);
+  }
+  const timePart = Date.now().toString(36);
+  const randPart = Math.floor(Math.random() * 0xffffffff)
+    .toString(36)
+    .padStart(6, "0");
+  return `${mode}-${timePart}-${randPart}`;
+}
+
 export function rollShiftForMode(
   mode: CampaignMode,
   visitors: readonly VisitorSpec[],
-  dailySeed: string = getDailyShiftSeed()
+  seed?: string
 ): VisitorRoll[] {
   if (mode === "daily") {
-    return rollShift(visitors, createSeededRng(`rolls:${dailySeed}`));
+    const resolved = seed?.trim() || getDailyShiftSeed();
+    return rollShift(visitors, createSeededRng(`rolls:${resolved}`));
+  }
+  if (seed?.trim()) {
+    return rollShift(visitors, createSeededRng(`rolls:${mode}:${seed.trim()}`));
   }
   return rollShift(visitors);
+}
+
+/**
+ * Reconstructs the deterministic visitor + hidden roll on the server purely from `(mode, runSeed, visitorId)`.
+ * Keeps `isMimic` and `defectMode` completely off the network wire without requiring server-side session storage.
+ */
+export function resolveVisitorAndRoll(
+  mode: CampaignMode,
+  runSeed: string,
+  visitorId: string
+): { visitor: VisitorSpec; roll: VisitorRoll } | null {
+  const roster = getVisitorsForMode(mode, runSeed);
+  const idx = roster.findIndex((v) => v.id === visitorId);
+  if (idx < 0) return null;
+  const rolls = rollShiftForMode(mode, roster, runSeed);
+  const visitor = roster[idx];
+  const roll = rolls[idx];
+  if (!visitor || !roll) return null;
+  return { visitor, roll };
 }

@@ -1,8 +1,16 @@
 import type { CrisisHistoryEntry, CrisisId } from "./crises.js";
+import {
+  clearShiftFromClientDb,
+  loadCompendiumFromClientDb,
+  loadShiftFromClientDb,
+  saveCompendiumToClientDb,
+  saveShiftToClientDb
+} from "./db.js";
 import type { CampaignMode } from "./visitors/index.js";
 import type { IntakeOption, PlayerCompactProfile } from "./night5.js";
 import type {
   EndingId,
+  HeartbeatEvent,
   Locale,
   LocalizedText,
   ShiftHistoryEntry,
@@ -180,12 +188,32 @@ export const ENDING_HINTS: Record<EndingId, LocalizedText> = {
   }
 };
 
+export interface SavedTranscriptLine {
+  speaker: "player" | "npc" | "system";
+  text: LocalizedText;
+  meta?: string;
+}
+
+export interface SavedVisitorSession {
+  visitorId: string;
+  turnsLeft: number;
+  chatterLeft: number;
+  bpm: number;
+  heartbeatEvents: HeartbeatEvent[];
+  stressReplayUnlocked: boolean;
+  transcript: SavedTranscriptLine[];
+  offAxisCount: number;
+  powerLeft: number;
+  maxPower: number;
+}
+
 export interface SavedShiftState {
   version: 1;
   savedAt: string;
   lang: Locale;
   campaignMode: CampaignMode;
   dailySeed?: string;
+  runSeed?: string;
   stage: "booth" | "crisis" | "demo_end" | "night5";
   activeCrisisId?: CrisisId;
   baseline: PlayerCompactProfile;
@@ -198,6 +226,7 @@ export interface SavedShiftState {
   emergencyOverdraftUsed?: boolean;
   currentVisitorOverdraft?: boolean;
   boggartUsedIds: string[];
+  activeSession?: SavedVisitorSession;
 }
 
 export interface CompendiumState {
@@ -223,6 +252,58 @@ function getStorage(): Storage | null {
   }
 }
 
+function normalizeSavedShift(parsed: Partial<SavedShiftState> | null): SavedShiftState | null {
+  if (!parsed) return null;
+  const validStage =
+    parsed.stage === "booth" ||
+    parsed.stage === "crisis" ||
+    parsed.stage === "demo_end" ||
+    parsed.stage === "night5";
+  if (
+    parsed.version !== 1 ||
+    !validStage ||
+    !Array.isArray(parsed.rolls) ||
+    !Array.isArray(parsed.history) ||
+    typeof parsed.visitorIdx !== "number" ||
+    !parsed.baseline
+  ) {
+    return null;
+  }
+  const resolvedMode: CampaignMode =
+    parsed.campaignMode === "slice" ||
+    parsed.campaignMode === "demo" ||
+    parsed.campaignMode === "daily" ||
+    parsed.campaignMode === "seeded"
+      ? parsed.campaignMode
+      : "full";
+  return {
+    version: 1,
+    savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : "",
+    lang: parsed.lang === "en" || parsed.lang === "ja" ? parsed.lang : "zh",
+    campaignMode: resolvedMode,
+    dailySeed: typeof parsed.dailySeed === "string" ? parsed.dailySeed : undefined,
+    runSeed: typeof parsed.runSeed === "string" ? parsed.runSeed : undefined,
+    stage: parsed.stage!,
+    activeCrisisId: parsed.activeCrisisId,
+    baseline: parsed.baseline,
+    intakeAnswers: Array.isArray(parsed.intakeAnswers) ? parsed.intakeAnswers : [],
+    rolls: parsed.rolls,
+    visitorIdx: parsed.visitorIdx,
+    history: parsed.history,
+    crisisHistory: Array.isArray(parsed.crisisHistory) ? parsed.crisisHistory : [],
+    fuelLeft:
+      typeof parsed.fuelLeft === "number" &&
+      Number.isFinite(parsed.fuelLeft) &&
+      parsed.fuelLeft >= 0
+        ? Math.floor(parsed.fuelLeft)
+        : undefined,
+    emergencyOverdraftUsed: Boolean(parsed.emergencyOverdraftUsed),
+    currentVisitorOverdraft: Boolean(parsed.currentVisitorOverdraft),
+    boggartUsedIds: Array.isArray(parsed.boggartUsedIds) ? parsed.boggartUsedIds : [],
+    activeSession: parsed.activeSession
+  };
+}
+
 export function loadSavedShift(): SavedShiftState | null {
   const store = getStorage();
   if (!store) return null;
@@ -230,74 +311,44 @@ export function loadSavedShift(): SavedShiftState | null {
     const raw = store.getItem(SHIFT_SAVE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<SavedShiftState>;
-    const validStage =
-      parsed.stage === "booth" ||
-      parsed.stage === "crisis" ||
-      parsed.stage === "demo_end" ||
-      parsed.stage === "night5";
-    if (
-      parsed.version !== 1 ||
-      !validStage ||
-      !Array.isArray(parsed.rolls) ||
-      !Array.isArray(parsed.history) ||
-      typeof parsed.visitorIdx !== "number" ||
-      !parsed.baseline
-    ) {
-      return null;
-    }
-    const resolvedMode: CampaignMode =
-      parsed.campaignMode === "slice" ||
-      parsed.campaignMode === "demo" ||
-      parsed.campaignMode === "daily"
-        ? parsed.campaignMode
-        : "full";
-    return {
-      version: 1,
-      savedAt: typeof parsed.savedAt === "string" ? parsed.savedAt : "",
-      lang: parsed.lang === "en" || parsed.lang === "ja" ? parsed.lang : "zh",
-      campaignMode: resolvedMode,
-      dailySeed: typeof parsed.dailySeed === "string" ? parsed.dailySeed : undefined,
-      stage: parsed.stage!,
-      activeCrisisId: parsed.activeCrisisId,
-      baseline: parsed.baseline,
-      intakeAnswers: Array.isArray(parsed.intakeAnswers) ? parsed.intakeAnswers : [],
-      rolls: parsed.rolls,
-      visitorIdx: parsed.visitorIdx,
-      history: parsed.history,
-      crisisHistory: Array.isArray(parsed.crisisHistory) ? parsed.crisisHistory : [],
-      fuelLeft:
-        typeof parsed.fuelLeft === "number" &&
-        Number.isFinite(parsed.fuelLeft) &&
-        parsed.fuelLeft >= 0
-          ? Math.floor(parsed.fuelLeft)
-          : undefined,
-      emergencyOverdraftUsed: Boolean(parsed.emergencyOverdraftUsed),
-      currentVisitorOverdraft: Boolean(parsed.currentVisitorOverdraft),
-      boggartUsedIds: Array.isArray(parsed.boggartUsedIds) ? parsed.boggartUsedIds : []
-    };
+    return normalizeSavedShift(parsed);
   } catch {
     return null;
   }
 }
 
+export async function hydrateSavedShift(): Promise<SavedShiftState | null> {
+  const fromDb = normalizeSavedShift(await loadShiftFromClientDb());
+  if (fromDb) return fromDb;
+  const fromLocal = loadSavedShift();
+  if (fromLocal) {
+    void saveShiftToClientDb(fromLocal);
+  }
+  return fromLocal;
+}
+
 export function saveShiftState(state: SavedShiftState): void {
   const store = getStorage();
-  if (!store) return;
-  try {
-    store.setItem(SHIFT_SAVE_KEY, JSON.stringify(state));
-  } catch {
-    // Ignore quota / sandbox errors
+  if (store) {
+    try {
+      store.setItem(SHIFT_SAVE_KEY, JSON.stringify(state));
+    } catch {
+      // Ignore quota / sandbox errors
+    }
   }
+  void saveShiftToClientDb(state);
 }
 
 export function clearSavedShift(): void {
   const store = getStorage();
-  if (!store) return;
-  try {
-    store.removeItem(SHIFT_SAVE_KEY);
-  } catch {
-    // ignore
+  if (store) {
+    try {
+      store.removeItem(SHIFT_SAVE_KEY);
+    } catch {
+      // ignore
+    }
   }
+  void clearShiftFromClientDb();
 }
 
 export function loadCompendium(): CompendiumState {
@@ -319,6 +370,16 @@ export function loadCompendium(): CompendiumState {
   } catch {
     return EMPTY_COMPENDIUM;
   }
+}
+
+export async function hydrateCompendium(): Promise<CompendiumState> {
+  const fromDb = await loadCompendiumFromClientDb();
+  if (fromDb && fromDb.version === 1) return fromDb;
+  const fromLocal = loadCompendium();
+  if (fromLocal.completedRuns > 0 || fromLocal.unlockedEndings.length > 0) {
+    void saveCompendiumToClientDb(fromLocal);
+  }
+  return fromLocal;
 }
 
 export function recordRunCompletion(opts: {
@@ -367,10 +428,12 @@ export function recordRunCompletion(opts: {
     afterAch.add("COLD_TRUTH_ANA");
   }
 
-  // ZERO_ERROR_WITNESS: Ending D in 8-visitor full/daily campaign
+  // ZERO_ERROR_WITNESS: Ending D in 8-visitor full/daily/seeded campaign
   if (
     opts.ending === "D" &&
-    (opts.campaignMode === "full" || opts.campaignMode === "daily") &&
+    (opts.campaignMode === "full" ||
+      opts.campaignMode === "daily" ||
+      opts.campaignMode === "seeded") &&
     opts.history.length >= 8
   ) {
     afterAch.add("ZERO_ERROR_WITNESS");
@@ -397,6 +460,7 @@ export function recordRunCompletion(opts: {
       // ignore
     }
   }
+  void saveCompendiumToClientDb(next);
 
   return { next, newlyUnlockedAchievements };
 }

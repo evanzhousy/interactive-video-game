@@ -3159,4 +3159,138 @@ dialog::backdrop,
     scale: none;
     translate: none;
   }
+
+  .stream-caret {
+    animation: none !important;
+  }
+}
+
+/* Phase 1: Live Claude Streaming, Chatter Budget & ECG Stress Replay */
+.chatter-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  letter-spacing: 0.04em;
+  color: var(--frost-cyan);
+  background: rgba(158, 198, 212, 0.08);
+  border: 1px solid rgba(158, 198, 212, 0.3);
+  white-space: nowrap;
+}
+
+.msg-npc.streaming {
+  border-left-color: var(--frost-cyan);
+  background: #0c1415;
+}
+
+.stream-caret {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--amber-crt);
+  animation: gate0-caret-blink 0.8s steps(2, start) infinite;
+}
+
+@keyframes gate0-caret-blink {
+  to {
+    opacity: 0;
+  }
+}
+
+.msg-system.glitch {
+  border-left-color: var(--danger-purge);
+  color: #ff9c8f;
+  background: rgba(224, 70, 52, 0.08);
+}
+
+.stress-replay-panel {
+  margin-top: 8px;
+  padding: 7px 10px;
+  background: #070b0d;
+  border: 1px solid rgba(235, 168, 52, 0.36);
+  border-left: 3px solid var(--amber-crt);
+  font-family: var(--font-mono);
+  font-size: 0.71rem;
+}
+
+.stress-replay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--amber-crt);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 5px;
+}
+
+.stress-replay-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stress-replay-row {
+  display: grid;
+  grid-template-columns: 28px 108px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  padding: 2px 4px;
+  border-bottom: 1px solid rgba(198, 176, 138, 0.08);
+  color: var(--text-secondary);
+}
+
+.stress-replay-row .sr-turn {
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.stress-replay-row .sr-bpm {
+  color: #e4e8eb;
+  font-weight: 700;
+}
+
+.stress-replay-row.anomaly-spike .sr-note,
+.stress-replay-row.anomaly-spike .sr-bpm {
+  color: var(--amber-crt);
+}
+
+.stress-replay-row.anomaly-flat_mismatch .sr-note,
+.stress-replay-row.anomaly-snapped_reset .sr-note {
+  color: #ff9c8f;
+}
+
+.stress-replay-row.anomaly-flat_mismatch,
+.stress-replay-row.anomaly-snapped_reset {
+  background: rgba(224, 70, 52, 0.08);
+}
+
+/* Phase 2: Seeded Shift Generator Control Bar */
+.seeded-control-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 14px;
+  background: #0a1013;
+  border-bottom: 1px solid rgba(235, 168, 52, 0.35);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.seeded-badge {
+  color: var(--amber-crt);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.seeded-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.seeded-input-group {
+  width: 210px;
 }

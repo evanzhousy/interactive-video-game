@@ -31,9 +31,12 @@ interface Props {
   visitor: VisitorSpec;
   lang: Locale;
   turnsLeft: number;
+  chatterLeft?: number;
   fuelLeft?: number;
   verdictDone: boolean;
   isRephrasing?: boolean;
+  streamingText?: string | null;
+  signalGlitch?: boolean;
   transcript: readonly TranscriptLine[];
   onAskProbe: (probeKey: ProbeKey | "off_axis", customText?: string) => void | Promise<void>;
   onExecuteVerdict: (decision: "ADMIT" | "PURGE") => void;
@@ -43,9 +46,12 @@ export function IntercomPanel({
   visitor,
   lang,
   turnsLeft,
+  chatterLeft = 3,
   fuelLeft = 5,
   verdictDone,
   isRephrasing = false,
+  streamingText = null,
+  signalGlitch = false,
   transcript,
   onAskProbe,
   onExecuteVerdict
@@ -63,7 +69,7 @@ export function IntercomPanel({
 
   useEffect(() => {
     scrollController.scrollToEnd({ behavior: "instant" });
-  }, [scrollController, transcript.length, isRephrasing]);
+  }, [scrollController, transcript.length, isRephrasing, streamingText]);
 
   const askDisabled = turnsLeft <= 0 || verdictDone || isRephrasing;
 
@@ -80,10 +86,24 @@ export function IntercomPanel({
     <section className="panel" id="intercom-panel">
       <div className="viewport-header">
         <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
-          <MicSignalIcon /> COMMS // CH-01
+          <MicSignalIcon /> {tl({ zh: "对讲 // CH-01", en: "COMMS // CH-01", ja: "通話 // CH-01" }, lang)}
           <CommsWaveformSvg active={isRephrasing} />
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <span
+            className="chatter-pill"
+            id="chatter-budget-pill"
+            title={tl(
+              {
+                zh: "闲聊/试探额度：非冲突轴提问优先消耗此额度，不扣有效追问回合",
+                en: "Chatter budget: off-axis/trivia questions consume this before core turns",
+                ja: "雑談枠：本題外の質問はこの枠を先に消費（有効尋問を消費しない）"
+              },
+              lang
+            )}
+          >
+            {tl({ zh: `闲聊 ${chatterLeft}/3`, en: `CHAT ${chatterLeft}/3`, ja: `雑談 ${chatterLeft}/3` }, lang)}
+          </span>
           <Meter
             className="hud-meter turns-meter"
             value={turnsLeft}
@@ -91,9 +111,9 @@ export function IntercomPanel({
             max={4}
             aria-label={tl(
               {
-                zh: "剩余审讯回合",
-                en: "Interrogation turns remaining",
-                ja: "残り尋問ターン"
+                zh: "剩余有效追问回合",
+                en: "Core interrogation turns remaining",
+                ja: "残り有効尋問ターン"
               },
               lang
             )}
@@ -142,9 +162,32 @@ export function IntercomPanel({
                 </div>
               );
             })}
-            {isRephrasing ? (
+            {isRephrasing && streamingText ? (
+              <div className="msg-npc streaming" id="intercom-streaming-bubble">
+                <div className="msg-meta">
+                  <span>[{visitor.id} INTERCOM // LIVE]</span>
+                  <span>STREAMING · CH-01</span>
+                </div>
+                <div>
+                  {streamingText}
+                  <span className="stream-caret" aria-hidden="true">▌</span>
+                </div>
+              </div>
+            ) : isRephrasing ? (
               <div className="msg-system" id="flash-rephrasing-indicator">
                 {tl(UI_STRINGS.rephrasingNote, lang)}
+              </div>
+            ) : null}
+            {signalGlitch ? (
+              <div className="msg-system glitch" id="signal-glitch-banner">
+                {tl(
+                  {
+                    zh: "⚡ [CH-01 信号干扰 // 极地静电截断] 已切换至抗干扰备份链路。",
+                    en: "⚡ [CH-01 STATIC INTERFERENCE] Signal scrubbed — switched to hardened backup relay.",
+                    ja: "⚡ [CH-01 信号干渉 // 極地静電遮断] 冗長バックアップ回線へ切替。"
+                  },
+                  lang
+                )}
               </div>
             ) : null}
           </ScrollAreaContent>
@@ -234,7 +277,9 @@ export function IntercomPanel({
           >
             <IsometricLeverGlyph kind="admit" />
             <div className="lever-copy">
-              <span className="lever-tag">[SW-01 // ADMIT]</span>
+              <span className="lever-tag">
+                {tl({ zh: "[SW-01 // 放行]", en: "[SW-01 // ADMIT]", ja: "[SW-01 // 通過]" }, lang)}
+              </span>
               <span>{tl(UI_STRINGS.admitBtn, lang)}</span>
             </div>
           </Button>
@@ -248,7 +293,9 @@ export function IntercomPanel({
           >
             <IsometricLeverGlyph kind="purge" />
             <div className="lever-copy">
-              <span className="lever-tag">[SW-02 // INCINERATE]</span>
+              <span className="lever-tag">
+                {tl({ zh: "[SW-02 // 高温净化]", en: "[SW-02 // INCINERATE]", ja: "[SW-02 // 焼却]" }, lang)}
+              </span>
               <span>
                 {tl(UI_STRINGS.purgeBtn, lang)} {fuelLeft > 0 ? "[-1 FUEL]" : "[! OVERDRAFT]"}
               </span>

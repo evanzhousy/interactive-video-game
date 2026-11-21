@@ -431,9 +431,11 @@ export function getNight5OffAxisProbe(): Night5ProbeSpec {
   };
 }
 
+export type PublicShiftLogEntry = Pick<ShiftHistoryEntry, "visitorId" | "decision" | "excuse">;
+
 export function buildNight5Probes(
   baseline: PlayerCompactProfile,
-  history: readonly ShiftHistoryEntry[],
+  history: readonly (PublicShiftLogEntry | ShiftHistoryEntry)[],
   crisisHistory: readonly CrisisHistoryEntry[] = []
 ): readonly Night5ProbeSpec[] {
   const n2 = crisisHistory.find((c) => c.crisisId === "N2_SERUM");
@@ -589,11 +591,13 @@ export function formatShareableShiftReport(opts: {
   const modeTag =
     mode === "daily"
       ? `DAILY SHIFT ${dailySeed ?? ""}`
-      : mode === "demo"
-        ? "DEMO SHIFT"
-        : mode === "slice"
-          ? "QUICK SLICE"
-          : "FULL SHIFT";
+      : mode === "seeded"
+        ? `SEEDED SHIFT ${dailySeed ?? ""}`
+        : mode === "demo"
+          ? "DEMO SHIFT"
+          : mode === "slice"
+            ? "QUICK SLICE"
+            : "FULL SHIFT";
   const subTag = audit.subReadiness.launchReady ? "NAUTILUS-0 READY" : "SUB UNDERCREWED";
   const missingStr =
     audit.subReadiness.missingRoles.length > 0
@@ -625,7 +629,7 @@ export function resolveNight5Ending(
   const perfectVerdicts = audit.totalVisitors > 0 && audit.correctVerdicts === audit.totalVisitors;
   const meetsStrictWitnessGate = opts
     ? (opts.rebuttedCount ?? 0) >= 1 &&
-      (opts.mode === "full" || opts.mode === "daily") &&
+      (opts.mode === "full" || opts.mode === "daily" || opts.mode === "seeded") &&
       audit.subReadiness.launchReady
     : true;
 

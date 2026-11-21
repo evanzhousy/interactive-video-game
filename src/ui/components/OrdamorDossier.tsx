@@ -188,7 +188,14 @@ export function OrdamorDossier({
           <div className="tab-panel-body">
             <div className="dossier-section">
               <div className="section-kicker">
-                NIGHT {visitor.night} // FORENSIC LENS · SCHEMA v{visitor.profile.schemaVersion}
+                {tl(
+                  {
+                    zh: `第 ${visitor.night} 夜 // 法医透镜 · SCHEMA v${visitor.profile.schemaVersion}`,
+                    en: `NIGHT ${visitor.night} // FORENSIC LENS · SCHEMA v${visitor.profile.schemaVersion}`,
+                    ja: `第 ${visitor.night} 夜 // 法医レンズ · SCHEMA v${visitor.profile.schemaVersion}`
+                  },
+                  lang
+                )}
               </div>
               <div style={{ fontSize: "1.02rem", fontWeight: 700 }}>{tl(visitor.name, lang)}</div>
               <div
@@ -213,7 +220,9 @@ export function OrdamorDossier({
               {gap ? (
                 <div className="axis-compare-bar">
                   <div className="pill-row" id="never-won-pills">
-                    <span className="axis-tag say">SAY · 0W</span>
+                    <span className="axis-tag say">
+                      {tl({ zh: "口述 · 0胜", en: "SAY · 0W", ja: "建前 · 0勝" }, lang)}
+                    </span>
                     {gap.neverWon.map((tok) => (
                       <span key={tok} className="value-pill never-won">
                         {VALUE_I18N[tok][lang]}
@@ -222,7 +231,9 @@ export function OrdamorDossier({
                   </div>
                   {arcUnlocked ? (
                     <div className="pill-row">
-                      <span className="axis-tag do">DO · CORE</span>
+                      <span className="axis-tag do">
+                        {tl({ zh: "实做 · 核心", en: "DO · CORE", ja: "実行動 · 核心" }, lang)}
+                      </span>
                       {gap.silent.map((tok) => (
                         <span key={tok} className="value-pill silent">
                           {VALUE_I18N[tok][lang]}
@@ -234,17 +245,35 @@ export function OrdamorDossier({
               ) : null}
 
               <div className="dossier-telemetry-strip" aria-label="Dossier Telemetry">
-                <span className="metric-chip amber">TIER-0{visitor.unlockTier}</span>
-                <span className="metric-chip">FACT {factCount}</span>
-                <span className="metric-chip">SAY {sayCount}</span>
-                <span className="metric-chip">AXES {visitor.profile.valueOrderings.length}</span>
+                <span className="metric-chip amber">
+                  {tl(
+                    { zh: `层级-0${visitor.unlockTier}`, en: `TIER-0${visitor.unlockTier}`, ja: `階層-0${visitor.unlockTier}` },
+                    lang
+                  )}
+                </span>
+                <span className="metric-chip">
+                  {tl({ zh: `事实 ${factCount}`, en: `FACT ${factCount}`, ja: `事実 ${factCount}` }, lang)}
+                </span>
+                <span className="metric-chip">
+                  {tl({ zh: `口述 ${sayCount}`, en: `SAY ${sayCount}`, ja: `口述 ${sayCount}` }, lang)}
+                </span>
+                <span className="metric-chip">
+                  {tl(
+                    {
+                      zh: `冲突轴 ${visitor.profile.valueOrderings.length}`,
+                      en: `AXES ${visitor.profile.valueOrderings.length}`,
+                      ja: `対立軸 ${visitor.profile.valueOrderings.length}`
+                    },
+                    lang
+                  )}
+                </span>
               </div>
             </div>
 
             {!arcUnlocked && !dispUnlocked ? (
               <div className="iso-lock-grid">
-                <IsometricLockedModule id="arc-locked" tier={2} night={2} kind="crystal" />
-                <IsometricLockedModule id="disp-locked" tier={4} night={4} kind="boggart" />
+                <IsometricLockedModule id="arc-locked" tier={2} night={2} kind="crystal" lang={lang} />
+                <IsometricLockedModule id="disp-locked" tier={4} night={4} kind="boggart" lang={lang} />
               </div>
             ) : (
               <>
@@ -283,7 +312,7 @@ export function OrdamorDossier({
                   </div>
                 ) : (
                   <div style={{ marginBottom: "10px" }}>
-                    <IsometricLockedModule id="arc-locked" tier={2} night={2} kind="crystal" />
+                    <IsometricLockedModule id="arc-locked" tier={2} night={2} kind="crystal" lang={lang} />
                   </div>
                 )}
 
@@ -314,7 +343,7 @@ export function OrdamorDossier({
                   </div>
                 ) : (
                   <div style={{ marginBottom: "10px" }}>
-                    <IsometricLockedModule id="disp-locked" tier={4} night={4} kind="boggart" />
+                    <IsometricLockedModule id="disp-locked" tier={4} night={4} kind="boggart" lang={lang} />
                   </div>
                 )}
               </>
@@ -353,7 +382,16 @@ export function OrdamorDossier({
 
             {!arcUnlocked ? (
               <div className="dossier-section" style={{ marginTop: "10px", marginBottom: 0 }}>
-                <div className="section-kicker">FORENSIC PROTOCOL // SAY ≠ DO CONTRAST</div>
+                <div className="section-kicker">
+                  {tl(
+                    {
+                      zh: "法医审讯协议 // 言行 (SAY ≠ DO) 对照",
+                      en: "FORENSIC PROTOCOL // SAY ≠ DO CONTRAST",
+                      ja: "法医尋問プロトコル // 言行 (SAY ≠ DO) 対照"
+                    },
+                    lang
+                  )}
+                </div>
                 <ForensicContrastSchematic lang={lang} />
               </div>
             ) : null}
@@ -377,11 +415,19 @@ export function OrdamorDossier({
                           color: verdictCorrect ? "var(--safe-text)" : "var(--danger-text)"
                         }}
                       >
-                        {verdictCorrect ? "VERIFIED // OK" : "MISJUDGED // LOSS"}
+                        {verdictCorrect
+                          ? tl({ zh: "裁决准确 // OK", en: "VERIFIED // OK", ja: "判定正確 // OK" }, lang)
+                          : tl({ zh: "裁决失误 // 漏放或误杀", en: "MISJUDGED // LOSS", ja: "判定ミス // LOSS" }, lang)}
                       </span>
-                      <span className="metric-chip">CALL: {verdictState}</span>
-                      <span className="metric-chip">TURNS: {turnsUsed}/4</span>
-                      <span className="metric-chip">OFF-AXIS: {offAxisCount}</span>
+                      <span className="metric-chip">
+                        {tl({ zh: `裁决: ${verdictState}`, en: `CALL: ${verdictState}`, ja: `判定: ${verdictState}` }, lang)}
+                      </span>
+                      <span className="metric-chip">
+                        {tl({ zh: `回合: ${turnsUsed}/4`, en: `TURNS: ${turnsUsed}/4`, ja: `ターン: ${turnsUsed}/4` }, lang)}
+                      </span>
+                      <span className="metric-chip">
+                        {tl({ zh: `离题: ${offAxisCount}`, en: `OFF-AXIS: ${offAxisCount}`, ja: `軸外: ${offAxisCount}` }, lang)}
+                      </span>
                     </div>
                   </div>
                   <div style={{ fontSize: "0.79rem", marginTop: "6px", color: "var(--text-secondary)" }}>
@@ -390,7 +436,16 @@ export function OrdamorDossier({
                 </div>
 
                 <div className="dossier-section">
-                  <div className="section-kicker">BASELINE CHORDS vs LIVE SUBJECT STANCE</div>
+                  <div className="section-kicker">
+                    {tl(
+                      {
+                        zh: "基线价值弧线 vs 实时审讯立场",
+                        en: "BASELINE CHORDS vs LIVE SUBJECT STANCE",
+                        ja: "基準価値アーク vs リアルタイム立場"
+                      },
+                      lang
+                    )}
+                  </div>
                   <MindCrystalCanvas
                     id="verdict-diff-canvas"
                     orderings={chordArcs}
@@ -446,7 +501,14 @@ export function OrdamorDossier({
           <div className="tab-panel-body">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
               <span className="section-kicker" style={{ marginBottom: 0 }}>
-                5-STAGE DETERMINISTIC STANCE + ZERO-LEAKAGE FLASH PIPELINE
+                {tl(
+                  {
+                    zh: "5 阶段确定性立场 + 零泄露 FLASH 管线",
+                    en: "5-STAGE DETERMINISTIC STANCE + ZERO-LEAKAGE FLASH PIPELINE",
+                    ja: "5段階決定論的立場 + ゼロ漏洩 FLASH パイプライン"
+                  },
+                  lang
+                )}
               </span>
               {import.meta.env?.DEV ? (
                 <Toggle
@@ -454,7 +516,9 @@ export function OrdamorDossier({
                   onPressedChange={() => onToggleSpoiler()}
                   className="ctrl-btn"
                 >
-                  {spoilerOpen ? "Hide Hidden Roll" : "Reveal Hidden Roll"}
+                  {spoilerOpen
+                    ? tl({ zh: "隐藏底牌", en: "Hide Hidden Roll", ja: "裏設定を隠す" }, lang)
+                    : tl({ zh: "揭示隐藏底牌", en: "Reveal Hidden Roll", ja: "裏設定を表示" }, lang)}
                 </Toggle>
               ) : null}
             </div>
@@ -462,6 +526,7 @@ export function OrdamorDossier({
               revealed={(import.meta.env?.DEV && spoilerOpen) || verdictDone}
               flashEnabled={flashEnabledInTrace}
               hasPayload={hasPipelineTrace}
+              lang={lang}
             />
             <pre
               className="code-inspector"
