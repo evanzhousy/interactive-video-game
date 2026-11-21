@@ -86,6 +86,7 @@ import {
 import { CompendiumModal } from "./components/CompendiumModal.js";
 import { CrisisModal, DemoCliffhangerModal } from "./components/CrisisModal.js";
 import { FlashConfigDrawer } from "./components/FlashConfigDrawer.js";
+import { GtaEcgCanvas, GtaRadarCanvas } from "./components/GtaHudCanvas.js";
 import {
   ArchiveIcon,
   BoltPowerIcon,
@@ -109,6 +110,7 @@ import { OnboardingGuide } from "./components/OnboardingGuide.js";
 import { OrdamorDossier, type DossierTab } from "./components/OrdamorDossier.js";
 import { IsometricAirlockSchematic } from "./components/Schematics.js";
 import { ViewportCanvas } from "./components/ViewportCanvas.js";
+import { WebGLAtmosphere } from "./components/WebGLAtmosphere.js";
 
 type Stage = "lobby" | "intake" | "booth" | "crisis" | "demo_end" | "night5";
 
@@ -264,6 +266,7 @@ export function App() {
     resolveInitialInterrogateConfig()
   );
   const [sysDrawerOpen, setSysDrawerOpen] = useState(false);
+  const [dossierCollapsed, setDossierCollapsed] = useState(false);
   const [motionPaused, setMotionPaused] = useState(false);
 
   // Sync root motion pause attribute so portaled Dialogs/Popovers also obey WCAG 2.2.2 Pause
@@ -1177,6 +1180,10 @@ export function App() {
     when: () => boothShortcutsEnabled,
     description: "Next Dossier Tab"
   });
+  useShortcut("d", () => setDossierCollapsed((c) => !c), {
+    when: () => stage === "booth" && !compendiumOpen && !flashDrawerOpen,
+    description: "Toggle Ordamor Dossier HUD"
+  });
 
   const strobeHint = useShortcutHint("s");
   const thermalHint = useShortcutHint("t");
@@ -1247,6 +1254,7 @@ export function App() {
       }
     }
     setVerdictState(decision);
+    setDossierCollapsed(false);
     setClipState(decision === "PURGE" ? "purge" : "admit");
     setReaction(decision === "PURGE" ? "CLIP: HIGH_TEMP_PURGE" : "CLIP: AIRLOCK_ADMIT");
     setActiveTab("verdict");
@@ -1379,7 +1387,7 @@ export function App() {
 
   return (
     <div
-      className={`booth-shell ${stage === "lobby" ? "is-lobby" : ""}`.trim()}
+      className={`booth-shell ${stage === "lobby" ? "is-lobby" : ""} ${stage === "booth" ? "is-gta-booth" : ""}`.trim()}
       data-motion={motionPaused ? "paused" : "active"}
     >
       <OverlayHost />
@@ -1742,7 +1750,19 @@ export function App() {
         </div>
       ) : null}
 
-      <main ref={mainRef} tabIndex={-1} className={`booth-main ${stage === "lobby" ? "is-lobby" : ""}`.trim()}>
+      <main
+        ref={mainRef}
+        tabIndex={-1}
+        className={`booth-main ${stage === "lobby" ? "is-lobby" : ""} ${stage === "booth" ? "is-gta-booth" : ""}`.trim()}
+      >
+        {stage !== "lobby" && stage !== "booth" ? (
+          <WebGLAtmosphere
+            mode={stage === "night5" ? "night5" : "lobby"}
+            night={stage === "night5" ? 5 : visitor.night}
+            bpm={bpm}
+            motionPaused={motionPaused}
+          />
+        ) : null}
         {stage === "lobby" ? (
           <LobbyScreen
             lang={lang}
@@ -1820,287 +1840,153 @@ export function App() {
 
         {stage === "booth" ? (
           <>
-            {visitor.id === "V-01" && !onboardingDismissed ? (
-              <OnboardingGuide
-                lang={lang}
-                turnsUsed={4 - turnsLeft}
-                verdictState={verdictState}
-                logSigned={logSigned}
-                onDismiss={() => {
-                  setOnboardingDismissed(true);
-                  saveOnboardingDismissed(true);
-                }}
-              />
-            ) : null}
             <div
-              className={`booth-grid ${
+              className={`gta-booth-stage ${
                 visitor.id === "V-01" && !onboardingDismissed
                   ? `tutorial-step-${verdictState !== "NONE" ? 3 : turnsLeft === 4 ? 1 : 2}`
                   : ""
-              }`.trim()}
+              } ${dossierCollapsed ? "dossier-collapsed" : ""}`.trim()}
               id="main-booth"
             >
-              <div className="left-stack">
-                <section className="panel">
-                  <div className="viewport-header">
-                    <span>
-                      {lang === "zh"
-                        ? `CAM-01 // 第${visitor.night}夜 · ${visitor.id} ${tl(visitor.name, lang)}`
-                        : `CAM-01 // N${visitor.night} · ${visitor.id} ${tl(visitor.name, lang).toUpperCase()}`}
-                    </span>
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-                      <Tooltip>
-                        <TooltipTrigger
-                          render={(triggerProps) => {
-                            const { type: _type, ...rest } = triggerProps as Record<string, unknown>;
-                            return (
-                              <span
-                                {...(rest as React.HTMLAttributes<HTMLSpanElement>)}
-                                id="booth-fuel-pill"
-                                tabIndex={0}
-                                aria-label={`Furnace fuel: ${fuelLeft}`}
-                                className={`fuel-pill ${fuelLeft === 0 ? "depleted" : fuelLeft <= 1 ? "low" : ""}`}
-                              />
-                            );
-                          }}
-                        >
-                          <FlameFuelIcon />
-                          <span className="pip-row" aria-hidden="true">
-                            {Array.from({ length: Math.max(5, fuelLeft) }, (_, i) => (
-                              <span key={i} className={`pip-dot ${i < fuelLeft ? "lit" : ""}`} />
-                            ))}
-                          </span>
-                          <span>{fuelLeft} FUEL</span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {tl(
-                            {
-                              zh: "岗亭供暖与高温净化燃料：每次净化消耗 1 FUEL，归零后触发低温降电 [1 PWR]",
-                              en: "Furnace & Purge Fuel: Each PURGE costs 1 FUEL; 0 fuel triggers -46°C brownout [1 PWR]",
-                              ja: "暖房・浄化燃料：焼却ごとに 1 FUEL 消費。ゼロで氷点下電圧低下 [1 PWR]"
-                            },
-                            lang
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                      <Meter
-                        className="hud-meter"
-                        value={powerLeft}
-                        min={0}
-                        max={Math.max(1, maxPower)}
-                        aria-label={tl(
-                          { zh: "传感器剩余电量", en: "Sensor power", ja: "センサー電力" },
-                          lang
-                        )}
-                      >
-                        <MeterTrack>
-                          <MeterIndicator />
-                        </MeterTrack>
-                      </Meter>
-                      <span className="telemetry-readout amber">
-                        <BoltPowerIcon /> {powerLeft}/{maxPower} PWR
-                      </span>
-                    </div>
-                  </div>
-
-                  <ViewportCanvas
-                    visitor={visitor}
-                    clipState={clipState}
-                    bpm={bpm}
-                    bpmDelta={lastBpmDelta}
-                    strobeTrigger={strobeTrigger}
-                    thermalTrigger={thermalTrigger}
-                    verdictState={verdictState}
-                    motionPaused={motionPaused}
-                    onClipComplete={handleClipComplete}
-                  />
-
-                  {fuelLeft === 0 ? (
-                    <div className="cryo-brownout-banner" id="cryo-brownout-banner">
-                      <SnowHazardIcon />
-                      <span>
-                        {tl(
-                          {
-                            zh: "[! CRYO-BROWNOUT · 0 FUEL] 电容结霜 -> 1 PWR（零油强行净化将透支至 0 PWR）",
-                            en: "[! CRYO-BROWNOUT · 0 FUEL] CAPACITOR 1 PWR (PURGE OVERDRAFTS TO 0 PWR)",
-                            ja: "[! CRYO-BROWNOUT · 0 FUEL] 電力 1 PWR（強行焼却で次回 0 PWR）"
-                          },
-                          lang
-                        )}
-                      </span>
-                    </div>
-                  ) : null}
-
-                  {visitor.night === 3 ? (
-                    <div className="storm-banner" id="night3-storm-banner">
-                      <HazardTriangleIcon />
-                      <span>{tl(UI_STRINGS.stormBanner, lang)}</span>
-                    </div>
-                  ) : null}
-
-                  {sensorToast ? <div className="sensor-toast">{sensorToast}</div> : null}
-
-                  {stressReplayUnlocked && heartbeatEvents.length > 0 && !sensorsBlinded ? (
-                    <div className="stress-replay-panel" id="stress-replay-panel">
-                      <div className="stress-replay-header">
-                        <span>
-                          {tl(
-                            {
-                              zh: "ECG 应激回放 // 逐轮心率佐证",
-                              en: "ECG STRESS REPLAY // PER-TURN CARDIAC TRACE",
-                              ja: "ECG ストレス再生 // ターン別心拍記録"
-                            },
-                            lang
-                          )}
-                        </span>
-                        <span>{heartbeatEvents.length} TURNS</span>
-                      </div>
-                      <div className="stress-replay-rows">
-                        {heartbeatEvents.map((ev) => (
-                          <div
-                            key={ev.turnIndex}
-                            className={`stress-replay-row anomaly-${ev.anomaly}`}
-                          >
-                            <span className="sr-turn">T{ev.turnIndex}</span>
-                            <span className="sr-bpm">
-                              {ev.bpmBefore}→{ev.bpmAfter} ({ev.delta >= 0 ? `+${ev.delta}` : ev.delta})
-                            </span>
-                            <span className="sr-note">{tl(ev.note, lang)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  <div className="sensor-bar">
-                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                      <Tooltip shortcut="s">
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              id="btn-strobe"
-                              className="ctrl-btn"
-                              disabled={sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE"}
-                              focusableWhenDisabled
-                              aria-keyshortcuts={strobeHint.ariaKeyshortcuts}
-                              onClick={() => handleTriggerSensor("strobe")}
-                            />
-                          }
-                        >
-                          <StrobeTargetIcon /> <span>{tl(UI_STRINGS.strobeBtn, lang)}</span>{" "}
-                          <kbd className="kbd-chip" aria-hidden="true">S</kbd>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {tl(
-                            {
-                              zh: "脉冲强光扫描瞳孔反射",
-                              en: "Strobe pupil photomotor scan",
-                              ja: "ストロボ瞳孔反応スキャン"
-                            },
-                            lang
-                          )}{" "}
-                          <TooltipShortcut />
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip shortcut="t">
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              id="btn-thermal"
-                              className="ctrl-btn"
-                              disabled={sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE"}
-                              focusableWhenDisabled
-                              aria-keyshortcuts={thermalHint.ariaKeyshortcuts}
-                              onClick={() => handleTriggerSensor("thermal")}
-                            />
-                          }
-                        >
-                          <ThermalWaveIcon /> <span>{tl(UI_STRINGS.thermalBtn, lang)}</span>{" "}
-                          <kbd className="kbd-chip" aria-hidden="true">T</kbd>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {tl(
-                            {
-                              zh: "FLIR 颈部神经端口红外热成像",
-                              en: "FLIR cervical neural port thermal scan",
-                              ja: "FLIR 頚部神経ポート赤外線スキャン"
-                            },
-                            lang
-                          )}{" "}
-                          <TooltipShortcut />
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip shortcut="r">
-                        <TooltipTrigger
-                          render={
-                            <Button
-                              id="btn-stress-replay"
-                              className={`ctrl-btn ${stressReplayUnlocked ? "amber" : ""}`}
-                              disabled={
-                                sensorsBlinded ||
-                                powerLeft <= 0 ||
-                                verdictState !== "NONE" ||
-                                stressReplayUnlocked ||
-                                heartbeatEvents.length === 0
-                              }
-                              focusableWhenDisabled
-                              aria-keyshortcuts={replayHint.ariaKeyshortcuts}
-                              onClick={handleUnlockStressReplay}
-                            />
-                          }
-                        >
-                          <BoltPowerIcon />{" "}
-                          <span>
-                            {tl(
-                              {
-                                zh: stressReplayUnlocked ? "回放已开" : "应激回放",
-                                en: stressReplayUnlocked ? "Replay On" : "ECG Replay",
-                                ja: stressReplayUnlocked ? "再生中" : "心拍再生"
-                              },
-                              lang
-                            )}
-                          </span>{" "}
-                          <kbd className="kbd-chip" aria-hidden="true">R</kbd>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {tl(
-                            {
-                              zh: "消耗 1 PWR 解锁逐轮心率应激曲线与异常标注（需先提问至少 1 轮）",
-                              en: "Spend 1 PWR to reveal per-turn cardiac stress anomalies (requires >=1 question)",
-                              ja: "1 PWR消費でターン別心拍ストレス異常を表示（1回以上質問後）"
-                            },
-                            lang
-                          )}{" "}
-                          <TooltipShortcut />
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <span className="telemetry-readout">
-                      CH-01 // {reaction}
-                    </span>
-                  </div>
-                </section>
-
-                <IntercomPanel
+              {/* FULL-SCREEN WORLD VIEWPORT + GPU WEBGL2 ATMOSPHERE LAYER */}
+              <div className="gta-world-stage">
+                <ViewportCanvas
                   visitor={visitor}
-                  lang={lang}
-                  operatorName={operatorName}
-                  turnsLeft={turnsLeft}
-                  chatterLeft={chatterLeft}
-                  fuelLeft={fuelLeft}
-                  verdictDone={verdictState !== "NONE"}
-                  isRephrasing={isRephrasing}
-                  streamingText={streamingReply}
-                  signalGlitch={signalGlitch}
-                  transcript={transcript}
-                  onAskProbe={handleAskProbe}
-                  onExecuteVerdict={handleVerdict}
+                  clipState={clipState}
+                  bpm={bpm}
+                  bpmDelta={lastBpmDelta}
+                  strobeTrigger={strobeTrigger}
+                  thermalTrigger={thermalTrigger}
+                  verdictState={verdictState}
+                  motionPaused={motionPaused}
+                  onClipComplete={handleClipComplete}
                 />
+                <WebGLAtmosphere
+                  mode="booth"
+                  night={visitor.night}
+                  bpm={bpm}
+                  strobeTrigger={strobeTrigger}
+                  thermalTrigger={thermalTrigger}
+                  verdictState={verdictState}
+                  signalGlitch={signalGlitch}
+                  motionPaused={motionPaused}
+                />
+                <div className="gta-world-vignette" aria-hidden="true" />
               </div>
 
-              <div className="right-stack">
+              {/* GTA VERDICT SLASH STINGER OVERLAY */}
+              {verdictState !== "NONE" ? (
+                <div
+                  className={`gta-verdict-stinger ${verdictState === "PURGE" ? "purge" : "admit"}`}
+                  id="gta-verdict-stinger"
+                  role="status"
+                >
+                  <div className="gta-stinger-kicker">
+                    {verdictState === "PURGE"
+                      ? "THERMAL STERILIZATION // 1,100°C"
+                      : "AIRLOCK CYCLE // CLEARANCE GRANTED"}
+                  </div>
+                  <div className="gta-stinger-title">
+                    {verdictState === "PURGE"
+                      ? tl({ zh: "高温净化完成 // PURGED", en: "INCINERATED // PURGED", ja: "焼却完了 // PURGED" }, lang)
+                      : tl({ zh: "气闸放行 // ADMITTED", en: "AIRLOCK CLEARED // ADMITTED", ja: "通過許可 // ADMITTED" }, lang)}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* TOP-LEFT FLOATING SUBJECT, ALERTS & GTA OBJECTIVE CHECKLIST */}
+              <div className="gta-hud-topleft">
+                <div className="gta-mission-plate">
+                  <span className="gta-mission-night">NIGHT 0{visitor.night}</span>
+                  <span className="gta-mission-subject">
+                    {visitor.id} · {tl(visitor.name, lang).toUpperCase()}
+                  </span>
+                  <span className="gta-mission-role">{tl(visitor.role, lang)}</span>
+                </div>
+
+                {fuelLeft === 0 ? (
+                  <div className="cryo-brownout-banner gta-alert-strip" id="cryo-brownout-banner">
+                    <SnowHazardIcon />
+                    <span>
+                      {tl(
+                        {
+                          zh: "[! CRYO-BROWNOUT · 0 FUEL] 电容结霜 -> 1 PWR（零油强行净化将透支至 0 PWR）",
+                          en: "[! CRYO-BROWNOUT · 0 FUEL] CAPACITOR 1 PWR (PURGE OVERDRAFTS TO 0 PWR)",
+                          ja: "[! CRYO-BROWNOUT · 0 FUEL] 電力 1 PWR（強行焼却で次回 0 PWR）"
+                        },
+                        lang
+                      )}
+                    </span>
+                  </div>
+                ) : null}
+
+                {visitor.night === 3 ? (
+                  <div className="storm-banner gta-alert-strip" id="night3-storm-banner">
+                    <HazardTriangleIcon />
+                    <span>{tl(UI_STRINGS.stormBanner, lang)}</span>
+                  </div>
+                ) : null}
+
+                {visitor.id === "V-01" && !onboardingDismissed ? (
+                  <OnboardingGuide
+                    lang={lang}
+                    turnsUsed={4 - turnsLeft}
+                    verdictState={verdictState}
+                    logSigned={logSigned}
+                    onDismiss={() => {
+                      setOnboardingDismissed(true);
+                      saveOnboardingDismissed(true);
+                    }}
+                  />
+                ) : null}
+              </div>
+
+              {/* TOP-RIGHT GTA WANTED-STARS + LIVE 60FPS ECG OSCILLOSCOPE + DOSSIER TOGGLE */}
+              <div className="gta-hud-topright">
+                <div
+                  className={`gta-wanted-stars ${visitor.night === 3 ? "emi" : ""}`}
+                  aria-label={`Threat tier ${visitor.night} of 4`}
+                >
+                  {[1, 2, 3, 4].map((star) => (
+                    <span
+                      key={star}
+                      className={`gta-star ${star <= visitor.night ? "lit" : ""}`}
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+
+                <div className={`gta-ecg-hud ${sensorsBlinded ? "blinded" : ""}`}>
+                  <GtaEcgCanvas bpm={bpm} blinded={sensorsBlinded} motionPaused={motionPaused} />
+                  <div className="gta-ecg-readout">
+                    <span className="gta-bpm-big">
+                      {sensorsBlinded ? "---" : bpm}
+                      <small>BPM</small>
+                    </span>
+                    <span className="gta-bpm-delta">
+                      {sensorsBlinded
+                        ? "SIGNAL LOST"
+                        : lastBpmDelta === null
+                          ? reaction.replace("CLIP: ", "")
+                          : `${lastBpmDelta >= 0 ? "+" : ""}${lastBpmDelta} Δ`}
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  id="btn-toggle-dossier"
+                  className={`gta-hud-pill ${!dossierCollapsed ? "amber" : ""}`}
+                  onClick={() => setDossierCollapsed((c) => !c)}
+                >
+                  {dossierCollapsed
+                    ? tl({ zh: "展开档案 [D] ◀", en: "DOSSIER [D] ◀", ja: "調書 [D] ◀" }, lang)
+                    : tl({ zh: "收起档案 [D] ▶", en: "HIDE [D] ▶", ja: "隠す [D] ▶" }, lang)}
+                </Button>
+              </div>
+
+              {/* RIGHT-SIDE FLOATING TRANSLUCENT ORDAMOR INTEL HUD */}
+              <aside className={`gta-dossier-rail ${dossierCollapsed ? "is-collapsed" : ""}`}>
                 <OrdamorDossier
                   visitor={visitor}
                   roll={currentRoll}
@@ -2120,7 +2006,7 @@ export function App() {
                   motionPaused={motionPaused}
                 />
 
-                <section className="panel airlock-dock-panel" aria-label="Airlock Telemetry">
+                <div className="gta-airlock-mini" aria-label="Airlock Telemetry">
                   <IsometricAirlockSchematic
                     verdictState={verdictState}
                     night={visitor.night}
@@ -2129,7 +2015,221 @@ export function App() {
                     maxPower={maxPower}
                     lang={lang}
                   />
-                </section>
+                </div>
+              </aside>
+
+              {/* BOTTOM-LEFT GTA TACTICAL MINIMAP RADAR + FUEL/PWR BARS + SENSOR KEYS */}
+              <div className="gta-hud-bottomleft">
+                {sensorToast ? <div className="sensor-toast gta-toast">{sensorToast}</div> : null}
+
+                {stressReplayUnlocked && heartbeatEvents.length > 0 && !sensorsBlinded ? (
+                  <div className="stress-replay-panel gta-replay-hud" id="stress-replay-panel">
+                    <div className="stress-replay-header">
+                      <span>
+                        {tl(
+                          {
+                            zh: "ECG 应激回放",
+                            en: "ECG STRESS REPLAY",
+                            ja: "ECG ストレス再生"
+                          },
+                          lang
+                        )}
+                      </span>
+                      <span>{heartbeatEvents.length} TURNS</span>
+                    </div>
+                    <div className="stress-replay-rows">
+                      {heartbeatEvents.map((ev) => (
+                        <div
+                          key={ev.turnIndex}
+                          className={`stress-replay-row anomaly-${ev.anomaly}`}
+                        >
+                          <span className="sr-turn">T{ev.turnIndex}</span>
+                          <span className="sr-bpm">
+                            {ev.bpmBefore}→{ev.bpmAfter} ({ev.delta >= 0 ? `+${ev.delta}` : ev.delta})
+                          </span>
+                          <span className="sr-note">{tl(ev.note, lang)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="gta-radar-frame">
+                  <GtaRadarCanvas
+                    visitor={visitor}
+                    bpm={bpm}
+                    verdictState={verdictState}
+                    motionPaused={motionPaused}
+                  />
+
+                  {/* Iconic GTA Horizontal Status Bars Beneath Minimap (FUEL + PWR) */}
+                  <div className="gta-radar-bars">
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={(triggerProps) => {
+                          const { type: _type, ...rest } = triggerProps as Record<string, unknown>;
+                          return (
+                            <div
+                              {...(rest as React.HTMLAttributes<HTMLDivElement>)}
+                              id="booth-fuel-pill"
+                              tabIndex={0}
+                              aria-label={`Furnace fuel: ${fuelLeft}`}
+                              className={`gta-bar-slot fuel ${fuelLeft === 0 ? "depleted" : fuelLeft <= 1 ? "low" : ""}`}
+                            />
+                          );
+                        }}
+                      >
+                        <div
+                          className="gta-bar-fill fuel"
+                          style={{ width: `${Math.min(100, (fuelLeft / 5) * 100)}%` }}
+                        />
+                        <span className="gta-bar-label">
+                          <FlameFuelIcon /> {fuelLeft} FUEL
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {tl(
+                          {
+                            zh: "炉心净化燃料：每次 PURGE 消耗 1 FUEL，归零触发低温降电 [1 PWR]",
+                            en: "Furnace Fuel: Each PURGE costs 1 FUEL; 0 fuel triggers -46°C brownout [1 PWR]",
+                            ja: "暖房燃料：焼却ごとに 1 FUEL 消費。ゼロで電圧低下 [1 PWR]"
+                          },
+                          lang
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <div className="gta-bar-slot pwr">
+                      <Meter
+                        className="gta-pwr-meter"
+                        value={powerLeft}
+                        min={0}
+                        max={Math.max(1, maxPower)}
+                        aria-label={tl({ zh: "传感器剩余电量", en: "Sensor power", ja: "センサー電力" }, lang)}
+                      >
+                        <MeterTrack>
+                          <MeterIndicator />
+                        </MeterTrack>
+                      </Meter>
+                      <span className="gta-bar-label">
+                        <BoltPowerIcon /> {powerLeft}/{maxPower} PWR
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tactical Sensor Hotkeys */}
+                <div className="gta-sensor-strip">
+                  <Tooltip shortcut="s">
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          id="btn-strobe"
+                          className="gta-sensor-btn"
+                          disabled={sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE"}
+                          focusableWhenDisabled
+                          aria-keyshortcuts={strobeHint.ariaKeyshortcuts}
+                          onClick={() => handleTriggerSensor("strobe")}
+                        />
+                      }
+                    >
+                      <StrobeTargetIcon />{" "}
+                      <span>{tl({ zh: "强光", en: "STROBE", ja: "閃光" }, lang)}</span>{" "}
+                      <kbd className="kbd-chip" aria-hidden="true">S</kbd>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {tl({ zh: "脉冲强光扫描瞳孔反射", en: "Strobe pupil photomotor scan", ja: "ストロボ瞳孔スキャン" }, lang)}{" "}
+                      <TooltipShortcut />
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip shortcut="t">
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          id="btn-thermal"
+                          className="gta-sensor-btn"
+                          disabled={sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE"}
+                          focusableWhenDisabled
+                          aria-keyshortcuts={thermalHint.ariaKeyshortcuts}
+                          onClick={() => handleTriggerSensor("thermal")}
+                        />
+                      }
+                    >
+                      <ThermalWaveIcon />{" "}
+                      <span>{tl({ zh: "热像", en: "FLIR", ja: "熱像" }, lang)}</span>{" "}
+                      <kbd className="kbd-chip" aria-hidden="true">T</kbd>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {tl({ zh: "FLIR 颈部神经热成像", en: "FLIR cervical thermal scan", ja: "FLIR 頚部熱画像" }, lang)}{" "}
+                      <TooltipShortcut />
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip shortcut="r">
+                    <TooltipTrigger
+                      render={
+                        <Button
+                          id="btn-stress-replay"
+                          className={`gta-sensor-btn ${stressReplayUnlocked ? "amber" : ""}`}
+                          disabled={
+                            sensorsBlinded ||
+                            powerLeft <= 0 ||
+                            verdictState !== "NONE" ||
+                            stressReplayUnlocked ||
+                            heartbeatEvents.length === 0
+                          }
+                          focusableWhenDisabled
+                          aria-keyshortcuts={replayHint.ariaKeyshortcuts}
+                          onClick={handleUnlockStressReplay}
+                        />
+                      }
+                    >
+                      <BoltPowerIcon />{" "}
+                      <span>
+                        {tl(
+                          {
+                            zh: stressReplayUnlocked ? "已开" : "回放",
+                            en: stressReplayUnlocked ? "ON" : "REPLAY",
+                            ja: stressReplayUnlocked ? "再生" : "心拍"
+                          },
+                          lang
+                        )}
+                      </span>{" "}
+                      <kbd className="kbd-chip" aria-hidden="true">R</kbd>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {tl(
+                        {
+                          zh: "消耗 1 PWR 解锁逐轮心率应激曲线与异常标注",
+                          en: "Spend 1 PWR to reveal per-turn cardiac stress anomalies",
+                          ja: "1 PWR消費でターン別心拍ストレス異常を表示"
+                        },
+                        lang
+                      )}{" "}
+                      <TooltipShortcut />
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+
+              {/* BOTTOM-CENTER GTA CINEMA SUBTITLES + RADIO & KILL-SWITCH CONSOLE */}
+              <div className="gta-hud-bottomcenter">
+                <IntercomPanel
+                  visitor={visitor}
+                  lang={lang}
+                  operatorName={operatorName}
+                  turnsLeft={turnsLeft}
+                  chatterLeft={chatterLeft}
+                  fuelLeft={fuelLeft}
+                  verdictDone={verdictState !== "NONE"}
+                  isRephrasing={isRephrasing}
+                  streamingText={streamingReply}
+                  signalGlitch={signalGlitch}
+                  transcript={transcript}
+                  onAskProbe={handleAskProbe}
+                  onExecuteVerdict={handleVerdict}
+                />
               </div>
             </div>
           </>

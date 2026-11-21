@@ -59,6 +59,7 @@ export function IntercomPanel({
   onExecuteVerdict
 }: Props) {
   const [draft, setDraft] = useState("");
+  const [logExpanded, setLogExpanded] = useState(false);
   const [pending, setPending] = useState<{ intent: ProbeKey | "off_axis"; text: string } | null>(
     null
   );
@@ -67,7 +68,18 @@ export function IntercomPanel({
   useEffect(() => {
     setDraft("");
     setPending(null);
+    setLogExpanded(false);
   }, [visitor.id]);
+
+  const latestNpcLine = (() => {
+    if (isRephrasing && streamingText) return streamingText;
+    for (let i = transcript.length - 1; i >= 0; i--) {
+      if (transcript[i]?.speaker === "npc") {
+        return tl(transcript[i]!.text, lang);
+      }
+    }
+    return tl(visitor.openingLine, lang);
+  })();
 
   useEffect(() => {
     scrollController.scrollToEnd({ behavior: "instant" });
@@ -85,11 +97,31 @@ export function IntercomPanel({
   };
 
   return (
-    <section className="panel" id="intercom-panel">
-      <div className="viewport-header">
+    <section className={`gta-comms-dock ${logExpanded ? "log-expanded" : ""}`.trim()} id="intercom-panel">
+      {/* GTA-Style Floating Cinema Subtitle Bar */}
+      <div className="gta-cinema-subtitle" id="gta-subtitle-bar" aria-live="polite">
+        <span className="gta-sub-speaker">
+          {visitor.id} // {tl(visitor.name, lang).split("（")[0]?.split("(")[0]?.trim()}
+        </span>
+        <span className="gta-sub-text">
+          {latestNpcLine}
+          {isRephrasing ? <span className="stream-caret" aria-hidden="true">▌</span> : null}
+        </span>
+      </div>
+
+      <div className="gta-comms-header">
         <span style={{ display: "inline-flex", alignItems: "center", gap: "7px" }}>
-          <MicSignalIcon /> {tl({ zh: "对讲 // CH-01", en: "COMMS // CH-01", ja: "通話 // CH-01" }, lang)}
+          <MicSignalIcon /> {tl({ zh: "CH-01 无线电", en: "COMMS // CH-01", ja: "CH-01 無線" }, lang)}
           <CommsWaveformSvg active={isRephrasing} />
+          <Button
+            type="button"
+            className="gta-micro-btn"
+            onClick={() => setLogExpanded((e) => !e)}
+          >
+            {logExpanded
+              ? tl({ zh: "收起记录", en: "COMPACT LOG", ja: "履歴縮小" }, lang)
+              : tl({ zh: `通话记录 (${transcript.length})`, en: `LOG (${transcript.length})`, ja: `履歴 (${transcript.length})` }, lang)}
+          </Button>
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span
@@ -124,7 +156,7 @@ export function IntercomPanel({
               <MeterIndicator />
             </MeterTrack>
           </Meter>
-          <span style={{ color: "var(--amber-crt)", fontWeight: 700 }}>{turnsLeft}/4</span>
+          <span className="gta-turns-num">{turnsLeft}/4</span>
         </div>
       </div>
 

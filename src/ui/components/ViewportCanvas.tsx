@@ -357,14 +357,18 @@ export function ViewportCanvas({
               ctx.fillText("INNER AIRLOCK UNSEALED · SUBJECT ADMITTED", w / 2, h - 22);
             }
 
-            // Top-left surveillance camera REC telemetry badge
+            // Surveillance camera REC telemetry badge (top-center in full-screen GTA mode, top-left in compact frame)
             const recBlink = Math.floor(now / 700) % 2 === 0;
             const streamActive = idleVideoReady || reactionVideoReady;
+            const fullGta = h > 520;
+            const badgeW = 192;
+            const badgeX = fullGta ? Math.round((w - badgeW) / 2) : 12;
+            const badgeY = fullGta ? 54 : 12;
             ctx.fillStyle = "rgba(6, 12, 16, 0.66)";
-            ctx.fillRect(12, 12, 186, 20);
+            ctx.fillRect(badgeX, badgeY, badgeW, 20);
             ctx.fillStyle = streamActive ? "#34d399" : recBlink ? "#ef4444" : "#7f1d1d";
             ctx.beginPath();
-            ctx.arc(21, 22, 3.2, 0, Math.PI * 2);
+            ctx.arc(badgeX + 9, badgeY + 10, 3.2, 0, Math.PI * 2);
             ctx.fill();
 
             ctx.fillStyle = streamActive ? "#a7f3d0" : "#e2e8f0";
@@ -372,8 +376,8 @@ export function ViewportCanvas({
             ctx.textAlign = "left";
             ctx.fillText(
               streamActive ? "CAM-01 // LIVE I2V STREAM" : "CAM-01 // 35MM AI LIVE",
-              30,
-              25
+              badgeX + 18,
+              badgeY + 13
             );
           }
         }

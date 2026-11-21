@@ -36,6 +36,8 @@
   --safe-soft: rgba(73, 184, 130, 0.14);
 
   --font-sans: "IBM Plex Sans", "Noto Sans SC", "PingFang SC", "Hiragino Sans", system-ui, sans-serif;
+  --font-display: "Chakra Petch", "Noto Sans SC", "PingFang SC", sans-serif;
+  --font-condensed: "Teko", "Chakra Petch", "Noto Sans SC", sans-serif;
   --font-mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", Consolas, ui-monospace, monospace;
 
   /* Physics-based CSS linear() curves (applied to spatial motion, never opacity) */
@@ -3663,5 +3665,1331 @@ dialog::backdrop,
     grid-template-columns: 1fr;
     gap: 20px;
     padding: 18px 16px 32px;
+  }
+}
+
+/* ============================================================================
+   AAA GTA-STYLE GAME HUD, WEBGL ATMOSPHERE & CANVAS TELEMETRY OVERHAUL
+   ============================================================================ */
+
+/* Full-screen GPU WebGL Atmosphere Canvas (snow, edge frost, mouse glint, thermal/strobe/blaze) */
+.webgl-atmosphere-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 6;
+  pointer-events: none;
+  display: block;
+}
+
+/* ----------------------------------------------------------------------------
+   1. GTA MAIN MENU LOBBY (Full-Viewport Animated Video + Slanted Action Stack)
+   ---------------------------------------------------------------------------- */
+.gta-lobby-screen {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 100dvh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  background: #030609;
+  user-select: none;
+}
+
+.gta-lobby-screen .lobby-bg-layer {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.gta-lobby-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 52% 42%, rgba(5, 10, 14, 0.08) 0%, rgba(4, 7, 10, 0.45) 58%, rgba(2, 4, 7, 0.9) 100%),
+    linear-gradient(180deg, rgba(3, 6, 9, 0.82) 0%, rgba(3, 6, 9, 0.08) 26%, rgba(3, 6, 9, 0.14) 64%, rgba(3, 6, 9, 0.92) 100%),
+    linear-gradient(90deg, rgba(3, 6, 9, 0.78) 0%, rgba(3, 6, 9, 0.06) 44%, rgba(3, 6, 9, 0.06) 62%, rgba(3, 6, 9, 0.72) 100%);
+}
+
+.gta-lobby-top {
+  position: relative;
+  z-index: 16;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 26px 34px 12px;
+}
+
+.gta-brand-emblem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(680px, 64vw);
+}
+
+.gta-kicker-strip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gta-stamp-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 11px;
+  background: var(--amber-crt);
+  color: #050709;
+  font-family: var(--font-display);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  transform: skewX(-10deg);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+}
+
+.gta-coord-text {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--frost-cyan);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+.gta-hero-title {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(2.35rem, 5vw, 4.3rem);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f6f8fa;
+  transform: skewX(-6deg);
+  transform-origin: left center;
+  text-shadow:
+    0 3px 0 #050709,
+    4px 5px 0 rgba(235, 168, 52, 0.42),
+    0 12px 32px rgba(0, 0, 0, 0.95);
+}
+
+.gta-hero-sub {
+  margin: 4px 0 0;
+  max-width: 540px;
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+  font-weight: 500;
+  line-height: 1.55;
+  color: rgba(228, 236, 242, 0.9);
+  padding-left: 12px;
+  border-left: 3px solid var(--amber-crt);
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95);
+}
+
+.gta-top-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.gta-hud-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 4px 12px;
+  border: 1px solid rgba(228, 236, 242, 0.28);
+  border-left: 3px solid rgba(158, 198, 212, 0.72);
+  border-radius: 0;
+  background: rgba(6, 10, 14, 0.74);
+  backdrop-filter: blur(6px);
+  color: #e8eff4;
+  font-family: var(--font-display);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  transition: background-color 110ms ease, border-color 110ms ease, color 110ms ease, transform 120ms var(--ease-mechanical);
+}
+
+.gta-hud-pill:hover:not(:disabled, [data-disabled]) {
+  background: rgba(18, 26, 34, 0.92);
+  border-color: var(--amber-crt);
+  color: var(--amber-bright);
+  transform: skewX(-8deg) translateY(-1px);
+}
+
+.gta-hud-pill.amber,
+.gta-hud-pill[data-pressed] {
+  background: var(--amber-crt);
+  border-color: var(--amber-bright);
+  border-left-color: #ffffff;
+  color: #050709;
+}
+
+.gta-hud-pill.amber:hover:not(:disabled, [data-disabled]),
+.gta-hud-pill[data-pressed]:hover:not(:disabled, [data-disabled]) {
+  background: var(--amber-bright);
+  color: #050709;
+}
+
+.gta-lobby-bottom {
+  position: relative;
+  z-index: 16;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 16px 34px 34px;
+}
+
+/* GTA Slanted Vertical Menu Stack (Bottom-Left) */
+.gta-menu-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: min(410px, 46vw);
+}
+
+.gta-menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  width: 100%;
+  min-height: 44px;
+  padding: 9px 18px 9px 14px;
+  border: 1px solid rgba(228, 236, 242, 0.22);
+  border-left: 5px solid rgba(158, 198, 212, 0.65);
+  border-radius: 0;
+  background: linear-gradient(90deg, rgba(6, 11, 16, 0.88) 0%, rgba(8, 14, 20, 0.66) 72%, rgba(8, 14, 20, 0.28) 100%);
+  backdrop-filter: blur(8px);
+  color: #eef4f7;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  transform: skewX(-8deg);
+  box-shadow: 4px 6px 20px rgba(0, 0, 0, 0.65);
+  transition:
+    transform 160ms var(--ease-mechanical),
+    background 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    box-shadow 140ms ease;
+}
+
+.gta-menu-item:hover:not(:disabled, [data-disabled]),
+.gta-menu-item:focus-visible {
+  transform: skewX(-8deg) translateX(12px);
+  background: linear-gradient(90deg, var(--amber-crt) 0%, rgba(235, 168, 52, 0.88) 85%, rgba(235, 168, 52, 0.55) 100%);
+  border-color: var(--amber-bright);
+  border-left-color: #ffffff;
+  color: #050709;
+  box-shadow: 0 8px 28px rgba(235, 168, 52, 0.35);
+}
+
+.gta-menu-item.primary {
+  min-height: 54px;
+  font-size: 1.1rem;
+  background: linear-gradient(90deg, rgba(235, 168, 52, 0.95) 0%, rgba(246, 189, 84, 0.85) 80%, rgba(235, 168, 52, 0.45) 100%);
+  border-color: var(--amber-bright);
+  border-left: 6px solid #ffffff;
+  color: #050709;
+  box-shadow: 0 8px 30px rgba(235, 168, 52, 0.32);
+}
+
+.gta-menu-item.primary:hover:not(:disabled, [data-disabled]),
+.gta-menu-item.primary:focus-visible {
+  background: linear-gradient(90deg, #ffce68 0%, var(--amber-bright) 90%, rgba(246, 189, 84, 0.72) 100%);
+  box-shadow: 0 10px 36px rgba(246, 189, 84, 0.48);
+}
+
+.gta-menu-item.continue {
+  border-left-color: var(--safe-admit);
+  background: linear-gradient(90deg, rgba(10, 32, 24, 0.9) 0%, rgba(10, 32, 24, 0.65) 75%, rgba(10, 32, 24, 0.25) 100%);
+  color: #a6f4cd;
+}
+
+.gta-menu-item.continue:hover:not(:disabled, [data-disabled]) {
+  background: linear-gradient(90deg, var(--safe-admit) 0%, rgba(73, 184, 130, 0.86) 85%, rgba(73, 184, 130, 0.5) 100%);
+  border-color: #86e8b8;
+  color: #04120b;
+}
+
+.gta-menu-idx {
+  font-family: var(--font-condensed);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 0.9;
+  min-width: 28px;
+  color: var(--amber-crt);
+  opacity: 0.95;
+}
+
+.gta-menu-item.primary .gta-menu-idx,
+.gta-menu-item:hover .gta-menu-idx,
+.gta-menu-item:focus-visible .gta-menu-idx {
+  color: #050709;
+}
+
+.gta-menu-item.continue .gta-menu-idx {
+  color: var(--safe-text);
+}
+
+.gta-menu-item.continue:hover .gta-menu-idx {
+  color: #04120b;
+}
+
+.gta-menu-label {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  flex: 1 1 auto;
+}
+
+.gta-menu-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gta-menu-row svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.gta-menu-sub {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.gta-menu-arrow {
+  font-size: 0.88rem;
+  opacity: 0.85;
+}
+
+/* Bottom-Right Frameless GTA Operator Dog-Tag Strip */
+.gta-operator-strip {
+  width: min(350px, 38vw);
+  padding: 14px 16px 16px;
+  background: linear-gradient(135deg, rgba(6, 11, 15, 0.84) 0%, rgba(4, 8, 12, 0.68) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(235, 168, 52, 0.34);
+  border-right: 4px solid var(--amber-crt);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.72);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  user-select: text;
+}
+
+.gta-dogtag-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(235, 168, 52, 0.25);
+}
+
+.gta-dogtag-code {
+  font-family: var(--font-mono);
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--frost-cyan);
+}
+
+.gta-dogtag-callsign {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--amber-bright);
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.gta-inline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gta-inline-label {
+  font-family: var(--font-mono);
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(196, 212, 222, 0.85);
+}
+
+.gta-input-group {
+  background: rgba(4, 7, 10, 0.82);
+  border: 1px solid rgba(228, 236, 242, 0.26);
+  border-radius: 0;
+}
+
+.gta-input {
+  width: 100%;
+  padding: 6px 9px;
+  background: transparent;
+  border: 0;
+  color: #f2f6f8;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.gta-select-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 10px;
+  background: rgba(4, 7, 10, 0.82);
+  border: 1px solid rgba(228, 236, 242, 0.26);
+  border-radius: 0;
+  color: #f2f6f8;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gta-select-trigger:hover {
+  border-color: var(--amber-crt);
+}
+
+.gta-dialog-shell {
+  background: rgba(7, 11, 15, 0.95) !important;
+  border: 1px solid rgba(235, 168, 52, 0.52) !important;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.88);
+}
+
+/* ----------------------------------------------------------------------------
+   2. GTA FULL-VIEWPORT QUARANTINE BOOTH (100vw x 100dvh World + Floating HUD)
+   ---------------------------------------------------------------------------- */
+.booth-shell.is-gta-booth {
+  max-width: none;
+  width: 100vw;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.booth-shell.is-gta-booth .topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 42;
+  min-height: 40px;
+  padding: 4px 16px;
+  border: 0;
+  border-bottom: 1px solid rgba(235, 168, 52, 0.24);
+  background: linear-gradient(180deg, rgba(4, 7, 10, 0.9) 0%, rgba(4, 7, 10, 0.62) 78%, rgba(4, 7, 10, 0.12) 100%);
+  backdrop-filter: blur(6px);
+}
+
+.booth-shell.is-gta-booth .sys-console-bar {
+  position: fixed;
+  top: 41px;
+  left: 0;
+  right: 0;
+  z-index: 41;
+  background: rgba(5, 8, 12, 0.94);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+}
+
+.booth-shell.is-gta-booth .seeded-control-bar {
+  position: fixed;
+  top: 41px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 39;
+  border: 1px solid rgba(235, 168, 52, 0.45);
+  border-top: 0;
+  background: rgba(6, 10, 14, 0.9);
+  backdrop-filter: blur(10px);
+}
+
+.booth-main.is-gta-booth {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.gta-booth-stage {
+  position: relative;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #030608;
+}
+
+/* Full-Viewport Blast Window World Canvas */
+.gta-world-stage {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  z-index: 1;
+  overflow: hidden;
+  background: #030608;
+}
+
+.gta-world-stage .viewport-frame {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border: 0;
+  outline: 0;
+  background: #030608;
+}
+
+.gta-world-stage .viewport-photo,
+.gta-world-stage .viewport-video {
+  object-fit: cover;
+  object-position: center 22%;
+  filter: contrast(1.06) saturate(0.92) brightness(0.94);
+}
+
+/* Keep SVG ECG in DOM for tests while suppressing visual duplication over GtaEcgCanvas */
+.gta-world-stage .viewport-ecg-svg-group {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.gta-world-stage .viewport-hud-overlay {
+  opacity: 0.45;
+}
+
+.gta-world-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 48% 36%, rgba(4, 8, 12, 0) 24%, rgba(3, 6, 9, 0.32) 66%, rgba(2, 4, 7, 0.84) 100%),
+    linear-gradient(180deg, rgba(3, 6, 9, 0.52) 0%, rgba(3, 6, 9, 0) 18%, rgba(3, 6, 9, 0) 56%, rgba(3, 6, 9, 0.88) 92%, rgba(2, 4, 7, 0.96) 100%);
+}
+
+/* GTA Mission Objective Floating Guide (Stacked cleanly inside .gta-hud-topleft on V-01) */
+.booth-main.is-gta-booth .onboarding-callout {
+  position: relative;
+  top: auto;
+  left: auto;
+  z-index: 28;
+  width: 268px;
+  margin: 4px 0 0;
+  padding: 9px 10px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  pointer-events: auto;
+  background: rgba(6, 10, 14, 0.84);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(235, 168, 52, 0.45);
+  border-left: 4px solid var(--amber-crt);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.72);
+}
+
+.booth-main.is-gta-booth .onboarding-head-col {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.booth-main.is-gta-booth .onboarding-flow {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+}
+
+.booth-main.is-gta-booth .onboarding-callout .flow-arrow {
+  display: none;
+}
+
+.booth-main.is-gta-booth .onboarding-node {
+  padding: 5px 7px;
+}
+
+/* Dramatic GTA Slanted Verdict Flash Ribbon ("INCINERATED" / "AIRLOCK CLEARED") */
+.gta-verdict-stinger {
+  position: fixed;
+  top: 24%;
+  left: 0;
+  right: 0;
+  z-index: 32;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 24px;
+  transform: skewY(-2.2deg);
+  border-top: 2px solid var(--amber-crt);
+  border-bottom: 2px solid var(--amber-crt);
+  background: linear-gradient(90deg, rgba(4, 6, 8, 0.1) 0%, rgba(6, 8, 10, 0.86) 24%, rgba(6, 8, 10, 0.86) 76%, rgba(4, 6, 8, 0.1) 100%);
+  backdrop-filter: blur(4px);
+  animation: gtaStingerSlam 380ms var(--ease-spring-snappy) 1 both;
+}
+
+.gta-verdict-stinger.purge {
+  border-color: var(--danger-purge);
+  background: linear-gradient(90deg, rgba(24, 5, 4, 0.08) 0%, rgba(36, 7, 6, 0.88) 22%, rgba(36, 7, 6, 0.88) 78%, rgba(24, 5, 4, 0.08) 100%);
+}
+
+.gta-verdict-stinger.admit {
+  border-color: var(--safe-admit);
+  background: linear-gradient(90deg, rgba(4, 22, 14, 0.08) 0%, rgba(6, 30, 20, 0.86) 22%, rgba(6, 30, 20, 0.86) 78%, rgba(4, 22, 14, 0.08) 100%);
+}
+
+.gta-stinger-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  color: rgba(240, 244, 248, 0.85);
+}
+
+.gta-stinger-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.85rem, 3.6vw, 3rem);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.08;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.95);
+}
+
+.gta-verdict-stinger.purge .gta-stinger-title {
+  color: #ff6e5d;
+}
+
+.gta-verdict-stinger.admit .gta-stinger-title {
+  color: #79f2b8;
+}
+
+@keyframes gtaStingerSlam {
+  0% {
+    opacity: 0;
+    transform: skewY(-2.2deg) scale(1.16);
+  }
+  100% {
+    opacity: 1;
+    transform: skewY(-2.2deg) scale(1);
+  }
+}
+
+/* TOP-LEFT FLOATING SUBJECT MISSION PLATE */
+.gta-hud-topleft {
+  position: fixed;
+  top: 54px;
+  left: 18px;
+  z-index: 24;
+  max-width: min(460px, 42vw);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  pointer-events: none;
+}
+
+.gta-mission-plate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 16px 8px 12px;
+  background: linear-gradient(90deg, rgba(6, 10, 14, 0.88) 0%, rgba(6, 10, 14, 0.6) 82%, rgba(6, 10, 14, 0) 100%);
+  border-left: 5px solid var(--amber-crt);
+  transform: skewX(-6deg);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+}
+
+.gta-mission-night {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--amber-crt);
+}
+
+.gta-mission-subject {
+  font-family: var(--font-display);
+  font-size: 1.14rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  color: #f6f9fb;
+}
+
+.gta-mission-role {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--frost-cyan);
+}
+
+.gta-alert-strip {
+  pointer-events: auto;
+  margin: 0 !important;
+  padding: 5px 10px !important;
+  font-size: 0.69rem !important;
+  transform: skewX(-5deg);
+  background: rgba(28, 8, 8, 0.88) !important;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+}
+
+/* TOP-RIGHT WANTED STARS + LIVE 60FPS ECG OSCILLOSCOPE + DOSSIER TOGGLE */
+.gta-hud-topright {
+  position: fixed;
+  top: 52px;
+  right: 18px;
+  z-index: 26;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.gta-wanted-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(4, 8, 12, 0.55);
+  transform: skewX(-8deg);
+}
+
+.gta-star {
+  font-size: 1.25rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.18);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
+}
+
+.gta-star.lit {
+  color: #f6bd54;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.98),
+    0 0 12px rgba(235, 168, 52, 0.72);
+}
+
+.gta-wanted-stars.emi .gta-star.lit {
+  color: #ff5c4a;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.98),
+    0 0 14px rgba(224, 70, 52, 0.85);
+  animation: gtaStarBlink 0.7s steps(2, start) infinite;
+}
+
+@keyframes gtaStarBlink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.gta-ecg-hud {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px 6px 8px;
+  background: linear-gradient(90deg, rgba(5, 9, 13, 0.76) 0%, rgba(5, 9, 13, 0.9) 100%);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(235, 168, 52, 0.34);
+  border-right: 4px solid var(--amber-crt);
+  transform: skewX(-6deg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.72);
+}
+
+.gta-ecg-hud.blinded {
+  border-color: rgba(224, 70, 52, 0.65);
+  border-right-color: var(--danger-purge);
+  background: rgba(26, 7, 7, 0.88);
+}
+
+.gta-ecg-canvas {
+  width: 146px;
+  height: 34px;
+  display: block;
+}
+
+.gta-ecg-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+  min-width: 78px;
+}
+
+.gta-bpm-big {
+  font-family: var(--font-condensed);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #f6f9fb;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
+  font-variant-numeric: tabular-nums;
+}
+
+.gta-bpm-big small {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--amber-crt);
+  margin-left: 3px;
+}
+
+.gta-ecg-hud.blinded .gta-bpm-big {
+  color: #ff8c7e;
+}
+
+.gta-bpm-delta {
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--frost-cyan);
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* RIGHT-SIDE FLOATING TRANSLUCENT ORDAMOR INTEL HUD RAIL */
+.gta-dossier-rail {
+  position: fixed;
+  top: 176px;
+  right: 18px;
+  bottom: 14px;
+  width: 356px;
+  z-index: 23;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  will-change: transform, opacity;
+  transition: transform 240ms var(--ease-mechanical), opacity 180ms ease, visibility 240ms ease;
+}
+
+.gta-dossier-rail.is-collapsed {
+  transform: translate3d(calc(100% + 40px), 0, 0);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.gta-dossier-rail #ordamor-dossier {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: rgba(6, 10, 14, 0.8);
+  backdrop-filter: blur(11px);
+  border: 1px solid rgba(235, 168, 52, 0.34);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.72);
+}
+
+.gta-dossier-rail #ordamor-dossier [data-slot="tabs"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gta-dossier-rail #ordamor-dossier [data-slot="tabs-panel"]:not([hidden]) {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.gta-dossier-rail #ordamor-dossier .tab-panel-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(235, 168, 52, 0.65) rgba(4, 6, 8, 0.6);
+}
+
+.gta-airlock-mini {
+  flex-shrink: 0;
+  background: rgba(5, 9, 13, 0.82);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(198, 176, 138, 0.24);
+  padding: 4px;
+}
+
+.gta-airlock-mini .iso-airlock-strip {
+  margin-top: 0;
+}
+
+/* BOTTOM-LEFT ICONIC GTA RADAR MINIMAP + HORIZONTAL FUEL/PWR BARS + SENSOR KEYS */
+.gta-hud-bottomleft {
+  position: fixed;
+  bottom: 14px;
+  left: 18px;
+  z-index: 25;
+  width: 268px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gta-toast {
+  margin-top: 0 !important;
+  background: rgba(5, 11, 16, 0.9) !important;
+  backdrop-filter: blur(8px);
+  font-size: 0.7rem !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.75);
+}
+
+.gta-replay-hud {
+  margin-top: 0 !important;
+  background: rgba(6, 10, 14, 0.92) !important;
+  backdrop-filter: blur(10px);
+  max-height: 146px;
+  overflow-y: auto;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.78);
+}
+
+.gta-replay-hud .stress-replay-row {
+  grid-template-columns: 22px 76px 1fr;
+  gap: 5px;
+  font-size: 0.66rem;
+}
+
+.gta-radar-frame {
+  border: 2px solid rgba(228, 236, 242, 0.34);
+  border-bottom: 3px solid var(--amber-crt);
+  background: rgba(4, 8, 12, 0.9);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.82),
+    inset 0 0 18px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.gta-radar-canvas {
+  width: 100%;
+  height: 112px;
+  display: block;
+}
+
+.gta-radar-bars {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  padding: 4px;
+  background: rgba(3, 6, 9, 0.95);
+  border-top: 1px solid rgba(198, 176, 138, 0.22);
+}
+
+.gta-bar-slot {
+  position: relative;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.gta-bar-fill.fuel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: linear-gradient(90deg, #2d9e6b 0%, #49b882 100%);
+  transition: width 260ms var(--ease-mechanical);
+}
+
+.gta-bar-slot.fuel.low .gta-bar-fill.fuel {
+  background: linear-gradient(90deg, #c97a16 0%, #eba834 100%);
+}
+
+.gta-bar-slot.fuel.depleted {
+  background: rgba(224, 70, 52, 0.25);
+  outline: 1px solid var(--danger-purge);
+}
+
+.gta-pwr-meter {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gta-pwr-meter [data-slot="meter-track"] {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+}
+
+.gta-pwr-meter [data-slot="meter-indicator"] {
+  height: 100%;
+  background: linear-gradient(90deg, #2b8ea8 0%, #63c5dc 100%);
+}
+
+.gta-bar-label {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #f6f9fb;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95);
+}
+
+.gta-bar-label svg {
+  width: 11px;
+  height: 11px;
+}
+
+.gta-sensor-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.gta-sensor-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 28px;
+  padding: 4px 5px;
+  border: 1px solid rgba(228, 236, 242, 0.24);
+  border-bottom: 2px solid rgba(158, 198, 212, 0.55);
+  border-radius: 0;
+  background: rgba(6, 11, 16, 0.86);
+  backdrop-filter: blur(6px);
+  color: #e4edf2;
+  font-family: var(--font-mono);
+  font-size: 0.64rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  transition: background-color 110ms ease, border-color 110ms ease, color 110ms ease;
+}
+
+.gta-sensor-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gta-sensor-btn svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.gta-sensor-btn:hover:not(:disabled, [data-disabled]) {
+  background: rgba(235, 168, 52, 0.2);
+  border-color: var(--amber-crt);
+  color: var(--amber-bright);
+}
+
+.gta-sensor-btn.amber {
+  background: var(--amber-crt);
+  border-color: var(--amber-bright);
+  color: #050709;
+}
+
+.gta-sensor-btn:disabled,
+.gta-sensor-btn[data-disabled] {
+  opacity: 0.36;
+  cursor: not-allowed;
+}
+
+/* BOTTOM-CENTER GTA CINEMA SUBTITLES + COMPACT RADIO DOCK + KILL-SWITCHES */
+.gta-hud-bottomcenter {
+  position: fixed;
+  bottom: 14px;
+  left: 300px;
+  right: 392px;
+  z-index: 24;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  transition: right 240ms var(--ease-mechanical);
+}
+
+.gta-booth-stage.dossier-collapsed .gta-hud-bottomcenter {
+  right: 24px;
+}
+
+.gta-comms-dock {
+  width: 100%;
+  max-width: 760px;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gta-cinema-subtitle {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px;
+  background: linear-gradient(90deg, rgba(4, 7, 10, 0.88) 0%, rgba(5, 9, 13, 0.82) 82%, rgba(5, 9, 13, 0.38) 100%);
+  backdrop-filter: blur(8px);
+  border-left: 4px solid var(--amber-crt);
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.72);
+}
+
+.gta-sub-speaker {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber-bright);
+}
+
+.gta-sub-text {
+  font-family: var(--font-sans);
+  font-size: 0.94rem;
+  font-weight: 500;
+  line-height: 1.48;
+  color: #f6f9fb;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.98);
+}
+
+.gta-comms-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 10px;
+  background: rgba(5, 9, 13, 0.8);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(198, 176, 138, 0.24);
+  font-family: var(--font-mono);
+  font-size: 0.69rem;
+  color: var(--text-secondary);
+}
+
+.gta-micro-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border: 1px solid rgba(235, 168, 52, 0.4);
+  background: rgba(235, 168, 52, 0.12);
+  color: var(--amber-bright);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.gta-micro-btn:hover {
+  background: var(--amber-crt);
+  color: #050709;
+}
+
+.gta-turns-num {
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--amber-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Keep radio tape collapsed behind GTA Cinema Subtitle by default; expands cleanly upward on LOG (n) */
+.gta-comms-dock [data-slot="scroll-area"] {
+  transition: max-height 200ms var(--ease-mechanical), opacity 160ms ease;
+}
+
+.gta-comms-dock:not(.log-expanded) [data-slot="scroll-area"] {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  margin: -3px 0;
+}
+
+.gta-comms-dock .intercom-log {
+  height: 0;
+  background: rgba(4, 7, 10, 0.84);
+  backdrop-filter: blur(8px);
+  border-width: 0;
+  border-color: rgba(198, 176, 138, 0.24);
+  transition: height 200ms var(--ease-mechanical);
+}
+
+.gta-comms-dock.log-expanded [data-slot="scroll-area"] {
+  max-height: 184px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.gta-comms-dock.log-expanded .intercom-log {
+  height: 174px;
+  border-width: 1px;
+}
+
+.gta-comms-dock .probe-grid {
+  margin-top: 0;
+  gap: 5px;
+}
+
+.gta-comms-dock .probe-chip {
+  min-height: 28px;
+  padding: 5px 8px;
+  background: rgba(7, 12, 17, 0.84);
+  backdrop-filter: blur(8px);
+  border-color: rgba(228, 236, 242, 0.2);
+  border-left: 3px solid var(--amber-crt);
+  font-size: 0.74rem;
+}
+
+.gta-comms-dock .probe-chip:hover:not(:disabled, [data-disabled]) {
+  background: rgba(235, 168, 52, 0.18);
+  border-color: var(--amber-crt);
+  color: #ffffff;
+}
+
+.gta-comms-dock .ask-form {
+  margin-top: 0;
+}
+
+.gta-comms-dock .ask-input-group {
+  background: rgba(5, 9, 13, 0.86);
+  backdrop-filter: blur(8px);
+}
+
+.gta-comms-dock .verdict-levers {
+  margin-top: 0;
+  gap: 8px;
+}
+
+.gta-comms-dock .lever-btn {
+  padding: 7px 11px;
+  backdrop-filter: blur(8px);
+  transform: skewX(-4deg);
+}
+
+/* ----------------------------------------------------------------------------
+   3. RESPONSIVE SAFETY FOR TABLETS & NARROW SCREENS
+   ---------------------------------------------------------------------------- */
+@media (max-width: 1180px) {
+  .gta-dossier-rail {
+    width: 316px;
+  }
+
+  .gta-hud-bottomcenter {
+    left: 292px;
+    right: 344px;
+  }
+}
+
+@media (max-width: 960px) {
+  .gta-lobby-top {
+    flex-direction: column;
+    padding: 18px 18px 8px;
+  }
+
+  .gta-brand-emblem {
+    max-width: 100%;
+  }
+
+  .gta-lobby-bottom {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 18px 22px;
+    gap: 16px;
+  }
+
+  .gta-menu-stack,
+  .gta-operator-strip {
+    width: 100%;
+  }
+
+  .booth-shell.is-gta-booth,
+  .booth-main.is-gta-booth,
+  .gta-booth-stage {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .gta-hud-topleft {
+    position: relative;
+    top: auto;
+    left: auto;
+    max-width: none;
+    padding: 54px 12px 6px;
+  }
+
+  .gta-hud-topright {
+    position: relative;
+    top: auto;
+    right: auto;
+    align-items: flex-start;
+    padding: 4px 12px;
+  }
+
+  .booth-main.is-gta-booth .onboarding-callout {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    margin: 6px 12px;
+  }
+
+  .gta-hud-bottomcenter,
+  .gta-hud-bottomleft,
+  .gta-dossier-rail {
+    position: relative;
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: auto;
+    padding: 6px 12px;
+  }
+
+  .gta-dossier-rail.is-collapsed {
+    display: none;
   }
 }

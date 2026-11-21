@@ -496,7 +496,7 @@ export function ViewportHudOverlay({
       ) : null}
 
       {/* Top-Right Live Biometric ECG Telemetry Widget */}
-      <g transform="translate(466, 12)">
+      <g className="viewport-ecg-svg-group" transform="translate(466, 12)">
         <rect
           x="0"
           y="0"
@@ -554,7 +554,7 @@ export function ViewportHudOverlay({
       </g>
 
       {/* Compact Lens + Subject Stamp Below ECG Box */}
-      <g transform="translate(466, 58)">
+      <g className="viewport-ecg-svg-group" transform="translate(466, 58)">
         <rect
           x="0"
           y="0"
