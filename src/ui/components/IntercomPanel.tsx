@@ -253,6 +253,7 @@ export function IntercomPanel({
           {tl(UI_STRINGS.placeholder, lang)}
         </Label>
         <InputGroup className="ask-input-group">
+          <span className="gta-input-prefix ptt" aria-hidden="true">PTT &gt;</span>
           <Input
             id="custom-ask-input"
             type="text"
@@ -263,6 +264,7 @@ export function IntercomPanel({
             placeholder={tl(UI_STRINGS.placeholder, lang)}
           />
           <InputClear
+            className="gta-input-clear"
             aria-label={tl(
               { zh: "清空提问", en: "Clear question", ja: "入力をクリア" },
               lang
@@ -271,7 +273,7 @@ export function IntercomPanel({
             <ClearIcon />
           </InputClear>
         </InputGroup>
-        <Button id="btn-ptt-send" type="submit" disabled={askDisabled} className="ctrl-btn amber">
+        <Button id="btn-ptt-send" type="submit" disabled={askDisabled} className="ctrl-btn amber gta-ptt-btn">
           {tl(UI_STRINGS.pttSend, lang)}
         </Button>
       </form>

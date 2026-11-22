@@ -758,6 +758,7 @@ export function Night5Audit({
                 {n5AskPrompt}
               </Label>
               <InputGroup className="ask-input-group">
+                <span className="gta-input-prefix ptt" aria-hidden="true">CH-01 &gt;</span>
                 <Input
                   id="n5-ask-input"
                   type="text"
@@ -768,6 +769,7 @@ export function Night5Audit({
                   placeholder={n5AskPrompt}
                 />
                 <InputClear
+                  className="gta-input-clear"
                   aria-label={tl(
                     { zh: "清空提问", en: "Clear question", ja: "入力をクリア" },
                     lang

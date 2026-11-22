@@ -1714,6 +1714,7 @@ export function App() {
             }}
           >
             <InputGroup className="seeded-input-group">
+              <span className="gta-input-prefix" aria-hidden="true">SEED#</span>
               <Input
                 id="seed-input"
                 type="text"

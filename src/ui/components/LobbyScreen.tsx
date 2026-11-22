@@ -442,15 +442,19 @@ export function LobbyScreen({
         {/* Bottom-Right Diegetic GTA Operator Dog-Tag & Shift Protocol Strip */}
         <aside className="gta-operator-strip" id="lobby-operator-card">
           <div className="gta-dogtag-header">
-            <span className="gta-dogtag-code">OPERATOR // #09</span>
+            <div className="gta-dogtag-meta">
+              <span className="gta-dogtag-dot" aria-hidden="true" />
+              <span className="gta-dogtag-code">OPERATOR // #09</span>
+            </div>
             <span className="gta-dogtag-callsign">{displayCallsign}</span>
           </div>
 
           <div className="gta-inline-field">
             <Label htmlFor="lobby-operator-name" className="gta-inline-label">
-              {tl({ zh: "值班员姓名 / CALLSIGN", en: "CALLSIGN / NAME", ja: "検疫官氏名" }, lang)}
+              {tl({ zh: "值班员代号 // CALLSIGN", en: "CALLSIGN // OPERATOR ID", ja: "検疫官コールサイン" }, lang)}
             </Label>
             <InputGroup className="gta-input-group">
+              <span className="gta-input-prefix" aria-hidden="true">ID //</span>
               <Input
                 id="lobby-operator-name"
                 type="text"
@@ -464,6 +468,7 @@ export function LobbyScreen({
                 )}
               />
               <InputClear
+                className="gta-input-clear"
                 aria-label={tl({ zh: "清空姓名", en: "Clear name", ja: "氏名をクリア" }, lang)}
               >
                 <ClearIcon />
@@ -483,8 +488,15 @@ export function LobbyScreen({
               }}
             >
               <SelectTrigger id="lobby-mode-select" className="gta-select-trigger">
-                <SelectValue />
-                <ChevronDownIcon />
+                <span className="gta-select-inner">
+                  <span className="gta-input-prefix cyan" aria-hidden="true">MODE //</span>
+                  <span className="gta-select-val">
+                    <SelectValue />
+                  </span>
+                  <span className="gta-select-chevron" aria-hidden="true">
+                    <ChevronDownIcon />
+                  </span>
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {campaignModeItems.map((item) => (
@@ -509,8 +521,9 @@ export function LobbyScreen({
               <Label htmlFor="lobby-seed-input" className="gta-inline-label">
                 {tl({ zh: "随机种子 // SEED (IndexedDB)", en: "SEED (INDEXEDDB CACHE)", ja: "シード値 (IndexedDB)" }, lang)}
               </Label>
-              <div style={{ display: "flex", gap: "6px" }}>
+              <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
                 <InputGroup className="gta-input-group" style={{ flex: 1 }}>
+                  <span className="gta-input-prefix" aria-hidden="true">SEED#</span>
                   <Input
                     id="lobby-seed-input"
                     type="text"
@@ -523,7 +536,7 @@ export function LobbyScreen({
                 <Button
                   id="btn-lobby-random-seed"
                   type="button"
-                  className="gta-hud-pill"
+                  className="gta-hud-pill gta-seed-roll-btn"
                   onClick={() => onChangeSeedDraft(generateRunSeed("seeded"))}
                 >
                   🎲
