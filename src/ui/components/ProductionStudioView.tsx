@@ -49,7 +49,7 @@ export function ProductionStudioView({
           <div className="section-kicker">
             {tl(
               {
-                zh: "HOLYWOOD 制片美术与分镜设计台 // QUARANTINE GATE 0",
+                zh: "HOLLYWOOD 制片美术与分镜设计台 // QUARANTINE GATE 0",
                 en: "PRODUCTION DESIGN BIBLE // LOOK-DEV · STORYBOARD · 3D BLOCKING",
                 ja: "制作デザインボード // ビジュアル資産・絵コンテ・3Dカメラ配置"
               },
@@ -165,16 +165,16 @@ export function ProductionStudioView({
                     >
                       <div className="asset-cast-top">
                         <div className="asset-cast-primary-img">
-                          <img src={cast.portraitSrc} alt={tl(cast.name, lang)} decoding="async" />
+                          <img src={cast.portraitSrc} alt={tl(cast.name, lang)} decoding="sync" />
                           <span className="story-node-code">{cast.code}</span>
                         </div>
                         {cast.flinchSrc || cast.leanInSrc ? (
                           <div className="asset-cast-reactions">
                             {cast.flinchSrc ? (
-                              <img src={cast.flinchSrc} alt="" decoding="async" title="Flinch Reference" />
+                              <img src={cast.flinchSrc} alt="" decoding="sync" title="Flinch Reference" />
                             ) : null}
                             {cast.leanInSrc ? (
-                              <img src={cast.leanInSrc} alt="" decoding="async" title="Lean-In Reference" />
+                              <img src={cast.leanInSrc} alt="" decoding="sync" title="Lean-In Reference" />
                             ) : null}
                           </div>
                         ) : null}
