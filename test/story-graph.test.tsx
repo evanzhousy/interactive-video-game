@@ -22,10 +22,10 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   });
 
-  it("maintains referential integrity across all 14 story nodes, edges, fallbacks, and prologue intake mapping", () => {
+  it("maintains referential integrity across all 17 story nodes, edges, fallbacks, and prologue intake mapping", () => {
     const nodeIds = new Set(STORY_NODES.map((n) => n.id));
-    expect(STORY_NODES.length).toBe(14);
-    expect(nodeIds.size).toBe(14);
+    expect(STORY_NODES.length).toBe(17);
+    expect(nodeIds.size).toBe(17);
 
     for (const edge of STORY_EDGES) {
       expect(nodeIds.has(edge.from)).toBe(true);
@@ -66,7 +66,7 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(p1Preload).toContain("./videos/chamber/whiteout.mp4");
 
     const stats = getStoryCompletionStats(["prologue_01", "prologue_02", "unknown_node"]);
-    expect(stats).toEqual({ unlockedCount: 2, totalCount: 14, percent: 14 });
+    expect(stats).toEqual({ unlockedCount: 2, totalCount: 17, percent: 12 });
   });
 
   it("deduplicates and persists unlocked story nodes and edges in compendium state", () => {
@@ -127,14 +127,20 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       document.querySelector("#fmv-booth-overlay [data-story-node='n1_elena_arrival']")
     ).not.toBeNull();
 
-    // Pick opening arrival choice (confront over intercom) -> transitions into V-01 interrogation booth
+    // Pick opening arrival choice (confront over intercom) -> plays Elena lip-sync defense clip -> enters V-01 booth
     await act(async () => {
       (document.querySelector('[data-story-choice="elena_open_intercom"]') as HTMLButtonElement).click();
+    });
+    expect(
+      document.querySelector("#fmv-booth-overlay [data-story-node='n1_elena_react_intercom']")
+    ).not.toBeNull();
+    await act(async () => {
+      (document.querySelector('[data-story-choice="elena_react_to_booth"]') as HTMLButtonElement).click();
     });
     expect(document.getElementById("fmv-booth-overlay")).toBeNull();
     expect(document.getElementById("chat-log")?.textContent).toContain("3 号舱");
 
-    // Verdict ADMIT Elena -> sign log -> Next Visitor -> triggers Corridor Admit movie interlude -> Leo arrival movie!
+    // Verdict ADMIT Elena -> sign log -> Next Visitor -> triggers Corridor Admit movie interlude -> Leo arrival -> Leo reaction clip!
     await act(async () => {
       (document.getElementById("btn-admit") as HTMLButtonElement).click();
     });
@@ -157,6 +163,12 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
 
     await act(async () => {
       (document.querySelector('[data-story-choice="leo_open_intercom"]') as HTMLButtonElement).click();
+    });
+    expect(
+      document.querySelector("#fmv-booth-overlay [data-story-node='n1_leo_react_intercom']")
+    ).not.toBeNull();
+    await act(async () => {
+      (document.querySelector('[data-story-choice="leo_react_to_booth"]') as HTMLButtonElement).click();
     });
     expect(document.getElementById("fmv-booth-overlay")).toBeNull();
     expect(document.getElementById("main-booth")?.textContent).toContain("V-02");

@@ -72,6 +72,7 @@ interface Props {
   onClearSavedShift: () => void;
   onOpenArchive: () => void;
   onOpenStoryMap: () => void;
+  onOpenStudio: () => void;
 }
 
 type ManualTab = "briefing" | "ordamor" | "cardiac" | "night5";
@@ -96,7 +97,8 @@ export function LobbyScreen({
   onContinueShift,
   onClearSavedShift,
   onOpenArchive,
-  onOpenStoryMap
+  onOpenStoryMap,
+  onOpenStudio
 }: Props) {
   const storyStats = getStoryCompletionStats(["prologue_01", ...(compendium.unlockedStoryNodes ?? [])]);
   const [videoReady, setVideoReady] = useState(false);
@@ -399,6 +401,29 @@ export function LobbyScreen({
           </Button>
 
           <Button
+            id="btn-lobby-studio"
+            className="gta-menu-item"
+            onClick={onOpenStudio}
+          >
+            <span className="gta-menu-idx">{savedShift ? "04" : "03"}</span>
+            <span className="gta-menu-label">
+              <span className="gta-menu-row">
+                <ClipboardDataIcon />
+                <span>
+                  {tl(
+                    {
+                      zh: "制片美术与3D分镜台 // STUDIO",
+                      en: "ASSET & 3D STORYBOARD STUDIO",
+                      ja: "制作ボード & 3D演出台 // STUDIO"
+                    },
+                    lang
+                  )}
+                </span>
+              </span>
+            </span>
+          </Button>
+
+          <Button
             id="btn-lobby-load"
             className="gta-menu-item"
             onClick={() => {
@@ -406,7 +431,7 @@ export function LobbyScreen({
               setLoadOpen(true);
             }}
           >
-            <span className="gta-menu-idx">{savedShift ? "04" : "03"}</span>
+            <span className="gta-menu-idx">{savedShift ? "05" : "04"}</span>
             <span className="gta-menu-label">
               <span className="gta-menu-row">
                 <ClipboardDataIcon />
@@ -420,7 +445,7 @@ export function LobbyScreen({
             className="gta-menu-item"
             onClick={() => setDocsOpen(true)}
           >
-            <span className="gta-menu-idx">{savedShift ? "05" : "04"}</span>
+            <span className="gta-menu-idx">{savedShift ? "06" : "05"}</span>
             <span className="gta-menu-label">
               <span className="gta-menu-row">
                 <FlameFuelIcon />
@@ -434,7 +459,7 @@ export function LobbyScreen({
             className="gta-menu-item"
             onClick={onOpenArchive}
           >
-            <span className="gta-menu-idx">{savedShift ? "06" : "05"}</span>
+            <span className="gta-menu-idx">{savedShift ? "07" : "06"}</span>
             <span className="gta-menu-label">
               <span className="gta-menu-row">
                 <ArchiveIcon />

@@ -15,6 +15,7 @@ interface Props {
   node: StoryNode;
   lang: Locale;
   motionPaused: boolean;
+  voiceEnabled?: boolean;
   operatorBadge?: string;
   progressLabel?: string;
   progressPct?: number;
@@ -30,6 +31,7 @@ export function InteractiveMoviePlayer({
   node,
   lang,
   motionPaused,
+  voiceEnabled = true,
   operatorBadge,
   progressLabel,
   progressPct,
@@ -43,6 +45,8 @@ export function InteractiveMoviePlayer({
   const [useFallbackVideo, setUseFallbackVideo] = useState(false);
   const [useFallbackPoster, setUseFallbackPoster] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
+  const [userMuted, setUserMuted] = useState(false);
+  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [remainingMs, setRemainingMs] = useState<number>(() =>
     node.timerSec ? node.timerSec * 1000 : 0
   );
@@ -57,6 +61,7 @@ export function InteractiveMoviePlayer({
     setUseFallbackVideo(false);
     setUseFallbackPoster(false);
     setVideoReady(false);
+    setAutoplayBlocked(false);
     timerFiredRef.current = false;
     setRemainingMs(node.timerSec ? node.timerSec * 1000 : 0);
   }, [node.id, node.timerSec]);
@@ -64,22 +69,33 @@ export function InteractiveMoviePlayer({
   const activeVideoSrc = useFallbackVideo ? node.fallbackVideoSrc : node.videoSrc;
   const activePosterSrc = useFallbackPoster ? node.fallbackPosterSrc : node.posterSrc;
   const preloadUrls = getPreloadVideoUrls(node);
+  const shouldPlaySound = Boolean(node.hasAudio) && voiceEnabled && !userMuted;
 
-  // Sync play/pause with WCAG 2.2.2 motionPaused
+  // Sync play/pause and unmuted lip-sync playback with WCAG 2.2.2 motionPaused
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
     try {
-      vid.load?.();
+      vid.muted = !shouldPlaySound;
       if (motionPaused) {
         vid.pause?.();
-      } else {
-        void vid.play?.().catch?.(() => {});
+        return;
+      }
+      const playPromise = vid.play?.();
+      if (playPromise && typeof playPromise.catch === "function") {
+        void playPromise.catch(() => {
+          // If browser blocks unmuted autoplay on cold entry, fall back gracefully to muted and offer 1-click unmute
+          if (shouldPlaySound && vid) {
+            vid.muted = true;
+            setAutoplayBlocked(true);
+            void vid.play?.().catch?.(() => {});
+          }
+        });
       }
     } catch {
       // ignore headless DOM
     }
-  }, [activeVideoSrc, motionPaused]);
+  }, [activeVideoSrc, motionPaused, shouldPlaySound]);
 
   // Timed QTE choice countdown (pauses cleanly when motionPaused is enabled)
   useEffect(() => {
@@ -113,6 +129,19 @@ export function InteractiveMoviePlayer({
       : 0;
   const timerSecText = (remainingMs / 1000).toFixed(1);
 
+  const handleReplayClip = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    try {
+      vid.currentTime = 0;
+      vid.muted = !shouldPlaySound;
+      setAutoplayBlocked(false);
+      void vid.play?.().catch?.(() => {});
+    } catch {
+      // ignore headless DOM
+    }
+  };
+
   return (
     <div
       className={`fmv-player-stage ${className}`.trim()}
@@ -142,7 +171,7 @@ export function InteractiveMoviePlayer({
           poster={activePosterSrc}
           autoPlay={!motionPaused}
           loop
-          muted
+          muted={!shouldPlaySound}
           playsInline
           onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
@@ -176,6 +205,11 @@ export function InteractiveMoviePlayer({
           <div className="fmv-kicker-row">
             <span className="fmv-code-badge">{node.code}</span>
             <span className="fmv-chapter-tag">{tl(STORY_CHAPTER_META[node.chapter], lang)}</span>
+            {node.hasAudio ? (
+              <span className="fmv-audio-pill">
+                {tl({ zh: "原声口型", en: "LIP-SYNC", ja: "口型音声" }, lang)}
+              </span>
+            ) : null}
             {operatorBadge ? <span className="tech-stamp">{operatorBadge}</span> : null}
           </div>
           <h2 className="fmv-scene-title">{tl(node.title, lang)}</h2>
@@ -197,23 +231,41 @@ export function InteractiveMoviePlayer({
             </div>
           ) : null}
 
-          {onOpenStoryMap ? (
+          {node.hasAudio ? (
             <Button
               type="button"
-              className="ctrl-btn"
-              onClick={onOpenStoryMap}
+              className={`ctrl-btn ${shouldPlaySound && !autoplayBlocked ? "amber" : ""}`}
+              onClick={() => {
+                if (autoplayBlocked && videoRef.current) {
+                  setAutoplayBlocked(false);
+                  setUserMuted(false);
+                  videoRef.current.muted = false;
+                  void videoRef.current.play?.().catch?.(() => {});
+                  return;
+                }
+                setUserMuted((m) => !m);
+              }}
             >
+              {autoplayBlocked
+                ? tl({ zh: "开启原声口型", en: "UNMUTE AUDIO", ja: "音声ON" }, lang)
+                : shouldPlaySound
+                  ? tl({ zh: "原声: 开", en: "AUDIO: ON", ja: "音声: ON" }, lang)
+                  : tl({ zh: "原声: 关", en: "AUDIO: OFF", ja: "音声: OFF" }, lang)}
+            </Button>
+          ) : null}
+
+          <Button type="button" className="ctrl-btn" onClick={handleReplayClip}>
+            {tl({ zh: "↻ 重播", en: "↻ REPLAY", ja: "↻ 再生" }, lang)}
+          </Button>
+
+          {onOpenStoryMap ? (
+            <Button type="button" className="ctrl-btn" onClick={onOpenStoryMap}>
               {tl({ zh: "故事线分支图", en: "STORY MAP", ja: "分岐マップ" }, lang)}
             </Button>
           ) : null}
 
           {onSkip ? (
-            <Button
-              type="button"
-              id="btn-fmv-skip"
-              className="ctrl-btn amber"
-              onClick={onSkip}
-            >
+            <Button type="button" id="btn-fmv-skip" className="ctrl-btn amber" onClick={onSkip}>
               {tl(
                 { zh: "切入防爆窗审讯 →", en: "ENTER BOOTH →", ja: "尋問へ進む →" },
                 lang

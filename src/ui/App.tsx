@@ -117,12 +117,13 @@ import { LobbyScreen } from "./components/LobbyScreen.js";
 import { Night5Audit } from "./components/Night5Audit.js";
 import { OnboardingGuide } from "./components/OnboardingGuide.js";
 import { OrdamorDossier, type DossierTab } from "./components/OrdamorDossier.js";
+import { ProductionStudioView } from "./components/ProductionStudioView.js";
 import { IsometricAirlockSchematic } from "./components/Schematics.js";
 import { StoryFlowchartModal } from "./components/StoryFlowchartModal.js";
 import { ViewportCanvas } from "./components/ViewportCanvas.js";
 import { WebGLAtmosphere } from "./components/WebGLAtmosphere.js";
 
-type Stage = "lobby" | "intake" | "booth" | "crisis" | "demo_end" | "night5";
+type Stage = "lobby" | "intake" | "booth" | "crisis" | "demo_end" | "night5" | "studio";
 
 const CORE_TURNS_MAX = 4;
 const CHATTER_BUDGET_MAX = 3;
@@ -265,6 +266,13 @@ export function App() {
   const [storyMapOpen, setStoryMapOpen] = useState(false);
   const [activeStoryNodeId, setActiveStoryNodeId] = useState<string | null>(null);
   const [prologueInitialStep, setPrologueInitialStep] = useState(0);
+  const returnStageRef = useRef<Exclude<Stage, "studio">>("lobby");
+
+  const openStudioFrom = (fromStage: Exclude<Stage, "studio">) => {
+    stopIntercomVoice();
+    returnStageRef.current = fromStage;
+    transitionStage(() => setStage("studio"));
+  };
 
   const unlockStoryNodes = useCallback((nodeIds: string[], edgeIds: string[] = []) => {
     setCompendium((prev) => recordStoryProgress(prev, nodeIds, edgeIds));
@@ -829,9 +837,11 @@ export function App() {
   };
 
   const handleTriggerSensor = useCallback(
-    (kind: "strobe" | "thermal") => {
+    (kind: "strobe" | "thermal", dismissStoryOverlay = true) => {
       if (sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE") return;
-      setActiveStoryNodeId(null);
+      if (dismissStoryOverlay) {
+        setActiveStoryNodeId(null);
+      }
       setPowerLeft((p) => p - 1);
       if (kind === "strobe") {
         playBoothSfx("strobe", sfx);
@@ -1407,7 +1417,7 @@ export function App() {
     if (choice.boothEffect) {
       if (choice.boothEffect.action === "strobe") {
         if (!sensorsBlinded && powerLeft > 0 && verdictState === "NONE") {
-          handleTriggerSensor("strobe");
+          handleTriggerSensor("strobe", false);
         }
       } else if (choice.boothEffect.action === "dossier") {
         setDossierCollapsed(false);
@@ -1432,13 +1442,18 @@ export function App() {
       return;
     }
 
-    if (nodeId === "n1_elena_arrival" || nodeId === "n1_elena_confront") {
+    if (
+      nodeId === "n1_elena_arrival" ||
+      nodeId === "n1_elena_react_intercom" ||
+      nodeId === "n1_elena_react_strobe" ||
+      nodeId === "n1_elena_confront"
+    ) {
       const idx = Math.max(0, activeVisitors.findIndex((v) => v.id === "V-01"));
-      const showMovie = nodeId === "n1_elena_arrival";
+      const showMovie = nodeId !== "n1_elena_confront";
       transitionStage(() => {
         setStage("booth");
         resetVisitorState(idx, activeVisitors, !showMovie, fuelLeft, false);
-        setActiveStoryNodeId(showMovie ? "n1_elena_arrival" : null);
+        setActiveStoryNodeId(showMovie ? nodeId : null);
       });
       return;
     }
@@ -1447,6 +1462,7 @@ export function App() {
       nodeId === "n1_corridor_admit" ||
       nodeId === "n1_corridor_purge" ||
       nodeId === "n1_leo_arrival" ||
+      nodeId === "n1_leo_react_intercom" ||
       nodeId === "n1_leo_confront"
     ) {
       const idx = Math.max(0, activeVisitors.findIndex((v) => v.id === "V-02"));
@@ -1609,6 +1625,20 @@ export function App() {
               ))}
             </SelectContent>
           </Select>
+
+          <Button
+            id="btn-studio"
+            className={`ctrl-btn ${stage === "studio" ? "amber" : ""}`}
+            onClick={() => {
+              if (stage === "studio") {
+                transitionStage(() => setStage(returnStageRef.current), "backward");
+              } else {
+                openStudioFrom(stage);
+              }
+            }}
+          >
+            <span>{tl({ zh: "制片台", en: "Studio", ja: "制作台" }, lang)}</span>
+          </Button>
 
           <Button
             id="btn-storymap"
@@ -1994,6 +2024,16 @@ export function App() {
             }}
             onOpenArchive={() => setCompendiumOpen(true)}
             onOpenStoryMap={() => setStoryMapOpen(true)}
+            onOpenStudio={() => openStudioFrom("lobby")}
+          />
+        ) : null}
+
+        {stage === "studio" ? (
+          <ProductionStudioView
+            lang={lang}
+            motionPaused={motionPaused}
+            onBack={() => transitionStage(() => setStage(returnStageRef.current), "backward")}
+            onPlayStoryNode={handleJumpToStoryNode}
           />
         ) : null}
 
@@ -2079,6 +2119,7 @@ export function App() {
                     node={getStoryNode(activeStoryNodeId)!}
                     lang={lang}
                     motionPaused={motionPaused}
+                    voiceEnabled={voice}
                     operatorBadge={
                       operatorName.trim() ? `#09 · ${operatorName.trim()}` : "#09"
                     }
