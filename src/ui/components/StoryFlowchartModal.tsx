@@ -37,10 +37,10 @@ interface Props {
   onJumpToNode: (nodeId: string) => void;
 }
 
-const NODE_W = 192;
-const NODE_H = 120;
+const NODE_W = 196;
+const NODE_H = 136;
 const COL_GAP = 48;
-const ROW_GAP = 22;
+const ROW_GAP = 20;
 const PAD_X = 24;
 const PAD_Y = 38;
 
@@ -255,7 +255,6 @@ export function StoryFlowchartModal({
                           <img
                             src={node.posterSrc}
                             alt=""
-                            loading="lazy"
                             decoding="async"
                             onError={(e) => {
                               if (!e.currentTarget.dataset.fb && node.fallbackPosterSrc !== node.posterSrc) {
