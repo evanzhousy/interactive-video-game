@@ -1587,12 +1587,11 @@ select {
   max-height: min(320px, var(--available-height, 320px));
   padding: 4px;
   border-radius: 0;
-  border: 1px solid rgba(235, 168, 52, 0.62);
+  border: 1px solid rgba(235, 168, 52, 0.72);
   border-left: 4px solid var(--amber-crt);
-  background: rgba(5, 9, 14, 0.95);
-  backdrop-filter: blur(12px);
+  background: #060b10;
   color: var(--text-primary);
-  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.9), 0 0 24px rgba(235, 168, 52, 0.14);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.94), 0 0 24px rgba(235, 168, 52, 0.16);
   font-family: var(--font-display);
   font-size: 0.78rem;
   font-weight: 600;
@@ -1608,9 +1607,8 @@ select {
   padding: 6px 10px;
   border-left: 3px solid transparent;
   border-radius: 0;
-  color: #dce6ec;
+  color: #e4eef4;
   cursor: pointer;
-  transition: background-color 100ms ease, color 100ms ease, border-color 100ms ease, padding-left 120ms var(--ease-mechanical);
 }
 
 [data-slot="select-item"][data-highlighted] {
@@ -1628,6 +1626,7 @@ select {
 }
 
 [data-slot="select-item"][data-highlighted][data-selected] {
+  background: var(--amber-crt);
   color: #050709;
   border-left-color: #ffffff;
 }
@@ -2460,8 +2459,7 @@ dialog::backdrop,
   outline-offset: 2px;
 }
 
-/* Popup entry/exit transitions (detent spring on translate, smooth ease on opacity) */
-[data-slot="select-content"],
+/* Popup entry/exit transitions (instant solid select popup, snappy tooltip) */
 [data-slot="tooltip-content"] {
   transition:
     opacity 130ms var(--ease-mechanical),
@@ -2474,12 +2472,6 @@ dialog::backdrop,
     linear,
     linear;
   transition-behavior: allow-discrete;
-}
-
-[data-slot="select-content"][data-starting-style],
-[data-slot="select-content"][data-ending-style] {
-  opacity: 0;
-  translate: 0 -4px;
 }
 
 [data-slot="tooltip-content"][data-starting-style],
@@ -4290,12 +4282,21 @@ dialog::backdrop,
   white-space: nowrap;
 }
 
+.gta-select-trigger::after {
+  display: none !important;
+}
+
 .gta-select-chevron {
   display: inline-flex;
   align-items: center;
   padding: 0 12px 0 4px;
   color: var(--amber-bright);
   transform: skewX(8deg);
+  transition: transform 140ms ease;
+}
+
+.gta-select-trigger[data-open] .gta-select-chevron {
+  transform: skewX(8deg) rotate(180deg);
 }
 
 .gta-seed-roll-btn {
