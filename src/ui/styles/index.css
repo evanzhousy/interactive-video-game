@@ -5283,3 +5283,209 @@ dialog::backdrop,
     right: 0;
   }
 }
+
+/* ============================================================================
+   4. UNIFIED GTA TACTICAL HUD STYLING ACROSS ALL STAGES & MODALS
+      (Intake, Inter-Night Crisis, Demo Cliffhanger, Night 5 Audit, Dialogs)
+   ============================================================================ */
+
+/* Atmospheric Blast-Window Backdrop Behind Non-Booth Stages */
+.booth-main.is-gta-overlay-stage {
+  position: relative;
+  min-height: calc(100dvh - 58px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 16px 0 28px;
+}
+
+.gta-stage-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: #030609;
+}
+
+.gta-stage-backdrop-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.46) contrast(1.08) saturate(0.86);
+  transform: scale(1.03);
+}
+
+.booth-main.is-gta-overlay-stage > section,
+.booth-main.is-gta-overlay-stage > .panel {
+  position: relative;
+  z-index: 16;
+}
+
+/* Unified GTA Topbar & System Console Across All Non-Lobby Stages */
+.topbar {
+  position: relative;
+  z-index: 30;
+  background: linear-gradient(180deg, rgba(4, 8, 12, 0.92) 0%, rgba(6, 10, 14, 0.78) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(235, 168, 52, 0.28);
+  border-left: 5px solid var(--amber-crt);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.7);
+}
+
+.station-stamp {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  transform: skewX(-8deg);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.85);
+}
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  transform: skewX(-4deg);
+}
+
+.sys-console-bar,
+.flash-drawer {
+  position: relative;
+  z-index: 29;
+  background: rgba(5, 9, 14, 0.92) !important;
+  backdrop-filter: blur(12px);
+  border-color: rgba(235, 168, 52, 0.42) !important;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.82);
+}
+
+/* Unified GTA Slanted Tactical Action Buttons & Controls */
+.ctrl-btn,
+.topbar .ctrl-select {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-color: rgba(228, 236, 242, 0.24);
+  background: rgba(8, 14, 20, 0.86);
+  transform: skewX(-6deg);
+}
+
+.ctrl-btn.amber,
+.ctrl-btn[data-pressed],
+[data-slot="toggle"][data-pressed].ctrl-btn {
+  background: linear-gradient(90deg, var(--amber-crt) 0%, var(--amber-bright) 100%);
+  border-color: var(--amber-bright);
+  color: #050709;
+  box-shadow: 0 4px 16px rgba(235, 168, 52, 0.28);
+}
+
+/* Unified Translucent Glass Panels for Intake, Crisis, Demo End, Night 5 & Dialogs */
+.modal-stage,
+#night5-panel,
+.gta-dialog-shell {
+  background: linear-gradient(155deg, rgba(6, 11, 16, 0.9) 0%, rgba(4, 8, 12, 0.84) 100%) !important;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(235, 168, 52, 0.42) !important;
+  border-left: 5px solid var(--amber-crt) !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(235, 168, 52, 0.14) !important;
+}
+
+.modal-stage .section-kicker,
+#night5-panel .section-kicker,
+.gta-dialog-shell .section-kicker,
+.modal-stage h2,
+#night5-panel h2,
+[data-slot="dialog-title"] {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Unified GTA Slanted Option Cards (Intake, Crisis, Sign Log, Night 5 Probes) */
+.option-card {
+  border: 1px solid rgba(228, 236, 242, 0.22);
+  border-left: 5px solid rgba(235, 168, 52, 0.72);
+  background: linear-gradient(90deg, rgba(7, 13, 19, 0.9) 0%, rgba(10, 17, 24, 0.74) 100%);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  transform: skewX(-4deg);
+  box-shadow: 3px 5px 16px rgba(0, 0, 0, 0.58);
+  transition:
+    transform 150ms var(--ease-mechanical),
+    background 130ms ease,
+    border-color 130ms ease,
+    color 130ms ease,
+    box-shadow 130ms ease;
+}
+
+.option-card:hover:not(:disabled, [data-disabled]),
+.option-card:focus-visible {
+  transform: skewX(-4deg) translateX(8px);
+  background: linear-gradient(90deg, rgba(235, 168, 52, 0.24) 0%, rgba(235, 168, 52, 0.09) 100%);
+  border-color: var(--amber-bright);
+  border-left-color: #ffffff;
+  color: #ffffff;
+  box-shadow: 0 6px 22px rgba(235, 168, 52, 0.22);
+}
+
+.option-card.selected {
+  background: linear-gradient(90deg, rgba(235, 168, 52, 0.28) 0%, rgba(235, 168, 52, 0.12) 100%);
+  border-color: var(--amber-bright);
+  border-left-color: #ffffff;
+}
+
+.option-card .opt-index {
+  font-family: var(--font-condensed);
+  font-size: 1.05rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  background: rgba(235, 168, 52, 0.16);
+  border-color: var(--amber-crt);
+}
+
+/* Unified Dossier Sections & Compendium Cards */
+.dossier-section {
+  background: rgba(5, 10, 14, 0.78);
+  border-color: rgba(228, 236, 242, 0.18);
+  border-left: 3px solid rgba(235, 168, 52, 0.48);
+}
+
+.compendium-card.unlocked {
+  border-left: 4px solid var(--amber-crt);
+  background: linear-gradient(90deg, rgba(16, 22, 26, 0.9) 0%, rgba(8, 12, 16, 0.82) 100%);
+}
+
+.hud-progress [data-slot="progress-track"] {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(235, 168, 52, 0.35);
+}
+
+.hud-progress [data-slot="progress-indicator"] {
+  background: linear-gradient(90deg, var(--amber-crt) 0%, var(--amber-bright) 100%);
+}
+
+.pipe-node {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  transform: skewX(-6deg);
+}
+
+@media (max-width: 720px) {
+  .option-card,
+  .ctrl-btn,
+  .gta-input-group,
+  .gta-select-trigger {
+    transform: none;
+  }
+
+  .gta-input-group .gta-input,
+  .gta-input-group .gta-input-clear,
+  .gta-select-val,
+  .gta-select-chevron {
+    transform: none;
+  }
+}

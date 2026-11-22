@@ -73,7 +73,7 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>
       <CollapsiblePanel>
-        <section className="panel flash-drawer" id="flash-config-drawer">
+        <section className="panel flash-drawer gta-dialog-shell" id="flash-config-drawer">
           <div className="viewport-header" style={{ marginBottom: "10px" }}>
             <span
               style={{

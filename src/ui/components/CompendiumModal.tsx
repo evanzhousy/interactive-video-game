@@ -42,7 +42,7 @@ export function CompendiumModal({ open, onOpenChange, lang, compendium }: Props)
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogBackdrop />
-      <DialogContent className="panel compendium-panel" id="compendium-modal">
+      <DialogContent className="panel compendium-panel gta-dialog-shell" id="compendium-modal">
         <div className="viewport-header" style={{ marginBottom: 0 }}>
           <div>
             <DialogTitle style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>

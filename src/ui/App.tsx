@@ -1755,15 +1755,21 @@ export function App() {
       <main
         ref={mainRef}
         tabIndex={-1}
-        className={`booth-main ${stage === "lobby" ? "is-lobby" : ""} ${stage === "booth" ? "is-gta-booth" : ""}`.trim()}
+        className={`booth-main ${stage === "lobby" ? "is-lobby" : ""} ${stage === "booth" ? "is-gta-booth" : ""} ${stage !== "lobby" && stage !== "booth" ? "is-gta-overlay-stage" : ""}`.trim()}
       >
         {stage !== "lobby" && stage !== "booth" ? (
-          <WebGLAtmosphere
-            mode={stage === "night5" ? "night5" : "lobby"}
-            night={stage === "night5" ? 5 : visitor.night}
-            bpm={bpm}
-            motionPaused={motionPaused}
-          />
+          <>
+            <div className="gta-stage-backdrop" aria-hidden="true">
+              <img src="./portraits/lobby_bg.jpg" alt="" className="gta-stage-backdrop-img" decoding="async" />
+              <div className="gta-world-vignette" />
+            </div>
+            <WebGLAtmosphere
+              mode={stage === "night5" ? "night5" : "lobby"}
+              night={stage === "night5" ? 5 : visitor.night}
+              bpm={bpm}
+              motionPaused={motionPaused}
+            />
+          </>
         ) : null}
         {stage === "lobby" ? (
           <LobbyScreen
