@@ -154,8 +154,8 @@ export const UI_STRINGS = {
     ja: "[! MAG-STORM] 第3夜・極地磁気嵐：光学・熱画像センサー飽和中 —— インターホン尋問のみで判定せよ！"
   },
   rephrasingNote: {
-    zh: "[PTT // 对讲电波调制中 · Flash 在线改写...]",
-    en: "[PTT // STATIC · Flash Rephrasing...]",
-    ja: "[PTT // 通信変調中 · Flash オンライン改稿...]"
+    zh: "[PTT // 正在接收窗外无线电回应...]",
+    en: "[PTT // RECEIVING INTERCOM TRANSMISSION...]",
+    ja: "[PTT // 窓外からの無線応答を受信中...]"
   }
 } as const;

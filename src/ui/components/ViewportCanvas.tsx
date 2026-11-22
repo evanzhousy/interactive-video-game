@@ -375,7 +375,7 @@ export function ViewportCanvas({
             ctx.font = "10px monospace";
             ctx.textAlign = "left";
             ctx.fillText(
-              streamActive ? "CAM-01 // LIVE I2V STREAM" : "CAM-01 // 35MM AI LIVE",
+              streamActive ? "CAM-01 // LIVE FEED" : "CAM-01 // OPTICAL FEED",
               badgeX + 18,
               badgeY + 13
             );

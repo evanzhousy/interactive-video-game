@@ -426,7 +426,7 @@ export function Night5Audit({
                 },
                 lang
               )}
-              {idleVideoReady || verdictVideoReady ? "LIVE I2V STREAM" : "35MM AI LIVE"}
+              {idleVideoReady || verdictVideoReady ? "CAM-01 // LIVE FEED" : "CAM-01 // OPTICAL FEED"}
             </div>
             <div className="viewport-frame n5-doppelganger-frame" id="night5-viewport">
               <div className={`viewport-media-stage ${flinchActive ? "clip-flinch" : ""}`}>

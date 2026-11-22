@@ -38,7 +38,6 @@ import type { Locale } from "../../game/types.js";
 import { generateRunSeed, type CampaignMode } from "../../game/visitors/index.js";
 import {
   ArchiveIcon,
-  BoltPowerIcon,
   CheckIcon,
   ChevronDownIcon,
   ClearIcon,
@@ -62,7 +61,6 @@ interface Props {
   onChangeSeedDraft: (seed: string) => void;
   savedShift: SavedShiftState | null;
   compendium: CompendiumState;
-  aiEnabled: boolean;
   ambience: boolean;
   onToggleAmbience: (next: boolean) => void;
   motionPaused: boolean;
@@ -71,7 +69,6 @@ interface Props {
   onContinueShift: (save: SavedShiftState) => void;
   onClearSavedShift: () => void;
   onOpenArchive: () => void;
-  onOpenAiConfig: () => void;
 }
 
 type ManualTab = "briefing" | "ordamor" | "cardiac" | "night5";
@@ -88,7 +85,6 @@ export function LobbyScreen({
   onChangeSeedDraft,
   savedShift,
   compendium,
-  aiEnabled,
   ambience,
   onToggleAmbience,
   motionPaused,
@@ -96,8 +92,7 @@ export function LobbyScreen({
   onStartNewShift,
   onContinueShift,
   onClearSavedShift,
-  onOpenArchive,
-  onOpenAiConfig
+  onOpenArchive
 }: Props) {
   const [videoReady, setVideoReady] = useState(false);
   const [loadOpen, setLoadOpen] = useState(false);
@@ -261,12 +256,12 @@ export function LobbyScreen({
       <WebGLAtmosphere mode="lobby" motionPaused={motionPaused} />
       <div className="gta-lobby-vignette" aria-hidden="true" />
 
-      {/* Top HUD Corner Row — Zero SaaS Toolbar */}
+      {/* Top HUD Corner Row — Pure Diegetic Game Controls */}
       <header className="gta-lobby-top">
         <div className="gta-brand-emblem">
           <div className="gta-kicker-strip">
             <span className="gta-stamp-pill">GATE-0</span>
-            <span className="gta-coord-text">78°13&apos;N · SVALBARD -46°C · ORD-OS v6</span>
+            <span className="gta-coord-text">78°13&apos;N · SVALBARD -46°C · OUTPOST 0</span>
           </div>
           <h1 ref={vfxTitleRef} className="gta-hero-title lobby-title">
             {tl(
@@ -291,15 +286,6 @@ export function LobbyScreen({
         </div>
 
         <div className="gta-top-pills">
-          <Button
-            id="btn-lobby-ai-status"
-            className={`gta-hud-pill ${aiEnabled ? "amber" : ""}`}
-            onClick={onOpenAiConfig}
-          >
-            <BoltPowerIcon />
-            <span>{aiEnabled ? "CLAUDE 5.5 ● LIVE" : "CLAUDE ● OFFLINE"}</span>
-          </Button>
-
           <Toggle
             id="btn-lobby-ambience"
             pressed={ambience}
@@ -519,7 +505,7 @@ export function LobbyScreen({
           {campaignMode === "seeded" ? (
             <div className="gta-inline-field">
               <Label htmlFor="lobby-seed-input" className="gta-inline-label">
-                {tl({ zh: "随机种子 // SEED (IndexedDB)", en: "SEED (INDEXEDDB CACHE)", ja: "シード値 (IndexedDB)" }, lang)}
+                {tl({ zh: "排班种子 // SHIFT SEED", en: "SHIFT SEED", ja: "当直シード // SHIFT SEED" }, lang)}
               </Label>
               <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
                 <InputGroup className="gta-input-group" style={{ flex: 1 }}>
@@ -556,9 +542,9 @@ export function LobbyScreen({
               <DialogTitle>
                 {tl(
                   {
-                    zh: "ORD-OS 班次档案 // LOCAL INDEXEDDB",
-                    en: "ORD-OS SHIFT STORAGE // INDEXEDDB",
-                    ja: "ORD-OS ローカル記録 // INDEXEDDB"
+                    zh: "ORD-OS 班次档案 // SHIFT ARCHIVE",
+                    en: "ORD-OS SHIFT ARCHIVE",
+                    ja: "ORD-OS 当直記録 // ARCHIVE"
                   },
                   lang
                 )}
@@ -566,9 +552,9 @@ export function LobbyScreen({
               <DialogDescription>
                 {tl(
                   {
-                    zh: "进度实时保存在本地 IndexedDB，支持续玩、导出或导入 .json 班次备份。",
-                    en: "Progress persists locally in IndexedDB. Resume, export, or import .json shift backups.",
-                    ja: "進捗はローカル IndexedDB に保存され、再開・書出・読込が可能です。"
+                    zh: "值班进度会自动保存在本机，支持续玩、导出或导入存档备份。",
+                    en: "Shift progress is saved locally. Resume, export, or import shift backups.",
+                    ja: "当直の進捗はローカルに自動保存され、再開・書出・読込が可能です。"
                   },
                   lang
                 )}
@@ -629,9 +615,9 @@ export function LobbyScreen({
               <div style={{ color: "var(--text-secondary)", fontSize: "0.84rem" }}>
                 {tl(
                   {
-                    zh: "当前本地数据库暂无进行中的班次存档。可直接开始新班次，或导入 .json 存档。",
-                    en: "No active shift found in IndexedDB. Start a new shift or import a .json backup.",
-                    ja: "アクティブなセーブはありません。新規開始するか JSON を読み込んでください。"
+                    zh: "当前本机暂无进行中的班次存档。可直接开始新班次，或导入存档备份。",
+                    en: "No active shift found locally. Start a new shift or import a backup file.",
+                    ja: "アクティブな記録はありません。新規開始するかバックアップを読み込んでください。"
                   },
                   lang
                 )}
@@ -712,7 +698,7 @@ export function LobbyScreen({
                 {tl({ zh: "02 取证法则", en: "02 ORDAMOR", ja: "02 鑑定法則" }, lang)}
               </TabsTab>
               <TabsTab value="cardiac" className="dossier-tab">
-                {tl({ zh: "03 心率与AI", en: "03 ECG & AI", ja: "03 心拍・AI" }, lang)}
+                {tl({ zh: "03 审讯与心率", en: "03 COMMS & ECG", ja: "03 尋問と心拍" }, lang)}
               </TabsTab>
               <TabsTab value="night5" className="dossier-tab">
                 {tl({ zh: "04 第5夜协议", en: "04 NIGHT 5", ja: "04 第5夜" }, lang)}
@@ -782,7 +768,7 @@ export function LobbyScreen({
                   </TabsPanel>
 
                   <TabsPanel value="cardiac" className="docs-article">
-                    <h3>{tl({ zh: "Claude 多轮自由审讯 & 心率佐证", en: "Claude Multi-Turn AI & Cardiac Telemetry", ja: "Claude 対話尋問 & 心拍テレメトリ" }, lang)}</h3>
+                    <h3>{tl({ zh: "自由审讯 & 心率佐证", en: "Freeform Interrogation & Cardiac Telemetry", ja: "自由尋問 & 心拍テレメトリ" }, lang)}</h3>
                     <ul>
                       <li>
                         <strong>{tl({ zh: "4 次有效追问 + 3 次闲聊额度", en: "4 Core Turns + 3 Chatter Budget", ja: "有効尋問4回 + 雑談枠3回" }, lang)}</strong>：

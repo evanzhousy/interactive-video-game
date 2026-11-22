@@ -177,12 +177,14 @@ export function OrdamorDossier({
           <TabsTab value="verdict" className={`tab-btn ${activeTab === "verdict" ? "active" : ""}`}>
             {tl(UI_STRINGS.tabVerdict, lang)}
           </TabsTab>
-          <TabsTab
-            value="inspector"
-            className={`tab-btn ${activeTab === "inspector" ? "active" : ""}`}
-          >
-            {tl(UI_STRINGS.tabInspector, lang)}
-          </TabsTab>
+          {import.meta.env?.DEV ? (
+            <TabsTab
+              value="inspector"
+              className={`tab-btn ${activeTab === "inspector" ? "active" : ""}`}
+            >
+              {tl(UI_STRINGS.tabInspector, lang)}
+            </TabsTab>
+          ) : null}
           <TabsIndicator className="tab-indicator" />
         </TabsList>
 
@@ -192,9 +194,9 @@ export function OrdamorDossier({
               <div className="section-kicker">
                 {tl(
                   {
-                    zh: `第 ${visitor.night} 夜 // 法医透镜 · SCHEMA v${visitor.profile.schemaVersion}`,
-                    en: `NIGHT ${visitor.night} // FORENSIC LENS · SCHEMA v${visitor.profile.schemaVersion}`,
-                    ja: `第 ${visitor.night} 夜 // 法医レンズ · SCHEMA v${visitor.profile.schemaVersion}`
+                    zh: `第 ${visitor.night} 夜 // 检疫档案 · ${visitor.id}`,
+                    en: `NIGHT ${visitor.night} // QUARANTINE DOSSIER · ${visitor.id}`,
+                    ja: `第 ${visitor.night} 夜 // 検疫調書 · ${visitor.id}`
                   },
                   lang
                 )}
@@ -499,7 +501,8 @@ export function OrdamorDossier({
           </div>
         </TabsPanel>
 
-        <TabsPanel value="inspector">
+        {import.meta.env?.DEV ? (
+          <TabsPanel value="inspector">
           <div className="tab-panel-body">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
               <span className="section-kicker" style={{ marginBottom: 0 }}>
@@ -566,6 +569,7 @@ export function OrdamorDossier({
             </pre>
           </div>
         </TabsPanel>
+        ) : null}
       </Tabs>
     </aside>
   );

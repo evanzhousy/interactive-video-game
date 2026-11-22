@@ -986,10 +986,7 @@ export function App() {
           outcome.source === "flash"
             ? { ...tel.canonicalReply, [lang]: outcome.line }
             : tel.canonicalReply;
-        const aiTag =
-          outcome.source === "flash"
-            ? `CUSTOM // ${outcome.latencyMs}ms`
-            : `FALLBACK (${outcome.fallbackReason ?? "CANONICAL"})`;
+        const aiTag = outcome.source === "flash" ? "CH-01 // LIVE" : "CH-01 // RELAY";
 
         setTranscript((prev) => {
           const next: TranscriptLine[] = [
@@ -1059,10 +1056,7 @@ export function App() {
         outcome.source === "llm"
           ? { ...tel.canonicalReply, [lang]: outcome.text }
           : tel.canonicalReply;
-      const aiTag =
-        outcome.source === "llm"
-          ? `CLAUDE // ${outcome.latencyMs}ms`
-          : `FALLBACK (${outcome.fallbackReason ?? "CANONICAL"})`;
+      const aiTag = outcome.source === "llm" ? "CH-01 // LIVE" : "CH-01 // RELAY";
 
       setTranscript((prev) => {
         const next: TranscriptLine[] = [
@@ -1138,7 +1132,9 @@ export function App() {
   const boothShortcutsEnabled = stage === "booth" && !compendiumOpen;
   const probeKeys = Object.keys(visitor.probes) as ProbeKey[];
   const cycleDossierTab = (delta: -1 | 1) => {
-    const order: DossierTab[] = ["baseline", "verdict", "inspector"];
+    const order: DossierTab[] = import.meta.env?.DEV
+      ? ["baseline", "verdict", "inspector"]
+      : ["baseline", "verdict"];
     setActiveTab((cur) => {
       const i = order.indexOf(cur);
       return order[(i + delta + order.length) % order.length]!;
@@ -1209,9 +1205,9 @@ export function App() {
       value: "seeded",
       label: tl(
         {
-          zh: "随机种子战役 (8人 · AI生成)",
-          en: "Seeded Shift (8 · AI Generated)",
-          ja: "ランダムシード (8名 · AI生成)"
+          zh: "随机排班 (8人 · 种子模式)",
+          en: "Seeded Shift (8 · Custom Seed)",
+          ja: "ランダム当直 (8名 · シード)"
         },
         lang
       )
@@ -1569,14 +1565,13 @@ export function App() {
             >
               <SlidersConsoleIcon />
               <span>SYS</span>
-              {flashConfig.enabled ? <span className="led-dot" aria-hidden="true" /> : null}
             </TooltipTrigger>
             <TooltipContent>
               {tl(
                 {
-                  zh: "系统控制舱：音频总线 · Flash 改写 · 班次调试",
-                  en: "System Console: Audio Bus · Flash AI · Shift Ops",
-                  ja: "システム制御盤：音声・Flash・周回操作"
+                  zh: "系统控制舱：音频 · 通信链路 · 班次选项",
+                  en: "System Console: Audio · Comms Relay · Shift Ops",
+                  ja: "システム制御盤：音声・通信・当直操作"
                 },
                 lang
               )}
@@ -1638,14 +1633,22 @@ export function App() {
 
             <div className="sys-console-group">
               <span className="sys-group-label">
-                {tl({ zh: "AI // 总线", en: "AI // BUS", ja: "AI // バス" }, lang)}
+                {tl({ zh: "通信 // 链路", en: "COMMS // LINK", ja: "通信 // 回線" }, lang)}
               </span>
               <Button
                 id="btn-flash-toggle"
                 className={`ctrl-btn ${flashConfig.enabled ? "amber" : ""}`}
                 onClick={() => setFlashDrawerOpen((o) => !o)}
               >
-                <BoltPowerIcon /> CLAUDE: {flashConfig.enabled ? "ON" : "OFF"}
+                <BoltPowerIcon />{" "}
+                {tl(
+                  {
+                    zh: `实时对讲: ${flashConfig.enabled ? "开" : "关"}`,
+                    en: `LIVE COMMS: ${flashConfig.enabled ? "ON" : "OFF"}`,
+                    ja: `動的応答: ${flashConfig.enabled ? "ON" : "OFF"}`
+                  },
+                  lang
+                )}
               </Button>
             </div>
 
@@ -1694,17 +1697,15 @@ export function App() {
             {isGeneratingSeed
               ? tl(
                   {
-                    zh: "⚡ CLAUDE 正在按种子生成 8 名 Ordamor 档案...",
-                    en: "⚡ GENERATING 8 ORDAMOR DOSSIERS VIA CLAUDE...",
-                    ja: "⚡ CLAUDE がシードから8名の調書を生成中..."
+                    zh: "⚡ 正在调取该种子对应的 8 名幸存者档案...",
+                    en: "⚡ RETRIEVING 8 SURVIVOR DOSSIERS FOR SEED...",
+                    ja: "⚡ シードに対応する8名の生存者記録を取得中..."
                   },
                   lang
                 )
-              : seededSource === "idb_cache"
-                ? "SEED // IDB CACHE"
-                : seededSource === "llm"
-                  ? "SEED // CLAUDE SONNET 5.5"
-                  : "SEED // ORDAMOR PROCEDURAL"}
+              : seededSource
+                ? "SHIFT SEED // ACTIVE"
+                : "SHIFT SEED // READY"}
           </span>
           <form
             className="seeded-form"
@@ -1783,7 +1784,6 @@ export function App() {
             onChangeSeedDraft={setSeedDraft}
             savedShift={savedShiftSnapshot}
             compendium={compendium}
-            aiEnabled={flashConfig.enabled}
             ambience={ambience}
             onToggleAmbience={setAmbience}
             motionPaused={motionPaused}
@@ -1801,7 +1801,6 @@ export function App() {
               setSavedShiftSnapshot(null);
             }}
             onOpenArchive={() => setCompendiumOpen(true)}
-            onOpenAiConfig={() => setFlashDrawerOpen((o) => !o)}
           />
         ) : null}
 

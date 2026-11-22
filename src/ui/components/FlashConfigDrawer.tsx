@@ -33,11 +33,11 @@ interface Props {
 const TRANSPORT_ITEMS: Array<{ value: FlashTransportMode; label: string }> = [
   {
     value: "server_proxy",
-    label: "Vercel AI Gateway (/api/interrogate · anthropic/claude-sonnet-5.5)"
+    label: "ORD-OS Station Relay (Default)"
   },
   {
     value: "custom_endpoint",
-    label: "Custom OpenAI-Compatible Endpoint (/v1/chat/completions)"
+    label: "Custom Relay Endpoint (/v1/chat/completions)"
   }
 ];
 
@@ -87,9 +87,9 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
               <BoltPowerIcon />{" "}
               {tl(
                 {
-                  zh: "CLAUDE 多轮审讯引擎 · Vercel AI Gateway（零身份泄露边界）",
-                  en: "CLAUDE MULTI-TURN INTERROGATION · VERCEL AI GATEWAY (ZERO LEAKAGE)",
-                  ja: "CLAUDE 対話尋問エンジン · Vercel AI Gateway（ゼロ漏洩境界）"
+                  zh: "CH-01 实时对讲链路配置",
+                  en: "CH-01 LIVE INTERCOM RELAY CONFIG",
+                  ja: "CH-01 リアルタイム対話回線設定"
                 },
                 lang
               )}
@@ -115,9 +115,9 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
               <span>
                 {tl(
                   {
-                    zh: "启用在线 Claude Sonnet 5.5 多轮审讯（超时/断网自动回退）",
-                    en: "Enable live Claude Sonnet 5.5 interrogation (auto canonical fallback)",
-                    ja: "Claude Sonnet 5.5 リアルタイム尋問を有効化（自動フォールバック）"
+                    zh: "启用实时动态自由对讲（断网时自动切换本地档案语音）",
+                    en: "Enable live dynamic intercom responses (automatic offline fallback)",
+                    ja: "リアルタイム動的応答を有効化（オフライン時は自動切替）"
                   },
                   lang
                 )}
@@ -182,7 +182,7 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
                   onClick={checkServerProxy}
                 >
                   {tl(
-                    { zh: "检测 Gateway 状态", en: "Check /api/interrogate", ja: "Gateway 状態確認" },
+                    { zh: "检测对讲链路", en: "Check Comms Relay", ja: "通信回線を確認" },
                     lang
                   )}
                 </Button>
@@ -264,9 +264,9 @@ export function FlashConfigDrawer({ open, onOpenChange, lang, config, onChange }
               <span>
                 {tl(
                   {
-                    zh: "安全边界 // 零泄露隔离：isMimic · defectMode · lineKey = HTTP 400",
-                    en: "GUARD // ZERO-LEAKAGE BOUNDARY: isMimic · defectMode · lineKey = HTTP 400",
-                    ja: "境界防御 // ゼロ漏洩ガード：isMimic · defectMode · lineKey = HTTP 400"
+                    zh: "通信加密 // CH-01 仅传输当前频道通话内容，不读取站内隔离底档",
+                    en: "ENCRYPTED // CH-01 RELAY ISOLATED FROM QUARANTINE TRUTH RECORDS",
+                    ja: "暗号化 // CH-01 回線は隔離機密記録から完全分離されています"
                   },
                   lang
                 )}
