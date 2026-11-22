@@ -100,9 +100,9 @@ export function IntakeModal({ lang, operatorName = "", onComplete }: Props) {
               <div className="section-kicker">
                 {tl(
                   {
-                    zh: "#09 值班员入职自述基线 (SAY)",
-                    en: "OPERATOR #09 SELF-REPORTED BASELINE (SAY)",
-                    ja: "#09 検疫官・自己申告ベースライン (SAY)"
+                    zh: "#09 值班员入职心理自述",
+                    en: "OPERATOR #09 INTAKE STATEMENT",
+                    ja: "#09 検疫官・入所時自己申告"
                   },
                   lang
                 )}
@@ -114,15 +114,15 @@ export function IntakeModal({ lang, operatorName = "", onComplete }: Props) {
                 &gt; {VALUE_I18N[baseline.dropped][lang]} · {tl(SIG_LABELS[baseline.sig], lang)}
               </div>
             </div>
-            <div className="audit-pipeline-strip" aria-label="ORD-OS Audit Pipeline">
+            <div className="audit-pipeline-strip" aria-label="Shift Audit Flow">
               <span className="pipe-node active">
-                {tl({ zh: "N0 // 入职口述 SAY", en: "N0 // SAY", ja: "N0 // 建前 SAY" }, lang)}
+                {tl({ zh: "第0夜 // 入职口述", en: "NIGHT 0 // WORDS", ja: "第0夜 // 口述" }, lang)}
               </span>
               <svg aria-hidden="true" className="svg-flow-arrow" width="18" height="10" viewBox="0 0 18 10" fill="none">
                 <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />
               </svg>
               <span className="pipe-node">
-                {tl({ zh: "N1–N4 // 行为记录 DO", en: "N1–N4 // DO LOGS", ja: "N1–N4 // 行動記録 DO" }, lang)}
+                {tl({ zh: "第1–4夜 // 值班行动", en: "N1–N4 // ACTIONS", ja: "第1〜4夜 // 実際の行動" }, lang)}
               </span>
               <svg aria-hidden="true" className="svg-flow-arrow" style={{ animationDelay: "0.4s" }} width="18" height="10" viewBox="0 0 18 10" fill="none">
                 <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />

@@ -43,6 +43,16 @@ interface Props {
   onExecuteVerdict: (decision: "ADMIT" | "PURGE") => void;
 }
 
+function formatPlayerProbeLabel(raw: string): string {
+  // Strip internal Ordamor technical prefixes (e.g. "首条轴 (v-1)：", "追问 o-01:", "测处置签名 (sig-1):", "Boggart Trap:")
+  return raw
+    .replace(
+      /^(?:首条轴|次条轴|两难试探|追问\s*o-\d+|测处置签名|处置签名|拆退路前提|常规核验|Axis\s*\d+|Dilemma|Press\s*o-\d+|Probe Signature|Signature|Boggart Trap|Trivia Check|第\d軸|二択試探|追及\s*o-\d+|署名検証|処置署名|前提剥奪|通常確認)(?:\s*[（(][^）)]+[）)])?\s*[:：]\s*/i,
+      ""
+    )
+    .trim();
+}
+
 export function IntercomPanel({
   visitor,
   lang,
@@ -242,7 +252,7 @@ export function IntercomPanel({
               onClick={() => void onAskProbe(key)}
             >
               <span className="opt-index">0{idx + 1}</span>
-              <span>{tl(probe.label, lang)}</span>
+              <span>{formatPlayerProbeLabel(tl(probe.label, lang))}</span>
             </Button>
           )
         )}

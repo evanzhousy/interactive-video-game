@@ -110,14 +110,14 @@ export const ACHIEVEMENTS: readonly AchievementSpec[] = [
   {
     id: "BOGGART_HUNTER",
     title: {
-      zh: "拆梯人 (Boggart)",
+      zh: "拆梯人",
       en: "Precondition Breaker",
-      ja: "退路剥奪者 (Boggart)"
+      ja: "退路剥奪者"
     },
     description: {
-      zh: "在第 4 夜使用拆退路前提追问 (disposalRequires) 并成功净化高阶拟态体。",
-      en: "Use a Night 4 Boggart precondition trap and accurately purge a high-tier mimic.",
-      ja: "第4夜に退路前提剥奪 (disposalRequires) を使って高階擬態体を正確に焼却する。"
+      zh: "在第 4 夜拆穿高阶伪人借口依赖的退路前提并成功净化。",
+      en: "Strip away a Night 4 high-tier mimic's safety net and accurately purge it.",
+      ja: "第4夜に高階擬態体の言い訳の前提を崩し、正確に焼却する。"
     }
   },
   {

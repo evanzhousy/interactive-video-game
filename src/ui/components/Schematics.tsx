@@ -1690,7 +1690,7 @@ export function AchievementMedallionSvg({
 
 export function IsometricLockedModule({
   id,
-  tier,
+  tier: _tier,
   night,
   kind,
   lang = "zh"
@@ -1703,8 +1703,8 @@ export function IsometricLockedModule({
 }) {
   const title =
     kind === "crystal"
-      ? tl({ zh: "心智晶格弧线", en: "MIND CRYSTAL ARCS", ja: "心理結晶アーク" }, lang)
-      : tl({ zh: "处置签名 + 拆前提陷阱", en: "DISPOSAL SIG + TRAP", ja: "処置署名 + 前提罠" }, lang);
+      ? tl({ zh: "心理底牌图谱", en: "PRIORITY MAP", ja: "心理マップ" }, lang)
+      : tl({ zh: "惯用借口与破绽", en: "EXCUSE WEAKPOINT", ja: "言い訳と弱点" }, lang);
   const accent = kind === "crystal" ? "#eba834" : "#e04634";
   return (
     <div className="iso-lock-card" id={id}>
@@ -1748,9 +1748,9 @@ export function IsometricLockedModule({
         <span className="iso-lock-code">
           {tl(
             {
-              zh: `未解锁 // ${tier}阶 · 第${night}夜`,
-              en: `LOCKED // TIER-0${tier} · N${night}`,
-              ja: `未解禁 // 階層0${tier} · 第${night}夜`
+              zh: `第 ${night} 夜解锁`,
+              en: `UNLOCKS NIGHT ${night}`,
+              ja: `第${night}夜で解放`
             },
             lang
           )}
@@ -2060,10 +2060,10 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
         <polygon points="14,20 96,20 90,56 8,56" fill="#0d1318" stroke="#eba834" strokeWidth="1.2" />
         <circle cx="86" cy="26" r="2" fill="#eba834" className="svg-node-breathe" />
         <text x="51" y="35" textAnchor="middle" fill="#f6bd54" fontSize="8.2" fontFamily="sans-serif" fontWeight="800">
-          PTT PROBE
+          {tl({ zh: "对讲追问", en: "INTERROGATE", ja: "対話尋問" }, lang)}
         </text>
         <text x="50" y="47" textAnchor="middle" fill="#9ec6d4" fontSize="7" fontFamily="monospace">
-          {tl({ zh: "审讯对质", en: "CONFRONT", ja: "対立尋問" }, lang)}
+          {tl({ zh: "戳档案旧账", en: "PRESS RECORDS", ja: "過去を突く" }, lang)}
         </text>
 
         {/* Dual Branch Connectors + Glowing Traveling Signal Pulses */}
@@ -2098,13 +2098,13 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
         {/* Upper Branch: Human Match (Slanted) */}
         <polygon points="149,9 333,9 327,33 143,33" fill="rgba(73,184,130,0.12)" stroke="#49b882" />
         <text x="155" y="24" fill="#86e8b8" fontSize="7.8" fontFamily="monospace" fontWeight="700">
-          DO [o-N] {tl({ zh: "承认冷酷事实", en: "OWNS HARD FACTS", ja: "事実行動に一致" }, lang)}
+          {tl({ zh: "承认自私过往 · 符合记录", en: "OWNS PAST ACTIONS", ja: "過去の行動どおりに認める" }, lang)}
         </text>
         <line x1="330" y1="21" x2="352" y2="21" stroke="rgba(73,184,130,0.5)" strokeWidth="1.2" />
         <path d="M330 21 H352" pathLength={100} className="svg-beam-travel delay-1" stroke="#86e8b8" strokeWidth="2" />
         <polygon points="355,9 452,9 446,33 349,33" fill="#49b882" />
         <text x="401" y="24" textAnchor="middle" fill="#04120b" fontSize="8" fontFamily="sans-serif" fontWeight="800">
-          HUMAN // ADMIT
+          {tl({ zh: "真人 · 放行", en: "HUMAN · ADMIT", ja: "人間 · 解放" }, lang)}
         </text>
 
         {/* Lower Branch: Mimic Self-Narrative (Slanted) */}
@@ -2115,13 +2115,13 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
           strokeDasharray="3 2"
         />
         <text x="155" y="58" fill="#ff9c8f" fontSize="7.8" fontFamily="monospace" fontWeight="700">
-          SAY [0W] {tl({ zh: "复读体面台词", en: "ECHOES NEVERWON", ja: "建前語りを復唱" }, lang)}
+          {tl({ zh: "复读体面假话 · 自吹自擂", en: "ACTS SAINTLY · HOLLOW TALK", ja: "建前だけを復唱する" }, lang)}
         </text>
         <line x1="330" y1="55" x2="352" y2="55" stroke="rgba(224,70,52,0.5)" strokeWidth="1.2" />
         <path d="M330 55 H352" pathLength={100} className="svg-beam-travel delay-2" stroke="#ff9c8f" strokeWidth="2" />
         <polygon points="355,43 452,43 446,67 349,67" fill="#e04634" />
         <text x="401" y="58" textAnchor="middle" fill="#060809" fontSize="8" fontFamily="sans-serif" fontWeight="800">
-          MIMIC // PURGE
+          {tl({ zh: "伪人 · 净化", en: "MIMIC · PURGE", ja: "擬態 · 焼却" }, lang)}
         </text>
       </svg>
     </div>
@@ -2324,10 +2324,10 @@ export function BoggartTrapSchematic({ lang }: { lang: Locale }) {
           strokeWidth="1.2"
         />
         <text x="220" y="22" textAnchor="middle" fill="#ff9c8f" fontSize="7.6" fontFamily="monospace" fontWeight="700">
-          STRIP disposalRequires
+          {tl({ zh: "拆穿借口前提", en: "BREAK EXCUSE", ja: "言い訳の前提を崩す" }, lang)}
         </text>
         <text x="220" y="34" textAnchor="middle" fill="#e4e8eb" fontSize="6.8" fontFamily="monospace">
-          {tl({ zh: "拆掉退路前提 [BOGGART]", en: "REMOVE PREREQUISITE", ja: "逃げ道前提を剥奪" }, lang)}
+          {tl({ zh: "堵死他惯用的退路", en: "REMOVE SAFETY NET", ja: "逃げ道を塞ぐ" }, lang)}
         </text>
 
         <line
@@ -2344,10 +2344,10 @@ export function BoggartTrapSchematic({ lang }: { lang: Locale }) {
         <rect x="318" y="10" width="114" height="30" fill="rgba(73,184,130,0.12)" stroke="#49b882" />
         <circle cx="425" cy="16" r="1.9" fill="#49b882" className="svg-node-breathe" />
         <text x="375" y="23" textAnchor="middle" fill="#86e8b8" fontSize="7.6" fontFamily="monospace" fontWeight="700">
-          SIG EXPOSURE
+          {tl({ zh: "真伪现形", en: "EXPOSURE", ja: "本性が露出" }, lang)}
         </text>
         <text x="375" y="34" textAnchor="middle" fill="#a2aeb6" fontSize="6.8" fontFamily="monospace">
-          {tl({ zh: "真活人变招 · 伪人卡死", en: "HUMAN ADAPTS / MIMIC LOOPS", ja: "人間は適応・擬態破綻" }, lang)}
+          {tl({ zh: "真人变招 · 伪人卡死", en: "HUMAN ADAPTS / MIMIC LOOPS", ja: "人間は適応・擬態破綻" }, lang)}
         </text>
       </svg>
     </div>

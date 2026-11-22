@@ -176,7 +176,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
       if (idx >= 6) {
         expect(document.getElementById("disp-box")).not.toBeNull();
         expect(document.getElementById("disposal-requires-tag")?.textContent).toContain(
-          "disposalRequires:"
+          "借口前提"
         );
       }
 
@@ -195,7 +195,7 @@ describe("UI End-to-End Flow (Full 8-Survivor Campaign + Autosave + Hotkeys + Fl
           const form = document.getElementById("custom-ask-form") as HTMLFormElement;
           form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
         });
-        expect(document.getElementById("ask-preview")?.textContent).toContain("Boggart");
+        expect(document.getElementById("ask-preview")?.textContent).toContain("拆穿借口");
         await act(async () => {
           (document.getElementById("btn-ask-confirm") as HTMLButtonElement).click();
         });

@@ -53,10 +53,10 @@ export function OnboardingGuide({
           <SubHullIcon />
           <div>
             <div className="node-code">
-              {tl({ zh: "01 // 言行比对 (SAY ≠ DO)", en: "01 // SAY ≠ DO", ja: "01 // 言行比較 (SAY ≠ DO)" }, lang)}
+              {tl({ zh: "01 // 先看右侧档案", en: "01 // READ DOSSIER", ja: "01 // 調書を確認" }, lang)}
             </div>
             <div className="node-sub">
-              {tl({ zh: "比对 [neverWon] 与 [o-01]", en: "Contrast SAY vs [o-01]", ja: "建前と [o-01] を比較" }, lang)}
+              {tl({ zh: "对比「真实记录」与「嘴上口述」", en: "Compare past actions vs quotes", ja: "「過去記録」と「発言」を比較" }, lang)}
             </div>
           </div>
         </div>
@@ -72,10 +72,10 @@ export function OnboardingGuide({
           <StrobeTargetIcon />
           <div>
             <div className="node-code">
-              {tl({ zh: "02 // 对讲 [1-3] · 扫描 [S/T]", en: "02 // PTT [1-3] · [S/T]", ja: "02 // 尋問 [1-3] · 計測 [S/T]" }, lang)}
+              {tl({ zh: "02 // 提问 [1-4] · 扫描 [S/T]", en: "02 // ASK [1-4] · SCAN [S/T]", ja: "02 // 質問 [1-4] · 計測 [S/T]" }, lang)}
             </div>
             <div className="node-sub">
-              {tl({ zh: "追问冲突轴 · 扫描体征", en: "Probe axis · Scan", ja: "対立軸尋問・計測" }, lang)}
+              {tl({ zh: "戳旧账试探反应，扫瞳孔/热像", en: "Press hard choices · Check vitals", ja: "過去を突き反応と体征を確認" }, lang)}
             </div>
           </div>
         </div>
@@ -91,12 +91,12 @@ export function OnboardingGuide({
           <ClipboardDataIcon />
           <div>
             <div className="node-code">
-              {tl({ zh: "03 // 拉闸裁决 + 签字", en: "03 // VERDICT + LOG", ja: "03 // 判定・署名" }, lang)}
+              {tl({ zh: "03 // 放行或净化 + 签字", en: "03 // DECIDE + SIGN LOG", ja: "03 // 判定・署名" }, lang)}
             </div>
             <div className="node-sub">
               {step === 3 && logSigned
                 ? tl({ zh: "已签 · 呼叫下位 →", en: "Signed · Next →", ja: "署名済 · 次へ →" }, lang)
-                : tl({ zh: "拉闸裁决 · 签字留证", en: "Pull lever · Sign log", ja: "判定・日誌署名" }, lang)}
+                : tl({ zh: "真人认账 · 伪人装圣人", en: "Humans own flaws · Mimics act saintly", ja: "人間は本音 · 擬態体は建前" }, lang)}
             </div>
           </div>
         </div>

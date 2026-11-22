@@ -78,40 +78,40 @@ export const UI_STRINGS = {
     ja: "戦術質問チップ（または自由入力）："
   },
   placeholder: {
-    zh: "输入两难或拆前提质询...",
-    en: "Type dilemma or precondition probe...",
-    ja: "二択・前提剥奪の質問を入力..."
+    zh: "直接输入你想质问窗外人的话...",
+    en: "Ask the survivor outside anything...",
+    ja: "窓外の相手へ自由に質問を入力..."
   },
-  pttSend: { zh: "按压发送", en: "PTT SEND", ja: "送信" },
+  pttSend: { zh: "发送", en: "SEND", ja: "送信" },
   admitBtn: { zh: "放行 // ADMIT", en: "UNSEAL // ADMIT", ja: "解放 // ADMIT" },
   purgeBtn: { zh: "净化 // PURGE", en: "PURGE // 1,100°C", ja: "焼却 // PURGE" },
-  tabBaseline: { zh: "01 心智卡", en: "01 Profile", ja: "01 カルテ" },
-  tabVerdict: { zh: "02 叠图", en: "02 Diff", ja: "02 比較" },
+  tabBaseline: { zh: "01 人物档案", en: "01 Dossier", ja: "01 人物調書" },
+  tabVerdict: { zh: "02 裁决复盘", en: "02 Verdict", ja: "02 判定結果" },
   tabInspector: { zh: "03 管线", en: "03 JSON", ja: "03 JSON" },
   neverWonLabel: {
-    zh: "嘴上常提 · 从未赢过 (neverWon):",
-    en: "Invoked Aloud · 0 Wins (neverWon):",
-    ja: "建前の価値 · 勝利0回 (neverWon):"
+    zh: "嘴上常挂（从未做到）:",
+    en: "Claims Aloud (Never Did):",
+    ja: "口癖の建前（実行0回）:"
   },
   silentLabel: {
-    zh: "沉默主宰 (silent):",
-    en: "Silent Driver (silent):",
-    ja: "沈黙の支配価値 (silent):"
+    zh: "真实底色:",
+    en: "True Priority:",
+    ja: "本当の優先順位:"
   },
   arcCaption: {
-    zh: "MIND CRYSTAL · 琥珀弧线由放弃方指向真实守住方（self / bond / rule）",
-    en: "MIND CRYSTAL · Amber chords point from dropped value to winner (self / bond / rule)",
-    ja: "MIND CRYSTAL · 琥珀色の弦は切り捨てた価値から守った価値を指す"
+    zh: "心理底牌 · 危机时「放弃什么 → 保住什么」",
+    en: "PRIORITY MAP · In a crisis: Dropped → Protected",
+    ja: "心理マップ · 危機時に「捨てたもの → 守ったもの」"
   },
   dispHeader: {
-    zh: "DISPOSAL SIGNATURE · 处置签名与退路前提 (disposalRequires)",
-    en: "DISPOSAL SIGNATURE · Pattern & Precondition (disposalRequires)",
-    ja: "DISPOSAL SIGNATURE · 処置署名と退路の前提条件"
+    zh: "惯用借口与破绽",
+    en: "FAVORITE EXCUSE & WEAKPOINT",
+    ja: "常套の言い訳と弱点"
   },
   evHeader: {
-    zh: "EVIDENCE // o-N 事实链",
-    en: "EVIDENCE // GROUNDED o-N",
-    ja: "EVIDENCE // 客観記録 o-N"
+    zh: "过往档案 // 真实记录与口述",
+    en: "STATION RECORDS // ACTIONS & QUOTES",
+    ja: "過去記録 // 行動履歴と発言"
   },
   nextVisitorBtn: {
     zh: "呼叫下一名门外幸存者 →",
@@ -119,34 +119,34 @@ export const UI_STRINGS = {
     ja: "次の生存者を呼ぶ →"
   },
   finishShiftBtn: {
-    zh: "进入第 5 夜终局：ORD-OS 自审 →",
-    en: "Enter Night 5 Finale: ORD-OS Self-Audit →",
+    zh: "进入第 5 夜终局：镜面自审 →",
+    en: "Enter Night 5 Finale: Mirror Audit →",
     ja: "第5夜クライマックス：自己監査へ →"
   },
   offAxisSystemNote: {
-    zh: "该问题未触及档案冲突轴：真人和寄生体会给出完全相同的回答。",
-    en: "Question touched no conflict axis on file: humans and mimics answer identically.",
-    ja: "記録上の対立軸に触れていない質問です。人間も擬態体も同じ答えになります。"
+    zh: "提示：工号与技术细节伪人全背过，不会露馅——请直接追问档案里的过往旧账与两难选择。",
+    en: "Note: Mimics memorize passcodes & trivia intact—press them on past actions and hard dilemmas from their file.",
+    ja: "ヒント：番号や知識は擬態体も暗記しています。調書の過去記録や二択の矛盾を突いてください。"
   },
   previewLead: {
-    zh: "ORD-OS 预判检测轴：",
-    en: "ORD-OS Axis Preview: ",
-    ja: "ORD-OS 検査軸予測："
+    zh: "提问方向：",
+    en: "Question Focus: ",
+    ja: "質問の方向："
   },
   previewOffAxis: {
-    zh: "未触及冲突轴 · 真人与伪人回答相同",
-    en: "Off-axis · Humans and mimics answer identically",
-    ja: "対立軸なし・人間も擬態体も同じ回答"
+    zh: "常规闲聊 · 真人与伪人回答相同",
+    en: "Small talk · Humans and mimics answer identically",
+    ja: "一般質問・人間も擬態体も同じ回答"
   },
   previewDisposal: {
-    zh: "处置签名 (sig-1)",
-    en: "Disposal Signature (sig-1)",
-    ja: "処置署名 (sig-1)"
+    zh: "追问借口与卸责方式",
+    en: "Pressing their excuse",
+    ja: "言い訳の追及"
   },
   previewBoggart: {
-    zh: "Boggart · 拆退路前提 (disposalRequires)",
-    en: "Boggart · Remove Precondition (disposalRequires)",
-    ja: "Boggart · 退路前提の剥奪 (disposalRequires)"
+    zh: "拆穿借口 · 堵死退路",
+    en: "Break Excuse · Remove Safety Net",
+    ja: "言い訳の前提を崩す"
   },
   stormBanner: {
     zh: "[! MAG-STORM] 第 3 夜 · 极地强磁暴：强光测距与红外热成像全屏噪点，请纯靠对讲审讯判断！",

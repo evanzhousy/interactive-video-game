@@ -56,24 +56,24 @@ interface Props {
 
 const DEFECT_EXPLANATIONS: Record<DefectMode, LocalizedText> = {
   HUMAN: {
-    zh: "真人幸存者。回答立场与 ORD-OS 外部事实链 (o-N) 及处置签名一致。",
-    en: "Human survivor. Stance matched external observations (o-N) and disposal signature.",
-    ja: "生身の生存者。回答の立場が外部行動記録 (o-N) および処置署名と一致。"
+    zh: "真人幸存者。回答与档案里的过往行为、真实处事方式完全一致。",
+    en: "Human survivor. Responses matched their recorded past actions and genuine priorities.",
+    ja: "生身の生存者。回答が過去の行動記録と本音の価値基準に一致。"
   },
   LOW_SELF_NARRATIVE: {
-    zh: "低阶寄生体：复述了宿主嘴上标榜却从未赢过的自我美化叙事 (neverWon)。",
-    en: "Low-tier mimic: recited the host's flattering self-narrative (neverWon) instead of real actions.",
-    ja: "低階擬態体：実際の行動ではなく、宿主の建前の価値 (neverWon) を復唱した。"
+    zh: "低阶伪人：只会复读宿主嘴上标榜、实际从未做到过的体面话。",
+    en: "Low-tier mimic: only repeated flattering claims the host preached aloud but never actually lived by.",
+    ja: "低階擬態体：宿主が口先だけで語り、一度も実行していない建前を復唱した。"
   },
   MID_SECOND_AXIS: {
-    zh: "中阶寄生体：吞下了首条愧疚记忆 (v-1)，但在次条冲突轴 (v-2) 仍退回自我叙事。",
-    en: "Mid-tier mimic: absorbed primary guilty memory (v-1), but reverted to self-narrative on v-2.",
-    ja: "中階擬態体：第1軸 (v-1) は通過したが、第2対立軸 (v-2) で建前に戻った。"
+    zh: "中阶伪人：藏住了第一个痛点，但在深挖第二处矛盾时露出了装好人的马脚。",
+    en: "Mid-tier mimic: hid the surface contradiction, but reverted to fake altruism when pressed on a second dilemma.",
+    ja: "中階擬態体：最初の矛盾は隠したが、2つ目のジレンマを突かれると建前に戻った。"
   },
   HIGH_WRONG_DISPOSAL: {
-    zh: "高阶寄生体：价值排序全对，但处置签名破功——拆掉退路前提 (disposalRequires) 后仍机械复读失效借口，或找错开脱方式。",
-    en: "High-tier mimic: passed value orderings, but failed disposal signature—rigidly repeated an invalidated excuse once disposalRequires was removed, or used the wrong excuse.",
-    ja: "高階擬態体：価値順位は一致したが処置署名で破綻——前提条件 (disposalRequires) 剥奪後も無効な言い訳を繰り返した。"
+    zh: "高阶伪人：前半段伪装极像，但拆掉借口依赖的退路后仍机械重复失效辩解。",
+    en: "High-tier mimic: nearly indistinguishable until stripped of their favorite excuse's safety net.",
+    ja: "高階擬態体：前半の擬態は完璧だったが、言い訳の退路を絶つと無効な弁明を機械的に繰り返した。"
   }
 };
 
@@ -235,7 +235,7 @@ export function OrdamorDossier({
                 <div className="axis-compare-bar">
                   <div className="pill-row" id="never-won-pills">
                     <span className="axis-tag say">
-                      {tl({ zh: "口述 · 0胜", en: "SAY · 0W", ja: "建前 · 0勝" }, lang)}
+                      {tl({ zh: "嘴上常挂（从未做到）", en: "CLAIMS · NEVER DID", ja: "口癖 · 実行0回" }, lang)}
                     </span>
                     {gap.neverWon.map((tok) => (
                       <span key={tok} className="value-pill never-won">
@@ -246,7 +246,7 @@ export function OrdamorDossier({
                   {arcUnlocked ? (
                     <div className="pill-row">
                       <span className="axis-tag do">
-                        {tl({ zh: "实做 · 核心", en: "DO · CORE", ja: "実行動 · 核心" }, lang)}
+                        {tl({ zh: "真实底色", en: "TRUE PRIORITY", ja: "本当の優先" }, lang)}
                       </span>
                       {gap.silent.map((tok) => (
                         <span key={tok} className="value-pill silent">
@@ -261,25 +261,15 @@ export function OrdamorDossier({
               <div className="dossier-telemetry-strip" aria-label="Dossier Telemetry">
                 <span className="metric-chip amber">
                   {tl(
-                    { zh: `层级-0${visitor.unlockTier}`, en: `TIER-0${visitor.unlockTier}`, ja: `階層-0${visitor.unlockTier}` },
+                    { zh: `第 ${visitor.night} 夜`, en: `NIGHT 0${visitor.night}`, ja: `第${visitor.night}夜` },
                     lang
                   )}
                 </span>
                 <span className="metric-chip">
-                  {tl({ zh: `事实 ${factCount}`, en: `FACT ${factCount}`, ja: `事実 ${factCount}` }, lang)}
+                  {tl({ zh: `记录 ${factCount}`, en: `RECORDS ${factCount}`, ja: `記録 ${factCount}` }, lang)}
                 </span>
                 <span className="metric-chip">
-                  {tl({ zh: `口述 ${sayCount}`, en: `SAY ${sayCount}`, ja: `口述 ${sayCount}` }, lang)}
-                </span>
-                <span className="metric-chip">
-                  {tl(
-                    {
-                      zh: `冲突轴 ${visitor.profile.valueOrderings.length}`,
-                      en: `AXES ${visitor.profile.valueOrderings.length}`,
-                      ja: `対立軸 ${visitor.profile.valueOrderings.length}`
-                    },
-                    lang
-                  )}
+                  {tl({ zh: `口述 ${sayCount}`, en: `QUOTES ${sayCount}`, ja: `口述 ${sayCount}` }, lang)}
                 </span>
               </div>
             </div>
@@ -312,7 +302,7 @@ export function OrdamorDossier({
                                 <strong style={{ color: "var(--amber-crt)" }}>
                                   {VALUE_I18N[o.winner][lang]}
                                 </strong>{" "}
-                                &gt; {VALUE_I18N[loser][lang]} ({o.id} · {o.confidence.toFixed(2)})
+                                &gt; {VALUE_I18N[loser][lang]}
                               </span>
                               <Meter
                                 className="ordering-meter"
@@ -326,7 +316,7 @@ export function OrdamorDossier({
                                 </MeterTrack>
                               </Meter>
                             </div>
-                            <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{o.evidence.join(" · ")}</span>
+                            <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{confPct}%</span>
                           </div>
                         );
                       })}
@@ -359,7 +349,8 @@ export function OrdamorDossier({
                           color: "var(--amber-crt)"
                         }}
                       >
-                        disposalRequires: {tl(visitor.disposalRequiresLocalized, lang)}
+                        {tl({ zh: "借口前提：", en: "EXCUSE DEPENDS ON: ", ja: "言い訳の前提：" }, lang)}
+                        {tl(visitor.disposalRequiresLocalized, lang)}
                       </div>
                     ) : null}
                   </div>
@@ -374,10 +365,14 @@ export function OrdamorDossier({
             <div className="dossier-section" style={{ marginBottom: 0 }}>
               <div className="section-kicker">{tl(UI_STRINGS.evHeader, lang)}</div>
               <div id="ord-evidence-list">
-                {visitor.evidenceCards.map((ev) => {
+                {visitor.evidenceCards.map((ev, evIdx) => {
                   const raw = tl(ev.text, lang);
                   const kw = ev.kw ? tl(ev.kw, lang) : "";
                   const idx = kw ? raw.indexOf(kw) : -1;
+                  const tagText =
+                    ev.type === "say"
+                      ? tl({ zh: "口述", en: "QUOTE", ja: "口述" }, lang)
+                      : tl({ zh: `记录 ${evIdx + 1}`, en: `REC ${evIdx + 1}`, ja: `記録 ${evIdx + 1}` }, lang);
                   return (
                     <div
                       key={ev.id}
@@ -385,7 +380,7 @@ export function OrdamorDossier({
                       style={{ opacity: ev.type === "say" ? 0.82 : 1 }}
                     >
                       <span className={`ev-tag ${ev.type === "say" ? "say" : "fact"}`}>
-                        {ev.type === "say" ? "SAY" : ev.id.toUpperCase()}
+                        {tagText}
                       </span>
                       {idx >= 0 ? (
                         <>
@@ -407,9 +402,9 @@ export function OrdamorDossier({
                 <div className="section-kicker">
                   {tl(
                     {
-                      zh: "法医审讯协议 // 言行 (SAY ≠ DO) 对照",
-                      en: "FORENSIC PROTOCOL // SAY ≠ DO CONTRAST",
-                      ja: "法医尋問プロトコル // 言行 (SAY ≠ DO) 対照"
+                      zh: "甄别指南 // 真人认账 · 伪人装圣人",
+                      en: "HOW TO SPOT A MIMIC",
+                      ja: "見抜き方 // 人間は本音 · 擬態体は建前"
                     },
                     lang
                   )}
@@ -468,9 +463,9 @@ export function OrdamorDossier({
                   <div className="section-kicker">
                     {tl(
                       {
-                        zh: "基线价值弧线 vs 实时审讯立场",
-                        en: "BASELINE CHORDS vs LIVE SUBJECT STANCE",
-                        ja: "基準価値アーク vs リアルタイム立場"
+                        zh: "档案底色 vs 刚才的回答",
+                        en: "FILE RECORD vs LIVE ANSWER",
+                        ja: "記録上の本音 vs 今回の回答"
                       },
                       lang
                     )}
@@ -489,9 +484,9 @@ export function OrdamorDossier({
                   <div className="section-kicker">
                     {tl(
                       {
-                        zh: "SIGN LOG // 签署值班记录（计入 ORD-OS 行为档案 DO）",
-                        en: "SIGN LOG // RECORDED AS ORD-OS DO EVIDENCE",
-                        ja: "SIGN LOG // ORD-OS 行動証拠として記録"
+                        zh: "签署值班记录（系统会记住你的理由）",
+                        en: "SIGN SHIFT LOG (YOUR REASON IS RECORDED)",
+                        ja: "当直日誌に署名（判断理由が記録されます）"
                       },
                       lang
                     )}

@@ -62,9 +62,9 @@ export function CrisisModal({ crisis, lang, fuelLeft, onResolveOption }: CrisisM
           <span className="axis-tag do">
             {tl(
               {
-                zh: "记录 // ORD-OS 行为档案 DO",
-                en: "REC // ORD-OS DO TELEMETRY",
-                ja: "記録 // ORD-OS 行動記録 DO"
+                zh: "记入值班行动档案",
+                en: "RECORDED IN SHIFT LOG",
+                ja: "当直行動記録に保存"
               },
               lang
             )}
@@ -238,8 +238,9 @@ export function DemoCliffhangerModal({
           marginBottom: "12px"
         }}
       >
-        NIGHTS 1–2 VERDICTS: {audit.correctVerdicts}/{audit.totalVisitors} · SAY:{" "}
-        {tl(SIG_LABELS[audit.baseline.sig], lang)} · DO: {tl(SIG_LABELS[audit.live.sig], lang)} (
+        NIGHTS 1–2 VERDICTS: {audit.correctVerdicts}/{audit.totalVisitors} ·{" "}
+        {tl({ zh: "自述", en: "PROMISED", ja: "発言" }, lang)}: {tl(SIG_LABELS[audit.baseline.sig], lang)} ·{" "}
+        {tl({ zh: "实际", en: "ACTED", ja: "行動" }, lang)}: {tl(SIG_LABELS[audit.live.sig], lang)} (
         {Math.round(audit.consistency * 100)}% MATCH)
       </div>
 

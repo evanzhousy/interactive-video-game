@@ -695,13 +695,13 @@ export function LobbyScreen({
                 {tl({ zh: "01 站内简报", en: "01 BRIEFING", ja: "01 基地概要" }, lang)}
               </TabsTab>
               <TabsTab value="ordamor" className="dossier-tab">
-                {tl({ zh: "02 取证法则", en: "02 ORDAMOR", ja: "02 鑑定法則" }, lang)}
+                {tl({ zh: "02 真伪甄别", en: "02 SPOTTING MIMICS", ja: "02 見抜き方" }, lang)}
               </TabsTab>
               <TabsTab value="cardiac" className="dossier-tab">
                 {tl({ zh: "03 审讯与心率", en: "03 COMMS & ECG", ja: "03 尋問と心拍" }, lang)}
               </TabsTab>
               <TabsTab value="night5" className="dossier-tab">
-                {tl({ zh: "04 第5夜协议", en: "04 NIGHT 5", ja: "04 第5夜" }, lang)}
+                {tl({ zh: "04 第5夜终局", en: "04 NIGHT 5", ja: "04 第5夜" }, lang)}
               </TabsTab>
               <TabsIndicator className="tab-indicator" />
             </TabsList>
@@ -748,22 +748,22 @@ export function LobbyScreen({
                   </TabsPanel>
 
                   <TabsPanel value="ordamor" className="docs-article">
-                    <h3>{tl({ zh: "Ordamor 人格取证法则（SAY vs DO）", en: "Ordamor Forensic Law (SAY vs DO)", ja: "Ordamor 人格鑑定法則 (SAY vs DO)" }, lang)}</h3>
+                    <h3>{tl({ zh: "如何识破伪人：别信体面话，看他旧账", en: "How to Spot a Mimic: Press Past Actions, Not Trivia", ja: "擬態体の見抜き方：過去と建前の矛盾を突け" }, lang)}</h3>
                     <p>
                       {tl(
                         {
-                          zh: "不要考工号或技术参数（trivia）——拟态体完整窃取了表层记忆。真正无法复制的，是宿主在危机中的真实价值排序（v-1 / v-2）与事后开脱签名。",
-                          en: "Never waste turns on passcodes or trivia—mimics copy surface memory intact. Expose them through crisis value orderings (v-1, v-2) and post-hoc disposal signatures.",
-                          ja: "社員番号や知識（trivia）で試すな——擬態体は表層記憶を複製している。価値順位（v-1/v-2）と処置署名で見抜け。"
+                          zh: "不要考工号或专业术语——伪人完整背下了宿主的所有记忆。它们唯一学不会的，是活人在绝境里「为了自保或偏心到底舍弃了什么」以及事后惯用的开脱借口。",
+                          en: "Never waste turns on passcodes or technical trivia—mimics copy surface memory intact. What they fail to copy is how a flawed human prioritizes survival vs others in real crises and excuses their dirty past.",
+                          ja: "社員番号や知識で試すな——擬態体は記憶を丸暗記している。真似できないのは、極限状況で「何を守り何を切り捨てたか」と事後の言い訳だ。"
                         },
                         lang
                       )}
                     </p>
                     <ul>
-                      <li><strong>Night 1（低阶）</strong>：{tl({ zh: "复读宿主嘴上标榜却从未赢过的自我美化叙事（neverWon）。", en: "Recites flattering self-narrative (neverWon).", ja: "宿主の建前（neverWon）を復唱する。" }, lang)}</li>
-                      <li><strong>Night 2（中阶）</strong>：{tl({ zh: "通过主轴（v-1），深挖次冲突轴（v-2）才会露馅。", en: "Passes v-1; fails on secondary axis v-2.", ja: "第1軸を通過、第2軸（v-2）で破綻。" }, lang)}</li>
-                      <li><strong>Night 3（磁暴黑障）</strong>：{tl({ zh: "全传感器与 ECG 离线，纯无线电推理（警惕冷酷认账型真人）。", en: "All sensors & ECG offline—pure audio deduction.", ja: "全センサー・ECG停止。対話のみで推論せよ。" }, lang)}</li>
-                      <li><strong>Night 4（高阶 Boggart）</strong>：{tl({ zh: "价值排序全对，拆掉借口依赖的外部前提（disposalRequires）才能逼出真伪。", en: "Strip their excuse precondition (disposalRequires) via Boggart Trap.", ja: "言い訳の前提条件（disposalRequires）を剥奪して破綻を引き出せ。" }, lang)}</li>
+                      <li><strong>Night 1（低阶）</strong>：{tl({ zh: "满嘴复读「公平/大局」等宿主从没做到过的圣人台词；真人反而会冷酷承认自己的自私旧账。", en: "Recites flattering saintly claims the host never lived up to, whereas the real human coldly owns their selfish past.", ja: "宿主が実行したことのない立派な建前ばかりを復唱する。" }, lang)}</li>
+                      <li><strong>Night 2（中阶）</strong>：{tl({ zh: "能应付第一轮日常危机追问，但换个第二处过往痛点或私密两难继续深挖就会露出马脚。", en: "Passes the first surface dilemma, but slips up when pressed on a second painful trade-off.", ja: "最初の追及は凌ぐが、2つ目のジレンマを突くと破綻する。" }, lang)}</li>
+                      <li><strong>Night 3（磁暴黑障）</strong>：{tl({ zh: "强磁暴导致瞳孔/热像/心率全离线，纯靠对话判断（警惕坦率认错的古怪真人）。", en: "Geomagnetic storm disables all sensors & ECG—judge strictly by dialogue (watch out for bluntly honest humans).", ja: "磁気嵐で全センサー停止。対話のみで判断せよ。" }, lang)}</li>
+                      <li><strong>Night 4（高阶）</strong>：{tl({ zh: "前几轮近乎滴水不漏；唯有当面拆掉他借口依赖的现实条件（退路），真活人会改口变招，伪人会卡死重复同一套假话。", en: "Almost indistinguishable on morals—only when you strip away the real-world excuse their alibi relies on will a mimic repeat the same broken script.", ja: "道徳観まで完全に擬態する。言い訳の前提条件を崩すと、人間は変幻し擬態体は同じ台詞で固まる。" }, lang)}</li>
                     </ul>
                   </TabsPanel>
 
@@ -771,12 +771,12 @@ export function LobbyScreen({
                     <h3>{tl({ zh: "自由审讯 & 心率佐证", en: "Freeform Interrogation & Cardiac Telemetry", ja: "自由尋問 & 心拍テレメトリ" }, lang)}</h3>
                     <ul>
                       <li>
-                        <strong>{tl({ zh: "4 次有效追问 + 3 次闲聊额度", en: "4 Core Turns + 3 Chatter Budget", ja: "有効尋問4回 + 雑談枠3回" }, lang)}</strong>：
+                        <strong>{tl({ zh: "4 次核心追问 + 3 次闲聊试探", en: "4 Core Questions + 3 Small-Talk Slots", ja: "有効尋問4回 + 雑談枠3回" }, lang)}</strong>：
                         {tl(
                           {
-                            zh: "可自由打字盘问、诈唬或援引档案细节（o-01/o-02）。非核心轴试探优先扣闲聊额度。",
-                            en: "Type custom questions, bluffs, or cite dossier facts (o-01/o-02). Off-axis chatter uses the 3 chatter slots first.",
-                            ja: "自由入力で追及・揺さぶりが可能。本題外の質問は雑談枠3回を先に消費。"
+                            zh: "可以直接点击预设问题，也能自由打字盘问、诈唬或援引档案里的过往细节。无关紧要的试探会优先消耗闲聊额度，不占主审回合。",
+                            en: "Use quick probes or type your own bluff citing past records from their file. Casual off-topic probing uses small-talk slots first.",
+                            ja: "定型質問のほか、調書の過去記録を引いた自由入力・揺さぶりも可能。雑談枠を先に消費。"
                           },
                           lang
                         )}
@@ -785,9 +785,9 @@ export function LobbyScreen({
                         <strong>{tl({ zh: "心率只做佐证（1 PWR 应激回放 R）", en: "Cardiac Corroboration (1 PWR Replay R)", ja: "心拍裏付け（1 PWR 再生 R）" }, lang)}</strong>：
                         {tl(
                           {
-                            zh: "真人在真实利害冲突轴上出现肾上腺素飙升并缓慢回落；伪人仅在失真轴出现心率平直或瞬间归零。按 D 可切换右侧取证档案浮层。",
-                            en: "Humans spike on real stakes and decay gradually. Mimics show flat mismatch or instant snap-back ONLY on flawed axes. Press D to toggle the Dossier HUD.",
-                            ja: "生身は本音軸で急上昇し緩やかに戻る。擬態体は破綻軸のみで平坦化や瞬間復帰を示す。D キーで調書HUDを切替。"
+                            zh: "真人在真实利害处出现心跳飙升并缓慢平复；伪人仅在露馅话题上出现心率反常平直或瞬间归零。按 D 可随时收起/展开右侧档案。",
+                            en: "Humans spike on real personal stakes and settle gradually. Mimics flatline or snap back abnormally when caught lying. Press D to toggle the Dossier HUD.",
+                            ja: "生身は本音の利害で急上昇し緩やかに戻る。擬態体は嘘の瞬間に平坦化や急落を示す。D キーで調書HUDを切替。"
                           },
                           lang
                         )}
@@ -796,13 +796,13 @@ export function LobbyScreen({
                   </TabsPanel>
 
                   <TabsPanel value="night5" className="docs-article">
-                    <h3>{tl({ zh: "第 5 夜 · 自我审计与 7 种结局", en: "Night 5 · Self-Audit & 7 Endings", ja: "第5夜・自己監査と7つの結末" }, lang)}</h3>
+                    <h3>{tl({ zh: "第 5 夜 · 镜面自审与 7 种结局", en: "Night 5 · Mirror Self-Audit & 7 Endings", ja: "第5夜・自己監査と7つの結末" }, lang)}</h3>
                     <p>
                       {tl(
                         {
-                          zh: "第 0 夜口述（SAY）与前 4 夜实际行动（DO）均被记录。第 5 夜窗外站着与你口述 99.98% 吻合的完美替身——唯有活人才会与自己说过的话对不上。",
-                          en: "Your Night 0 intake (SAY) vs Nights 1–4 actions (DO) are audited. On Night 5 a 99.98% double knocks—only the living contradict their own words.",
-                          ja: "第0夜の建前（SAY）と第1〜4夜の行動（DO）が監査される。第5夜、99.98%一致する自分の影が現れる。"
+                          zh: "你在第 0 夜入职时做过的承诺，与第 1–4 夜实际留下的行动都会被系统记住。第 5 夜窗外站着与你本人言辞 99.98% 吻合的完美替身——唯有活人才会与自己说过的话对不上。",
+                          en: "Your Night 0 intake promise and your actual Nights 1–4 actions are both recorded. On Night 5 a 99.98% double knocks—only the living contradict their own words.",
+                          ja: "第0夜の言葉と第1〜4夜の実際の行動はすべて記録される。第5夜、99.98%一致する自分の影が現れる。"
                         },
                         lang
                       )}

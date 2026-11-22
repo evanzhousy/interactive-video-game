@@ -176,5 +176,5 @@ export function previewQuestionAxis(
   const ord = visitor.profile.valueOrderings[probe.axis];
   if (!ord) return tl(UI_STRINGS.previewOffAxis, lang);
   const loser = otherValue(ord.pair, ord.winner);
-  return `${VALUE_I18N[ord.winner][lang]} vs ${VALUE_I18N[loser][lang]} (${ord.id})`;
+  return `${VALUE_I18N[ord.winner][lang]} vs ${VALUE_I18N[loser][lang]}`;
 }
