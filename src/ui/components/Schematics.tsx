@@ -2055,26 +2055,26 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <rect x="0.5" y="0.5" width="459" height="75" fill="#050709" stroke="rgba(198,176,138,0.22)" />
-        {/* Left Entry Node */}
-        <rect x="10" y="20" width="84" height="36" fill="#0d1115" stroke="#eba834" strokeWidth="1.1" />
-        <circle cx="87" cy="26" r="2" fill="#eba834" className="svg-node-breathe" />
-        <text x="52" y="35" textAnchor="middle" fill="#eba834" fontSize="8" fontFamily="monospace" fontWeight="700">
+        <rect x="0.5" y="0.5" width="459" height="75" fill="rgba(4,8,12,0.72)" stroke="rgba(235,168,52,0.22)" />
+        {/* Left Entry Node (GTA Slanted Parallelogram) */}
+        <polygon points="14,20 96,20 90,56 8,56" fill="#0d1318" stroke="#eba834" strokeWidth="1.2" />
+        <circle cx="86" cy="26" r="2" fill="#eba834" className="svg-node-breathe" />
+        <text x="51" y="35" textAnchor="middle" fill="#f6bd54" fontSize="8.2" fontFamily="sans-serif" fontWeight="800">
           PTT PROBE
         </text>
-        <text x="52" y="47" textAnchor="middle" fill="#9ec6d4" fontSize="7" fontFamily="monospace">
+        <text x="50" y="47" textAnchor="middle" fill="#9ec6d4" fontSize="7" fontFamily="monospace">
           {tl({ zh: "审讯对质", en: "CONFRONT", ja: "対立尋問" }, lang)}
         </text>
 
         {/* Dual Branch Connectors + Glowing Traveling Signal Pulses */}
         <path
-          d="M94 38 H122 V21 H146"
+          d="M93 38 H122 V21 H146"
           stroke="rgba(73,184,130,0.48)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
         />
         <path
-          d="M94 38 H122 V21 H146"
+          d="M93 38 H122 V21 H146"
           pathLength={100}
           className="svg-beam-travel"
           stroke="#86e8b8"
@@ -2082,38 +2082,35 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
         />
 
         <path
-          d="M94 38 H122 V55 H146"
+          d="M93 38 H122 V55 H146"
           stroke="rgba(224,70,52,0.48)"
           strokeWidth="1.2"
           strokeDasharray="4 3"
         />
         <path
-          d="M94 38 H122 V55 H146"
+          d="M93 38 H122 V55 H146"
           pathLength={100}
           className="svg-beam-travel delay-1"
           stroke="#ff9c8f"
           strokeWidth="2"
         />
 
-        {/* Upper Branch: Human Match */}
-        <rect x="146" y="9" width="184" height="24" fill="rgba(73,184,130,0.1)" stroke="#49b882" />
+        {/* Upper Branch: Human Match (Slanted) */}
+        <polygon points="149,9 333,9 327,33 143,33" fill="rgba(73,184,130,0.12)" stroke="#49b882" />
         <text x="155" y="24" fill="#86e8b8" fontSize="7.8" fontFamily="monospace" fontWeight="700">
           DO [o-N] {tl({ zh: "承认冷酷事实", en: "OWNS HARD FACTS", ja: "事実行動に一致" }, lang)}
         </text>
         <line x1="330" y1="21" x2="352" y2="21" stroke="rgba(73,184,130,0.5)" strokeWidth="1.2" />
         <path d="M330 21 H352" pathLength={100} className="svg-beam-travel delay-1" stroke="#86e8b8" strokeWidth="2" />
-        <rect x="352" y="9" width="98" height="24" fill="#49b882" />
-        <text x="401" y="24" textAnchor="middle" fill="#060809" fontSize="8" fontFamily="monospace" fontWeight="700">
+        <polygon points="355,9 452,9 446,33 349,33" fill="#49b882" />
+        <text x="401" y="24" textAnchor="middle" fill="#04120b" fontSize="8" fontFamily="sans-serif" fontWeight="800">
           HUMAN // ADMIT
         </text>
 
-        {/* Lower Branch: Mimic Self-Narrative */}
-        <rect
-          x="146"
-          y="43"
-          width="184"
-          height="24"
-          fill="rgba(224,70,52,0.1)"
+        {/* Lower Branch: Mimic Self-Narrative (Slanted) */}
+        <polygon
+          points="149,43 333,43 327,67 143,67"
+          fill="rgba(224,70,52,0.12)"
           stroke="#e04634"
           strokeDasharray="3 2"
         />
@@ -2122,8 +2119,8 @@ export function ForensicContrastSchematic({ lang }: { lang: Locale }) {
         </text>
         <line x1="330" y1="55" x2="352" y2="55" stroke="rgba(224,70,52,0.5)" strokeWidth="1.2" />
         <path d="M330 55 H352" pathLength={100} className="svg-beam-travel delay-2" stroke="#ff9c8f" strokeWidth="2" />
-        <rect x="352" y="43" width="98" height="24" fill="#e04634" />
-        <text x="401" y="58" textAnchor="middle" fill="#060809" fontSize="8" fontFamily="monospace" fontWeight="700">
+        <polygon points="355,43 452,43 446,67 349,67" fill="#e04634" />
+        <text x="401" y="58" textAnchor="middle" fill="#060809" fontSize="8" fontFamily="sans-serif" fontWeight="800">
           MIMIC // PURGE
         </text>
       </svg>

@@ -1,5 +1,13 @@
 /// <reference types="vite/client" />
 import { Button } from "@ui-sdk/react/button";
+import { Meter, MeterIndicator, MeterTrack } from "@ui-sdk/react/meter";
+import {
+  ScrollArea,
+  ScrollAreaContent,
+  ScrollAreaScrollbar,
+  ScrollAreaThumb,
+  ScrollAreaViewport
+} from "@ui-sdk/react/scroll-area";
 import { Tabs, TabsIndicator, TabsList, TabsPanel, TabsTab } from "@ui-sdk/react/tabs";
 import { Toggle } from "@ui-sdk/react/toggle";
 import { useState } from "react";
@@ -189,7 +197,9 @@ export function OrdamorDossier({
         </TabsList>
 
         <TabsPanel value="baseline">
-          <div className="tab-panel-body">
+          <ScrollArea className="gta-dossier-scroll" type="auto">
+            <ScrollAreaViewport>
+              <ScrollAreaContent className="tab-panel-body">
             <div className="dossier-section">
               <div className="section-kicker">
                 {tl(
@@ -304,9 +314,17 @@ export function OrdamorDossier({
                                 </strong>{" "}
                                 &gt; {VALUE_I18N[loser][lang]} ({o.id} · {o.confidence.toFixed(2)})
                               </span>
-                              <div className="ordering-bar-track" aria-hidden="true">
-                                <div className="ordering-bar-fill" style={{ width: `${confPct}%` }} />
-                              </div>
+                              <Meter
+                                className="ordering-meter"
+                                value={confPct}
+                                min={0}
+                                max={100}
+                                aria-label={`${VALUE_I18N[o.winner][lang]} ${confPct}%`}
+                              >
+                                <MeterTrack>
+                                  <MeterIndicator />
+                                </MeterTrack>
+                              </Meter>
                             </div>
                             <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{o.evidence.join(" · ")}</span>
                           </div>
@@ -399,11 +417,18 @@ export function OrdamorDossier({
                 <ForensicContrastSchematic lang={lang} />
               </div>
             ) : null}
-          </div>
+              </ScrollAreaContent>
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar orientation="vertical" className="gta-dossier-scrollbar">
+              <ScrollAreaThumb className="gta-dossier-thumb" />
+            </ScrollAreaScrollbar>
+          </ScrollArea>
         </TabsPanel>
 
         <TabsPanel value="verdict">
-          <div className="tab-panel-body">
+          <ScrollArea className="gta-dossier-scroll" type="auto">
+            <ScrollAreaViewport>
+              <ScrollAreaContent className="tab-panel-body">
             {!verdictDone ? (
               <StandbyVerdictSchematic lang={lang} />
             ) : (
@@ -498,7 +523,12 @@ export function OrdamorDossier({
                 </div>
               </div>
             )}
-          </div>
+              </ScrollAreaContent>
+            </ScrollAreaViewport>
+            <ScrollAreaScrollbar orientation="vertical" className="gta-dossier-scrollbar">
+              <ScrollAreaThumb className="gta-dossier-thumb" />
+            </ScrollAreaScrollbar>
+          </ScrollArea>
         </TabsPanel>
 
         {import.meta.env?.DEV ? (
