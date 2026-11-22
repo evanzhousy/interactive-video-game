@@ -185,3 +185,14 @@ export function MotionPlayIcon(props: IconProps) {
     </Icon>
   );
 }
+
+export function StoryBranchIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="3.5" cy="8" r="1.7" />
+      <circle cx="12.5" cy="4" r="1.7" />
+      <circle cx="12.5" cy="12" r="1.7" />
+      <path d="M5.2 8h2.6c1 0 1.4-4 3-4M7.8 8c1 0 1.4 4 3 4" />
+    </Icon>
+  );
+}

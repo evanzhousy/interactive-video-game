@@ -28,6 +28,7 @@ import { Tabs, TabsIndicator, TabsList, TabsPanel, TabsTab } from "@ui-sdk/react
 import { Toggle } from "@ui-sdk/react/toggle";
 import { useEffect, useRef, useState } from "react";
 import { tl } from "../../game/i18n.js";
+import { getStoryCompletionStats } from "../../game/story-graph.js";
 import {
   exportShiftSaveJson,
   importShiftSaveJson,
@@ -45,7 +46,8 @@ import {
   FlameFuelIcon,
   MotionPauseIcon,
   MotionPlayIcon,
-  SnowHazardIcon
+  SnowHazardIcon,
+  StoryBranchIcon
 } from "./Icons.js";
 import { WebGLAtmosphere, useVfxShader } from "./WebGLAtmosphere.js";
 
@@ -69,6 +71,7 @@ interface Props {
   onContinueShift: (save: SavedShiftState) => void;
   onClearSavedShift: () => void;
   onOpenArchive: () => void;
+  onOpenStoryMap: () => void;
 }
 
 type ManualTab = "briefing" | "ordamor" | "cardiac" | "night5";
@@ -92,8 +95,10 @@ export function LobbyScreen({
   onStartNewShift,
   onContinueShift,
   onClearSavedShift,
-  onOpenArchive
+  onOpenArchive,
+  onOpenStoryMap
 }: Props) {
+  const storyStats = getStoryCompletionStats(["prologue_01", ...(compendium.unlockedStoryNodes ?? [])]);
   const [videoReady, setVideoReady] = useState(false);
   const [loadOpen, setLoadOpen] = useState(false);
   const [docsOpen, setDocsOpen] = useState(false);
@@ -371,6 +376,29 @@ export function LobbyScreen({
           ) : null}
 
           <Button
+            id="btn-lobby-storymap"
+            className="gta-menu-item"
+            onClick={onOpenStoryMap}
+          >
+            <span className="gta-menu-idx">{savedShift ? "03" : "02"}</span>
+            <span className="gta-menu-label">
+              <span className="gta-menu-row">
+                <StoryBranchIcon />
+                <span>
+                  {tl(
+                    {
+                      zh: `故事线 // STORY MAP (${storyStats.unlockedCount}/${storyStats.totalCount})`,
+                      en: `STORY MAP (${storyStats.unlockedCount}/${storyStats.totalCount})`,
+                      ja: `分岐図 // STORY (${storyStats.unlockedCount}/${storyStats.totalCount})`
+                    },
+                    lang
+                  )}
+                </span>
+              </span>
+            </span>
+          </Button>
+
+          <Button
             id="btn-lobby-load"
             className="gta-menu-item"
             onClick={() => {
@@ -378,7 +406,7 @@ export function LobbyScreen({
               setLoadOpen(true);
             }}
           >
-            <span className="gta-menu-idx">{savedShift ? "03" : "02"}</span>
+            <span className="gta-menu-idx">{savedShift ? "04" : "03"}</span>
             <span className="gta-menu-label">
               <span className="gta-menu-row">
                 <ClipboardDataIcon />
@@ -392,7 +420,7 @@ export function LobbyScreen({
             className="gta-menu-item"
             onClick={() => setDocsOpen(true)}
           >
-            <span className="gta-menu-idx">{savedShift ? "04" : "03"}</span>
+            <span className="gta-menu-idx">{savedShift ? "05" : "04"}</span>
             <span className="gta-menu-label">
               <span className="gta-menu-row">
                 <FlameFuelIcon />
@@ -406,7 +434,7 @@ export function LobbyScreen({
             className="gta-menu-item"
             onClick={onOpenArchive}
           >
-            <span className="gta-menu-idx">{savedShift ? "05" : "04"}</span>
+            <span className="gta-menu-idx">{savedShift ? "06" : "05"}</span>
             <span className="gta-menu-label">
               <span className="gta-menu-row">
                 <ArchiveIcon />

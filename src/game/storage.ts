@@ -269,13 +269,17 @@ export interface CompendiumState {
   unlockedEndings: EndingId[];
   unlockedAchievements: AchievementId[];
   completedRuns: number;
+  unlockedStoryNodes?: string[];
+  visitedStoryEdges?: string[];
 }
 
 const EMPTY_COMPENDIUM: CompendiumState = {
   version: 1,
   unlockedEndings: [],
   unlockedAchievements: [],
-  completedRuns: 0
+  completedRuns: 0,
+  unlockedStoryNodes: [],
+  visitedStoryEdges: []
 };
 
 function getStorage(): Storage | null {
@@ -423,7 +427,9 @@ export function loadCompendium(): CompendiumState {
       unlockedAchievements: Array.isArray(parsed.unlockedAchievements)
         ? parsed.unlockedAchievements
         : [],
-      completedRuns: typeof parsed.completedRuns === "number" ? parsed.completedRuns : 0
+      completedRuns: typeof parsed.completedRuns === "number" ? parsed.completedRuns : 0,
+      unlockedStoryNodes: Array.isArray(parsed.unlockedStoryNodes) ? parsed.unlockedStoryNodes : [],
+      visitedStoryEdges: Array.isArray(parsed.visitedStoryEdges) ? parsed.visitedStoryEdges : []
     };
   } catch {
     return EMPTY_COMPENDIUM;
@@ -432,9 +438,19 @@ export function loadCompendium(): CompendiumState {
 
 export async function hydrateCompendium(): Promise<CompendiumState> {
   const fromDb = await loadCompendiumFromClientDb();
-  if (fromDb && fromDb.version === 1) return fromDb;
+  if (fromDb && fromDb.version === 1) {
+    return {
+      ...fromDb,
+      unlockedStoryNodes: Array.isArray(fromDb.unlockedStoryNodes) ? fromDb.unlockedStoryNodes : [],
+      visitedStoryEdges: Array.isArray(fromDb.visitedStoryEdges) ? fromDb.visitedStoryEdges : []
+    };
+  }
   const fromLocal = loadCompendium();
-  if (fromLocal.completedRuns > 0 || fromLocal.unlockedEndings.length > 0) {
+  if (
+    fromLocal.completedRuns > 0 ||
+    fromLocal.unlockedEndings.length > 0 ||
+    (fromLocal.unlockedStoryNodes?.length ?? 0) > 0
+  ) {
     void saveCompendiumToClientDb(fromLocal);
   }
   return fromLocal;
@@ -507,7 +523,9 @@ export function recordRunCompletion(opts: {
     version: 1,
     unlockedEndings: [...endings],
     unlockedAchievements: [...afterAch],
-    completedRuns: opts.current.completedRuns + 1
+    completedRuns: opts.current.completedRuns + 1,
+    unlockedStoryNodes: opts.current.unlockedStoryNodes ?? [],
+    visitedStoryEdges: opts.current.visitedStoryEdges ?? []
   };
 
   const store = getStorage();
@@ -521,4 +539,50 @@ export function recordRunCompletion(opts: {
   void saveCompendiumToClientDb(next);
 
   return { next, newlyUnlockedAchievements };
+}
+
+export function recordStoryProgress(
+  current: CompendiumState,
+  nodeIds: readonly string[],
+  edgeIds: readonly string[] = []
+): CompendiumState {
+  const nodes = new Set<string>(current.unlockedStoryNodes ?? []);
+  const edges = new Set<string>(current.visitedStoryEdges ?? []);
+  let changed = false;
+
+  for (const id of nodeIds) {
+    if (id && !nodes.has(id)) {
+      nodes.add(id);
+      changed = true;
+    }
+  }
+  for (const id of edgeIds) {
+    if (id && !edges.has(id)) {
+      edges.add(id);
+      changed = true;
+    }
+  }
+
+  if (!changed) return current;
+
+  const next: CompendiumState = {
+    version: 1,
+    unlockedEndings: [...current.unlockedEndings],
+    unlockedAchievements: [...current.unlockedAchievements],
+    completedRuns: current.completedRuns,
+    unlockedStoryNodes: [...nodes],
+    visitedStoryEdges: [...edges]
+  };
+
+  const store = getStorage();
+  if (store) {
+    try {
+      store.setItem(COMPENDIUM_SAVE_KEY, JSON.stringify(next));
+    } catch {
+      // ignore
+    }
+  }
+  void saveCompendiumToClientDb(next);
+
+  return next;
 }

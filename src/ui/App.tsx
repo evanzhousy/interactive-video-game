@@ -56,6 +56,7 @@ import {
   loadOperatorName,
   loadSavedShift,
   recordRunCompletion,
+  recordStoryProgress,
   saveOnboardingDismissed,
   saveOperatorName,
   saveShiftState,
@@ -63,6 +64,12 @@ import {
   type CompendiumState,
   type SavedShiftState
 } from "../game/storage.js";
+import {
+  PROLOGUE_NODE_IDS,
+  STORY_EDGES,
+  getStoryNode,
+  type StoryChoice
+} from "../game/story-graph.js";
 import type {
   EndingId,
   FlashRephraseConfig,
@@ -99,16 +106,19 @@ import {
   MotionPlayIcon,
   SlidersConsoleIcon,
   SnowHazardIcon,
+  StoryBranchIcon,
   StrobeTargetIcon,
   ThermalWaveIcon
 } from "./components/Icons.js";
 import { IntakeModal } from "./components/IntakeModal.js";
+import { InteractiveMoviePlayer } from "./components/InteractiveMoviePlayer.js";
 import { IntercomPanel, type TranscriptLine } from "./components/IntercomPanel.js";
 import { LobbyScreen } from "./components/LobbyScreen.js";
 import { Night5Audit } from "./components/Night5Audit.js";
 import { OnboardingGuide } from "./components/OnboardingGuide.js";
 import { OrdamorDossier, type DossierTab } from "./components/OrdamorDossier.js";
 import { IsometricAirlockSchematic } from "./components/Schematics.js";
+import { StoryFlowchartModal } from "./components/StoryFlowchartModal.js";
 import { ViewportCanvas } from "./components/ViewportCanvas.js";
 import { WebGLAtmosphere } from "./components/WebGLAtmosphere.js";
 
@@ -252,6 +262,13 @@ export function App() {
 
   const [compendium, setCompendium] = useState<CompendiumState>(() => loadCompendium());
   const [compendiumOpen, setCompendiumOpen] = useState(false);
+  const [storyMapOpen, setStoryMapOpen] = useState(false);
+  const [activeStoryNodeId, setActiveStoryNodeId] = useState<string | null>(null);
+  const [prologueInitialStep, setPrologueInitialStep] = useState(0);
+
+  const unlockStoryNodes = useCallback((nodeIds: string[], edgeIds: string[] = []) => {
+    setCompendium((prev) => recordStoryProgress(prev, nodeIds, edgeIds));
+  }, []);
 
   const safeIdx = Math.min(visitorIdx, activeVisitors.length - 1);
   const visitor = activeVisitors[safeIdx]!;
@@ -443,7 +460,27 @@ export function App() {
     let cancelled = false;
     void hydrateCompendium().then((dbComp) => {
       if (cancelled) return;
-      setCompendium((prev) => (dbComp.completedRuns > prev.completedRuns ? dbComp : prev));
+      setCompendium((prev) => {
+        const mergedNodes = Array.from(
+          new Set([...(prev.unlockedStoryNodes ?? []), ...(dbComp.unlockedStoryNodes ?? [])])
+        );
+        const mergedEdges = Array.from(
+          new Set([...(prev.visitedStoryEdges ?? []), ...(dbComp.visitedStoryEdges ?? [])])
+        );
+        if (
+          dbComp.completedRuns > prev.completedRuns ||
+          mergedNodes.length > (prev.unlockedStoryNodes?.length ?? 0) ||
+          mergedEdges.length > (prev.visitedStoryEdges?.length ?? 0)
+        ) {
+          const base = dbComp.completedRuns > prev.completedRuns ? dbComp : prev;
+          return {
+            ...base,
+            unlockedStoryNodes: mergedNodes,
+            visitedStoryEdges: mergedEdges
+          };
+        }
+        return prev;
+      });
     });
     if (!initialSave) {
       void hydrateSavedShift().then((dbShift) => {
@@ -721,6 +758,15 @@ export function App() {
       setBoggartUsedIds([]);
       setStage("booth");
       resetVisitorState(0, roster, true, initFuel, false, freshRunSeed);
+      if (roster[0]?.id === "V-01") {
+        setActiveStoryNodeId("n1_elena_arrival");
+        unlockStoryNodes(
+          ["n1_elena_arrival", "n1_elena_confront"],
+          ["e_n1e_arr_con"]
+        );
+      } else {
+        setActiveStoryNodeId(null);
+      }
     });
     if (modeOverride === "seeded") {
       void loadSeededRoster(freshRunSeed, lang, false);
@@ -738,6 +784,8 @@ export function App() {
       setFuelLeft(getInitialFuel(campaignMode));
       setEmergencyOverdraftUsed(false);
       setBoggartUsedIds([]);
+      setActiveStoryNodeId(null);
+      setPrologueInitialStep(0);
       setStage("intake");
     }, "backward");
   };
@@ -783,6 +831,7 @@ export function App() {
   const handleTriggerSensor = useCallback(
     (kind: "strobe" | "thermal") => {
       if (sensorsBlinded || powerLeft <= 0 || verdictState !== "NONE") return;
+      setActiveStoryNodeId(null);
       setPowerLeft((p) => p - 1);
       if (kind === "strobe") {
         playBoothSfx("strobe", sfx);
@@ -811,6 +860,7 @@ export function App() {
     ) {
       return;
     }
+    setActiveStoryNodeId(null);
     playBoothSfx("heartbeat", sfx);
     setPowerLeft((p) => p - 1);
     setStressReplayUnlocked(true);
@@ -829,6 +879,7 @@ export function App() {
   const handleAskProbe = useCallback(
     async (probeKey: ProbeKey | "off_axis", customText?: string) => {
       if (turnsLeft <= 0 || verdictState !== "NONE" || isRephrasing) return;
+      setActiveStoryNodeId(null);
       playBoothSfx("ptt", sfx);
       setSignalGlitch(false);
 
@@ -1129,7 +1180,7 @@ export function App() {
   );
 
   // Desktop Steam / Keyboard Tactical Shortcuts via @ui-sdk/react/shortcuts
-  const boothShortcutsEnabled = stage === "booth" && !compendiumOpen;
+  const boothShortcutsEnabled = stage === "booth" && !compendiumOpen && !storyMapOpen;
   const probeKeys = Object.keys(visitor.probes) as ProbeKey[];
   const cycleDossierTab = (delta: -1 | 1) => {
     const order: DossierTab[] = import.meta.env?.DEV
@@ -1177,7 +1228,7 @@ export function App() {
     description: "Next Dossier Tab"
   });
   useShortcut("d", () => setDossierCollapsed((c) => !c), {
-    when: () => stage === "booth" && !compendiumOpen && !flashDrawerOpen,
+    when: () => stage === "booth" && !compendiumOpen && !storyMapOpen && !flashDrawerOpen,
     description: "Toggle Ordamor Dossier HUD"
   });
 
@@ -1230,6 +1281,7 @@ export function App() {
 
   const handleVerdict = (decision: "ADMIT" | "PURGE") => {
     if (verdictState !== "NONE" || isRephrasing) return;
+    setActiveStoryNodeId(null);
     stopIntercomVoice();
     playBoothSfx(decision === "PURGE" ? "purge" : "admit", sfx);
     if (decision === "PURGE") {
@@ -1307,11 +1359,113 @@ export function App() {
     if (safeIdx < activeVisitors.length - 1) {
       const nextOverdraft = emergencyOverdraftUsed;
       setEmergencyOverdraftUsed(false);
+      const nextVisitorSpec = activeVisitors[safeIdx + 1];
+      if (visitor.id === "V-01" && nextVisitorSpec?.id === "V-02") {
+        const isPurge =
+          verdictState === "PURGE" ||
+          history.find((h) => h.visitorId === "V-01")?.decision === "PURGE";
+        const elenaVerdictNode = isPurge ? "n1_elena_purge" : "n1_elena_admit";
+        const corridorNode = isPurge ? "n1_corridor_purge" : "n1_corridor_admit";
+        const edgeToVerdict = isPurge ? "e_n1e_con_purge" : "e_n1e_con_admit";
+        const edgeToCorridor = isPurge ? "e_n1e_purge_corr" : "e_n1e_admit_corr";
+        unlockStoryNodes([elenaVerdictNode, corridorNode], [edgeToVerdict, edgeToCorridor]);
+        setActiveStoryNodeId(corridorNode);
+      } else {
+        if (visitor.id === "V-02") {
+          const isPurge =
+            verdictState === "PURGE" ||
+            history.find((h) => h.visitorId === "V-02")?.decision === "PURGE";
+          const leoVerdictNode = isPurge ? "n1_leo_purge" : "n1_leo_admit";
+          const edgeToVerdict = isPurge ? "e_n1l_con_purge" : "e_n1l_con_admit";
+          const edgeToHub = isPurge ? "e_n1l_purge_hub" : "e_n1l_admit_hub";
+          unlockStoryNodes([leoVerdictNode, "nights_2_5_hub"], [edgeToVerdict, edgeToHub]);
+        }
+        setActiveStoryNodeId(null);
+      }
       resetVisitorState(safeIdx + 1, activeVisitors, true, fuelLeft, nextOverdraft);
     } else {
       stopIntercomVoice();
       playBoothSfx("purge", sfx);
+      setActiveStoryNodeId(null);
       transitionStage(() => setStage("night5"));
+    }
+  };
+
+  const handleSelectBoothStoryChoice = (choice: StoryChoice) => {
+    playBoothSfx("ptt", sfx);
+    const curId = activeStoryNodeId;
+    const edge = STORY_EDGES.find((e) => e.from === curId && e.to === choice.nextNodeId);
+    unlockStoryNodes([choice.nextNodeId], edge ? [edge.id] : []);
+
+    const nextNode = getStoryNode(choice.nextNodeId);
+    if (nextNode && nextNode.kind === "movie") {
+      setActiveStoryNodeId(nextNode.id);
+    } else {
+      setActiveStoryNodeId(null);
+    }
+
+    if (choice.boothEffect) {
+      if (choice.boothEffect.action === "strobe") {
+        if (!sensorsBlinded && powerLeft > 0 && verdictState === "NONE") {
+          handleTriggerSensor("strobe");
+        }
+      } else if (choice.boothEffect.action === "dossier") {
+        setDossierCollapsed(false);
+        setActiveTab("baseline");
+      }
+      setTranscript((prev) => [
+        ...prev,
+        { speaker: "system", text: choice.boothEffect!.systemNote }
+      ]);
+    }
+  };
+
+  const handleJumpToStoryNode = (nodeId: string) => {
+    stopIntercomVoice();
+    playBoothSfx("ptt", sfx);
+
+    const pIdx = PROLOGUE_NODE_IDS.indexOf(nodeId as (typeof PROLOGUE_NODE_IDS)[number]);
+    if (pIdx >= 0) {
+      setActiveStoryNodeId(null);
+      setPrologueInitialStep(pIdx);
+      transitionStage(() => setStage("intake"), "backward");
+      return;
+    }
+
+    if (nodeId === "n1_elena_arrival" || nodeId === "n1_elena_confront") {
+      const idx = Math.max(0, activeVisitors.findIndex((v) => v.id === "V-01"));
+      const showMovie = nodeId === "n1_elena_arrival";
+      transitionStage(() => {
+        setStage("booth");
+        resetVisitorState(idx, activeVisitors, !showMovie, fuelLeft, false);
+        setActiveStoryNodeId(showMovie ? "n1_elena_arrival" : null);
+      });
+      return;
+    }
+
+    if (
+      nodeId === "n1_corridor_admit" ||
+      nodeId === "n1_corridor_purge" ||
+      nodeId === "n1_leo_arrival" ||
+      nodeId === "n1_leo_confront"
+    ) {
+      const idx = Math.max(0, activeVisitors.findIndex((v) => v.id === "V-02"));
+      const showMovie = nodeId !== "n1_leo_confront";
+      transitionStage(() => {
+        setStage("booth");
+        resetVisitorState(idx, activeVisitors, !showMovie, fuelLeft, false);
+        setActiveStoryNodeId(showMovie ? nodeId : null);
+      });
+      return;
+    }
+
+    if (nodeId === "nights_2_5_hub") {
+      const idx = Math.min(2, activeVisitors.length - 1);
+      transitionStage(() => {
+        setStage("booth");
+        resetVisitorState(idx, activeVisitors, true, fuelLeft, false);
+        setActiveStoryNodeId(null);
+      });
     }
   };
 
@@ -1455,6 +1609,15 @@ export function App() {
               ))}
             </SelectContent>
           </Select>
+
+          <Button
+            id="btn-storymap"
+            className={`ctrl-btn ${storyMapOpen ? "amber" : ""}`}
+            onClick={() => setStoryMapOpen((o) => !o)}
+          >
+            <StoryBranchIcon />
+            <span>{tl({ zh: "故事线", en: "Story Map", ja: "分岐図" }, lang)}</span>
+          </Button>
 
           <Button
             id="btn-compendium"
@@ -1691,6 +1854,27 @@ export function App() {
         compendium={compendium}
       />
 
+      <StoryFlowchartModal
+        open={storyMapOpen}
+        onOpenChange={setStoryMapOpen}
+        lang={lang}
+        compendium={compendium}
+        currentNodeId={
+          stage === "intake"
+            ? PROLOGUE_NODE_IDS[Math.min(prologueInitialStep, 2)]
+            : stage === "booth" && activeStoryNodeId
+              ? activeStoryNodeId
+              : stage === "booth" && visitor.id === "V-01"
+                ? "n1_elena_confront"
+                : stage === "booth" && visitor.id === "V-02"
+                  ? "n1_leo_confront"
+                  : stage === "booth" || stage === "crisis" || stage === "night5"
+                    ? "nights_2_5_hub"
+                    : null
+        }
+        onJumpToNode={handleJumpToStoryNode}
+      />
+
       {stage !== "lobby" && campaignMode === "seeded" ? (
         <div className="seeded-control-bar" id="seeded-control-bar">
           <span className="seeded-badge">
@@ -1796,10 +1980,12 @@ export function App() {
             onToggleMotionPaused={setMotionPaused}
             onStartNewShift={() => {
               playBoothSfx("ptt", sfx);
+              setPrologueInitialStep(0);
               transitionStage(() => setStage("intake"));
             }}
             onContinueShift={(save) => {
               playBoothSfx("ptt", sfx);
+              setActiveStoryNodeId(null);
               transitionStage(() => applySavedShift(save));
             }}
             onClearSavedShift={() => {
@@ -1807,17 +1993,24 @@ export function App() {
               setSavedShiftSnapshot(null);
             }}
             onOpenArchive={() => setCompendiumOpen(true)}
+            onOpenStoryMap={() => setStoryMapOpen(true)}
           />
         ) : null}
 
         {stage === "intake" ? (
           <IntakeModal
+            key={`prologue-${prologueInitialStep}`}
             lang={lang}
             operatorName={operatorName}
+            motionPaused={motionPaused}
+            initialStep={prologueInitialStep}
+            onUnlockNode={unlockStoryNodes}
+            onOpenStoryMap={() => setStoryMapOpen(true)}
             onComplete={(profile, answers) => {
               playBoothSfx("ptt", sfx);
               setBaseline(profile);
               setIntakeAnswers(answers);
+              setPrologueInitialStep(0);
               startNewShift();
             }}
           />
@@ -1879,6 +2072,25 @@ export function App() {
                 />
                 <div className="gta-world-vignette" aria-hidden="true" />
               </div>
+
+              {activeStoryNodeId && getStoryNode(activeStoryNodeId) ? (
+                <div className="fmv-booth-overlay" id="fmv-booth-overlay">
+                  <InteractiveMoviePlayer
+                    node={getStoryNode(activeStoryNodeId)!}
+                    lang={lang}
+                    motionPaused={motionPaused}
+                    operatorBadge={
+                      operatorName.trim() ? `#09 · ${operatorName.trim()}` : "#09"
+                    }
+                    onSelectChoice={handleSelectBoothStoryChoice}
+                    onOpenStoryMap={() => setStoryMapOpen(true)}
+                    onSkip={() => {
+                      playBoothSfx("ptt", sfx);
+                      setActiveStoryNodeId(null);
+                    }}
+                  />
+                </div>
+              ) : null}
 
               {/* GTA VERDICT SLASH STINGER OVERLAY */}
               {verdictState !== "NONE" ? (
