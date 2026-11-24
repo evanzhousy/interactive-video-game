@@ -22,10 +22,10 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   });
 
-  it("maintains referential integrity across all 17 story nodes, edges, fallbacks, and prologue intake mapping", () => {
+  it("maintains referential integrity across all 18 story nodes, multi-clip segments, edges, fallbacks, and prologue intake mapping", () => {
     const nodeIds = new Set(STORY_NODES.map((n) => n.id));
-    expect(STORY_NODES.length).toBe(17);
-    expect(nodeIds.size).toBe(17);
+    expect(STORY_NODES.length).toBe(18);
+    expect(nodeIds.size).toBe(18);
 
     for (const edge of STORY_EDGES) {
       expect(nodeIds.has(edge.from)).toBe(true);
@@ -41,16 +41,24 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
         title: node.title,
         subtitle: node.subtitle,
         speaker: node.speaker,
-        choices: node.choices
+        choices: node.choices,
+        clips: node.clips
       });
       expect(forbiddenJargon.test(serialized)).toBe(false);
 
       for (const ch of node.choices ?? []) {
         expect(nodeIds.has(ch.nextNodeId)).toBe(true);
       }
+      for (const seg of node.clips ?? []) {
+        expect(seg.videoSrc).toBeTruthy();
+        expect(seg.fallbackVideoSrc).toBeTruthy();
+      }
     }
 
-    // Prologue 3 beats map 1:1 to INTAKE_QUESTIONS
+    // Prologue 3 beats map 1:1 to INTAKE_QUESTIONS, with 3-clip prequel montage on SC-00A
+    expect(getStoryNode("prologue_01")!.clips?.length).toBe(3);
+    expect(getStoryNode("n1_elena_arrival")!.clips?.length).toBe(2);
+    expect(getStoryNode("n1_leo_aftermath")!.clips?.length).toBe(2);
     expect(PROLOGUE_NODE_IDS.length).toBe(INTAKE_QUESTIONS.length);
     PROLOGUE_NODE_IDS.forEach((nodeId, idx) => {
       const node = getStoryNode(nodeId);
@@ -62,11 +70,12 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     });
 
     const p1Preload = getPreloadVideoUrls(getStoryNode("prologue_01")!);
+    expect(p1Preload).toContain("./videos/story/prequel_op08_warning.mp4");
     expect(p1Preload).toContain("./videos/story/prologue_02.mp4");
     expect(p1Preload).toContain("./videos/chamber/whiteout.mp4");
 
     const stats = getStoryCompletionStats(["prologue_01", "prologue_02", "unknown_node"]);
-    expect(stats).toEqual({ unlockedCount: 2, totalCount: 17, percent: 12 });
+    expect(stats).toEqual({ unlockedCount: 2, totalCount: 18, percent: 11 });
   });
 
   it("deduplicates and persists unlocked story nodes and edges in compendium state", () => {
@@ -113,7 +122,17 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(document.getElementById("story-flowchart-modal")).toBeNull();
     expect(document.getElementById("intake-panel")?.getAttribute("data-step")).toBe("1");
 
-    // Complete 3 Prologue movie choices & enter Booth -> Night 1 Elena Arrival Movie appears
+    // Complete 3 Prologue movie choices (verifying multi-clip playlist advancement on SC-00A) & enter Booth
+    expect(
+      document.querySelector('[data-story-node="prologue_01"]')?.getAttribute("data-clip-id")
+    ).toBe("prequel_icecore_breach");
+    await act(async () => {
+      (document.getElementById("btn-fmv-next-clip") as HTMLButtonElement).click();
+    });
+    expect(
+      document.querySelector('[data-story-node="prologue_01"]')?.getAttribute("data-clip-id")
+    ).toBe("prequel_op08_warning");
+
     for (let i = 0; i < 3; i++) {
       await act(async () => {
         (document.querySelector(".option-card") as HTMLButtonElement).click();
@@ -126,6 +145,11 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(
       document.querySelector("#fmv-booth-overlay [data-story-node='n1_elena_arrival']")
     ).not.toBeNull();
+    expect(
+      document
+        .querySelector("#fmv-booth-overlay [data-story-node='n1_elena_arrival']")
+        ?.getAttribute("data-clip-id")
+    ).toBe("fb_elena_cabin3");
 
     // Pick opening arrival choice (confront over intercom) -> plays Elena lip-sync defense clip -> enters V-01 booth
     await act(async () => {
@@ -134,13 +158,15 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(
       document.querySelector("#fmv-booth-overlay [data-story-node='n1_elena_react_intercom']")
     ).not.toBeNull();
+    expect(document.querySelector('[data-story-choice="elena_react_admit"]')).not.toBeNull();
+    expect(document.querySelector('[data-story-choice="elena_react_purge"]')).not.toBeNull();
     await act(async () => {
       (document.querySelector('[data-story-choice="elena_react_to_booth"]') as HTMLButtonElement).click();
     });
     expect(document.getElementById("fmv-booth-overlay")).toBeNull();
     expect(document.getElementById("chat-log")?.textContent).toContain("3 号舱");
 
-    // Verdict ADMIT Elena -> sign log -> Next Visitor -> triggers Corridor Admit movie interlude -> Leo arrival -> Leo reaction clip!
+    // Verdict ADMIT Elena -> sign log -> Next Visitor -> triggers Corridor Admit outcome montage -> Leo arrival -> 1-click Purge!
     await act(async () => {
       (document.getElementById("btn-admit") as HTMLButtonElement).click();
     });
@@ -167,11 +193,26 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(
       document.querySelector("#fmv-booth-overlay [data-story-node='n1_leo_react_intercom']")
     ).not.toBeNull();
+
+    // Test 1-click direct verdict inside movie choice deck -> leads straight into Night 1 finale shadow cliffhanger!
     await act(async () => {
-      (document.querySelector('[data-story-choice="leo_react_to_booth"]') as HTMLButtonElement).click();
+      (document.querySelector('[data-story-choice="leo_react_purge"]') as HTMLButtonElement).click();
+    });
+    expect(
+      document.querySelector("#fmv-booth-overlay [data-story-node='n1_leo_aftermath']")
+    ).not.toBeNull();
+    expect(
+      document
+        .querySelector("#fmv-booth-overlay [data-story-node='n1_leo_aftermath']")
+        ?.getAttribute("data-clip-id")
+    ).toBe("n1_leo_outcome_purge");
+    expect(document.getElementById("booth-fuel-pill")?.textContent).toContain("4 FUEL");
+
+    await act(async () => {
+      (document.querySelector('[data-story-choice="n1_aftermath_continue"]') as HTMLButtonElement).click();
     });
     expect(document.getElementById("fmv-booth-overlay")).toBeNull();
-    expect(document.getElementById("main-booth")?.textContent).toContain("V-02");
+    expect(document.getElementById("main-booth")?.textContent).toContain("V-03");
 
     await act(async () => {
       root.unmount();

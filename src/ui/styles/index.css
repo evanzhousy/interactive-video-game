@@ -5936,6 +5936,58 @@ dialog::backdrop,
   text-align: left;
 }
 
+.fmv-choice-btn.is-verdict-admit {
+  border-color: rgba(73, 184, 130, 0.72) !important;
+  background: linear-gradient(180deg, rgba(22, 62, 46, 0.88) 0%, rgba(12, 34, 26, 0.94) 100%) !important;
+  box-shadow: 0 0 18px rgba(73, 184, 130, 0.16);
+}
+
+.fmv-choice-btn.is-verdict-admit:hover:not(:disabled) {
+  border-color: rgba(112, 224, 168, 0.95) !important;
+  background: linear-gradient(180deg, rgba(30, 82, 60, 0.94) 0%, rgba(15, 44, 34, 0.98) 100%) !important;
+}
+
+.fmv-choice-btn.is-verdict-admit .opt-index {
+  color: #7ee3b0;
+  border-color: rgba(73, 184, 130, 0.55);
+}
+
+.fmv-choice-btn.is-verdict-admit .fmv-choice-sub {
+  color: #93e9bd;
+}
+
+.fmv-choice-btn.is-verdict-purge {
+  border-color: rgba(224, 70, 52, 0.72) !important;
+  background: linear-gradient(180deg, rgba(68, 22, 20, 0.88) 0%, rgba(36, 12, 12, 0.94) 100%) !important;
+  box-shadow: 0 0 18px rgba(224, 70, 52, 0.16);
+}
+
+.fmv-choice-btn.is-verdict-purge:hover:not(:disabled) {
+  border-color: rgba(248, 108, 92, 0.95) !important;
+  background: linear-gradient(180deg, rgba(92, 28, 25, 0.94) 0%, rgba(48, 15, 14, 0.98) 100%) !important;
+}
+
+.fmv-choice-btn.is-verdict-purge .opt-index {
+  color: #ff8c7e;
+  border-color: rgba(224, 70, 52, 0.55);
+}
+
+.fmv-choice-btn.is-verdict-purge .fmv-choice-sub {
+  color: #ffa89e;
+}
+
+.fmv-reel-pill {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border: 1px solid rgba(91, 186, 213, 0.52);
+  background: rgba(91, 186, 213, 0.14);
+  color: #8ee0f6;
+}
+
 .fmv-choice-copy {
   display: flex;
   flex-direction: column;

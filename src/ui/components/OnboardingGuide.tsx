@@ -53,10 +53,10 @@ export function OnboardingGuide({
           <SubHullIcon />
           <div>
             <div className="node-code">
-              {tl({ zh: "01 // 先看右侧档案", en: "01 // READ DOSSIER", ja: "01 // 調書を確認" }, lang)}
+              {tl({ zh: "01 // 看右边记录", en: "01 // CHECK LOGS", ja: "01 // 記録を見る" }, lang)}
             </div>
             <div className="node-sub">
-              {tl({ zh: "对比「真实记录」与「嘴上口述」", en: "Compare past actions vs quotes", ja: "「過去記録」と「発言」を比較" }, lang)}
+              {tl({ zh: "谁敢承认犯错谁是真人", en: "Real humans admit mistakes", ja: "失敗を認めれば人間" }, lang)}
             </div>
           </div>
         </div>
@@ -72,10 +72,10 @@ export function OnboardingGuide({
           <StrobeTargetIcon />
           <div>
             <div className="node-code">
-              {tl({ zh: "02 // 提问 [1-4] · 扫描 [S/T]", en: "02 // ASK [1-4] · SCAN [S/T]", ja: "02 // 質問 [1-4] · 計測 [S/T]" }, lang)}
+              {tl({ zh: "02 // 点一句问问 [1-4]", en: "02 // ASK [1-4] · SCAN", ja: "02 // 質問 [1-4]" }, lang)}
             </div>
             <div className="node-sub">
-              {tl({ zh: "戳旧账试探反应，扫瞳孔/热像", en: "Press hard choices · Check vitals", ja: "過去を突き反応と体征を確認" }, lang)}
+              {tl({ zh: "戳他痛处，照强光看慌不慌", en: "Ask hard lines · Flash strobe", ja: "過去を突き反応を見る" }, lang)}
             </div>
           </div>
         </div>
@@ -91,12 +91,12 @@ export function OnboardingGuide({
           <ClipboardDataIcon />
           <div>
             <div className="node-code">
-              {tl({ zh: "03 // 放行或净化 + 签字", en: "03 // DECIDE + SIGN LOG", ja: "03 // 判定・署名" }, lang)}
+              {tl({ zh: "03 // 开门或净化", en: "03 // ADMIT OR PURGE", ja: "03 // 許可・焼却" }, lang)}
             </div>
             <div className="node-sub">
               {step === 3 && logSigned
-                ? tl({ zh: "已签 · 呼叫下位 →", en: "Signed · Next →", ja: "署名済 · 次へ →" }, lang)
-                : tl({ zh: "真人认账 · 伪人装圣人", en: "Humans own flaws · Mimics act saintly", ja: "人間は本音 · 擬態体は建前" }, lang)}
+                ? tl({ zh: "已签 · 点下一位 →", en: "Signed · Next →", ja: "署名済 · 次へ →" }, lang)
+                : tl({ zh: "装完美好人多半是伪人", en: "Too-perfect excuses = mimic", ja: "完璧すぎる言い訳は偽物" }, lang)}
             </div>
           </div>
         </div>

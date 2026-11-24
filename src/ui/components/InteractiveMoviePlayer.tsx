@@ -6,6 +6,7 @@ import {
   STORY_CHAPTER_META,
   getPreloadVideoUrls,
   type StoryChoice,
+  type StoryClipSegment,
   type StoryNode
 } from "../../game/story-graph.js";
 import type { Locale } from "../../game/types.js";
@@ -16,6 +17,7 @@ interface Props {
   lang: Locale;
   motionPaused: boolean;
   voiceEnabled?: boolean;
+  clipsOverride?: readonly StoryClipSegment[];
   operatorBadge?: string;
   progressLabel?: string;
   progressPct?: number;
@@ -32,6 +34,7 @@ export function InteractiveMoviePlayer({
   lang,
   motionPaused,
   voiceEnabled = true,
+  clipsOverride,
   operatorBadge,
   progressLabel,
   progressPct,
@@ -42,6 +45,25 @@ export function InteractiveMoviePlayer({
   onOpenStoryMap,
   footerExtra
 }: Props) {
+  const segments: readonly StoryClipSegment[] =
+    clipsOverride && clipsOverride.length > 0
+      ? clipsOverride
+      : node.clips && node.clips.length > 0
+        ? node.clips
+        : [
+            {
+              id: node.id,
+              videoSrc: node.videoSrc,
+              fallbackVideoSrc: node.fallbackVideoSrc,
+              posterSrc: node.posterSrc,
+              fallbackPosterSrc: node.fallbackPosterSrc,
+              hasAudio: node.hasAudio,
+              speaker: node.speaker,
+              subtitle: node.subtitle
+            }
+          ];
+
+  const [clipIndex, setClipIndex] = useState(0);
   const [useFallbackVideo, setUseFallbackVideo] = useState(false);
   const [useFallbackPoster, setUseFallbackPoster] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
@@ -51,13 +73,18 @@ export function InteractiveMoviePlayer({
     node.timerSec ? node.timerSec * 1000 : 0
   );
 
+  const safeClipIndex = Math.max(0, Math.min(segments.length - 1, clipIndex));
+  const activeSegment = segments[safeClipIndex] ?? segments[0]!;
+  const isLastClip = safeClipIndex >= segments.length - 1;
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timerFiredRef = useRef(false);
   const onSelectChoiceRef = useRef(onSelectChoice);
   onSelectChoiceRef.current = onSelectChoice;
 
-  // Reset buffer & timer when switching to a new story node
+  // Reset playlist index, buffer & timer when switching to a new story node
   useEffect(() => {
+    setClipIndex(0);
     setUseFallbackVideo(false);
     setUseFallbackPoster(false);
     setVideoReady(false);
@@ -66,10 +93,29 @@ export function InteractiveMoviePlayer({
     setRemainingMs(node.timerSec ? node.timerSec * 1000 : 0);
   }, [node.id, node.timerSec]);
 
-  const activeVideoSrc = useFallbackVideo ? node.fallbackVideoSrc : node.videoSrc;
-  const activePosterSrc = useFallbackPoster ? node.fallbackPosterSrc : node.posterSrc;
-  const preloadUrls = getPreloadVideoUrls(node);
-  const shouldPlaySound = Boolean(node.hasAudio) && voiceEnabled && !userMuted;
+  // Reset per-segment fallback flags when advancing within a multi-clip montage
+  useEffect(() => {
+    setUseFallbackVideo(false);
+    setUseFallbackPoster(false);
+    setVideoReady(false);
+    setAutoplayBlocked(false);
+  }, [safeClipIndex, activeSegment.id]);
+
+  const activeVideoSrc = useFallbackVideo
+    ? activeSegment.fallbackVideoSrc
+    : activeSegment.videoSrc;
+  const activePosterSrc = useFallbackPoster
+    ? activeSegment.fallbackPosterSrc
+    : activeSegment.posterSrc;
+  const nextSegment = !isLastClip ? segments[safeClipIndex + 1] : undefined;
+  const preloadUrls = Array.from(
+    new Set([
+      ...(nextSegment ? [nextSegment.videoSrc, nextSegment.fallbackVideoSrc] : []),
+      ...getPreloadVideoUrls(node)
+    ])
+  ).filter((u) => u && u !== activeVideoSrc);
+  const segmentHasAudio = Boolean(activeSegment.hasAudio);
+  const shouldPlaySound = segmentHasAudio && voiceEnabled && !userMuted;
 
   // Sync play/pause and unmuted lip-sync playback with WCAG 2.2.2 motionPaused
   useEffect(() => {
@@ -97,15 +143,16 @@ export function InteractiveMoviePlayer({
     }
   }, [activeVideoSrc, motionPaused, shouldPlaySound]);
 
-  // Timed QTE choice countdown (pauses cleanly when motionPaused is enabled)
+  // Timed QTE choice countdown — runs ONLY on the final clip in a montage so earlier story shots finish playing
   useEffect(() => {
     const totalSec = node.timerSec;
     const firstChoice = node.choices?.[0];
-    if (!totalSec || !firstChoice || motionPaused) return;
+    if (!totalSec || !firstChoice || motionPaused || !isLastClip) return;
 
     const totalMs = totalSec * 1000;
     const stepMs = 100;
-    let currentMs = remainingMs > 0 ? remainingMs : totalMs;
+    let currentMs = totalMs;
+    setRemainingMs(totalMs);
 
     const timerId = window.setInterval(() => {
       if (timerFiredRef.current) return;
@@ -119,9 +166,7 @@ export function InteractiveMoviePlayer({
     }, stepMs);
 
     return () => window.clearInterval(timerId);
-    // Intentionally reset interval per node / motion state toggle
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [node.id, node.timerSec, motionPaused]);
+  }, [node.id, node.timerSec, motionPaused, isLastClip]);
 
   const timerPct =
     node.timerSec && node.timerSec > 0
@@ -130,6 +175,7 @@ export function InteractiveMoviePlayer({
   const timerSecText = (remainingMs / 1000).toFixed(1);
 
   const handleReplayClip = () => {
+    setClipIndex(0);
     const vid = videoRef.current;
     if (!vid) return;
     try {
@@ -147,6 +193,8 @@ export function InteractiveMoviePlayer({
       className={`fmv-player-stage ${className}`.trim()}
       id={id}
       data-story-node={node.id}
+      data-clip-id={activeSegment.id}
+      data-clip-index={safeClipIndex}
       role="region"
       aria-label={tl(node.title, lang)}
     >
@@ -158,25 +206,36 @@ export function InteractiveMoviePlayer({
           className="fmv-poster-img"
           decoding="async"
           onError={() => {
-            if (!useFallbackPoster && node.fallbackPosterSrc !== node.posterSrc) {
+            if (
+              !useFallbackPoster &&
+              activeSegment.fallbackPosterSrc !== activeSegment.posterSrc
+            ) {
               setUseFallbackPoster(true);
             }
           }}
         />
         <video
-          key={activeVideoSrc}
+          key={`${activeSegment.id}:${activeVideoSrc}`}
           ref={videoRef}
           className="fmv-video-el"
           style={{ opacity: videoReady ? 1 : 0 }}
           poster={activePosterSrc}
           autoPlay={!motionPaused}
-          loop
+          loop={isLastClip}
           muted={!shouldPlaySound}
           playsInline
           onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
+          onEnded={() => {
+            if (!isLastClip) {
+              setClipIndex((i) => Math.min(segments.length - 1, i + 1));
+            }
+          }}
           onError={() => {
-            if (!useFallbackVideo && node.fallbackVideoSrc !== node.videoSrc) {
+            if (
+              !useFallbackVideo &&
+              activeSegment.fallbackVideoSrc !== activeSegment.videoSrc
+            ) {
               setUseFallbackVideo(true);
             } else {
               setVideoReady(false);
@@ -205,7 +264,19 @@ export function InteractiveMoviePlayer({
           <div className="fmv-kicker-row">
             <span className="fmv-code-badge">{node.code}</span>
             <span className="fmv-chapter-tag">{tl(STORY_CHAPTER_META[node.chapter], lang)}</span>
-            {node.hasAudio ? (
+            {segments.length > 1 ? (
+              <span className="fmv-reel-pill" id="fmv-reel-indicator">
+                {tl(
+                  {
+                    zh: `镜头 ${safeClipIndex + 1}/${segments.length}${activeSegment.badge ? ` · ${activeSegment.badge.zh}` : ""}`,
+                    en: `SHOT ${safeClipIndex + 1}/${segments.length}${activeSegment.badge ? ` · ${activeSegment.badge.en}` : ""}`,
+                    ja: `カット ${safeClipIndex + 1}/${segments.length}${activeSegment.badge ? ` · ${activeSegment.badge.ja}` : ""}`
+                  },
+                  lang
+                )}
+              </span>
+            ) : null}
+            {segmentHasAudio ? (
               <span className="fmv-audio-pill">
                 {tl({ zh: "原声口型", en: "LIP-SYNC", ja: "口型音声" }, lang)}
               </span>
@@ -231,7 +302,18 @@ export function InteractiveMoviePlayer({
             </div>
           ) : null}
 
-          {node.hasAudio ? (
+          {segments.length > 1 && !isLastClip ? (
+            <Button
+              type="button"
+              id="btn-fmv-next-clip"
+              className="ctrl-btn amber"
+              onClick={() => setClipIndex((i) => Math.min(segments.length - 1, i + 1))}
+            >
+              {tl({ zh: "下一镜头 ›", en: "NEXT SHOT ›", ja: "次へ ›" }, lang)}
+            </Button>
+          ) : null}
+
+          {segmentHasAudio ? (
             <Button
               type="button"
               className={`ctrl-btn ${shouldPlaySound && !autoplayBlocked ? "amber" : ""}`}
@@ -280,12 +362,12 @@ export function InteractiveMoviePlayer({
         <div className="fmv-subtitle-box">
           <div className="fmv-speaker-row">
             <span className="fmv-rec-dot" aria-hidden="true" />
-            <span className="fmv-speaker-tag">{tl(node.speaker, lang)}</span>
+            <span className="fmv-speaker-tag">{tl(activeSegment.speaker, lang)}</span>
           </div>
-          <p className="fmv-subtitle-text">{tl(node.subtitle, lang)}</p>
+          <p className="fmv-subtitle-text">{tl(activeSegment.subtitle, lang)}</p>
         </div>
 
-        {node.timerSec && node.choices && node.choices.length > 0 ? (
+        {isLastClip && node.timerSec && node.choices && node.choices.length > 0 ? (
           <div className="fmv-qte-timer" role="timer" aria-live="off">
             <div className="fmv-qte-header">
               <span>
@@ -324,7 +406,13 @@ export function InteractiveMoviePlayer({
                 key={choice.id}
                 type="button"
                 data-story-choice={choice.id}
-                className="option-card fmv-choice-btn"
+                className={`option-card fmv-choice-btn ${
+                  choice.directVerdict === "ADMIT"
+                    ? "is-verdict-admit"
+                    : choice.directVerdict === "PURGE"
+                      ? "is-verdict-purge"
+                      : ""
+                }`.trim()}
                 onClick={() => {
                   timerFiredRef.current = true;
                   onSelectChoice(choice, idx);

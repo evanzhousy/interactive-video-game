@@ -287,6 +287,78 @@ export const CAST_VISUAL_ASSETS: readonly CastAssetSpec[] = [
 
 export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
   {
+    id: "shot_prequel_icecore",
+    storyNodeId: "prologue_01",
+    shotCode: "SC-P01",
+    chapter: { zh: "前传 · 冰芯事故", en: "PREQUEL · BREACH", ja: "前日譚 · 氷床事故" },
+    title: { zh: "深冰钻井台断电红警", en: "Deep Ice-Core Breach Alarm", ja: "深層掘削基地 停電警報" },
+    framing: "24mm Anamorphic Wide",
+    cameraMove: { zh: "低角度极夜推轨，钻井大厅红警旋转扫过冻裂地砖", en: "Low-angle wide push through frost-cracked ice-core bay under red alarm beacons", ja: "赤色灯が回る極夜掘削室のローアングル前進" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/story/prologue_01.jpg",
+    videoSrc: "./videos/story/prequel_icecore_breach.mp4",
+    fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+    blocking: {
+      zone: "inner_corridor",
+      alertLight: "red",
+      camera: {
+        pos: [5.6, 1.05, 3.1],
+        target: [6.8, 1.35, -2.1],
+        fov: 50,
+        lensLabel: "24mm Anamorphic f/2.0",
+        axisNote: {
+          zh: "低机位宽银幕仰拍，强化深冰事故夜的工业压迫感。",
+          en: "Low-angle 24mm establishing sweep along ice-crusted bulkheads.",
+          ja: "24mm広角煽りで極夜事故の不穏さを強調。"
+        }
+      },
+      actors: [
+        { id: "crew", label: "撤离钻井班员", pos: [6.5, 0, -1.8], rotY: 0, color: "#e04634" }
+      ]
+    }
+  },
+  {
+    id: "shot_prequel_op08",
+    storyNodeId: "prologue_01",
+    shotCode: "SC-P02",
+    chapter: { zh: "前传 · 前任遗言", en: "PREQUEL · #08 WARNING", ja: "前日譚 · #08の遺言" },
+    title: { zh: "前任值班员 #08 遗言（口型）", en: "#08 Watchstander Warning (Lip-Sync)", ja: "前任当直官 #08 警告（口型）" },
+    framing: "50mm Booth Desk Close-Up",
+    cameraMove: { zh: "琥珀台灯斜侧顶光下，#08 急促回头盯门后贴近镜头留下忠告", en: "Tight 50mm booth console framing under sodium lamp as #08 warns successor", ja: "操作盤アンバー光下で#08が後任へ緊迫の警告" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: true,
+    speakerName: { zh: "前任值班员 #08", en: "Watchstander #08", ja: "前任当直官 #08" },
+    lipSyncLine: {
+      zh: "「记住：真人会怕、会认错；越是完美得像教科书的，越不是人。」",
+      en: "\"Remember: real humans fear and admit fault. Too clean means mimic.\"",
+      ja: "「忘れるな、完璧すぎる言い訳をする奴ほど人間じゃない。」"
+    },
+    posterSrc: "./portraits/operator09.jpg",
+    videoSrc: "./videos/story/prequel_op08_warning.mp4",
+    fallbackVideoSrc: "./videos/operator09/idle.mp4",
+    blocking: {
+      zone: "booth",
+      alertLight: "amber",
+      camera: {
+        pos: [-0.35, 1.44, 1.38],
+        target: [0.0, 1.42, 2.25],
+        fov: 38,
+        lensLabel: "50mm Anamorphic f/2.0",
+        axisNote: {
+          zh: "岗亭内反打控制台席位，后台防爆窗雪影衬出孤立宿命感。",
+          en: "Reverse interior desk angle keeping blizzard glass glowing cyan behind #08.",
+          ja: "ブース内逆切り返しで孤独な当直席を映す。"
+        }
+      },
+      actors: [
+        { id: "op08", label: "前任值班员 #08", pos: [0.0, 0, 2.25], rotY: 0, color: "#eba834", speaking: true }
+      ]
+    }
+  },
+  {
     id: "shot_prologue_01",
     storyNodeId: "prologue_01",
     shotCode: "SC-00A",
@@ -383,6 +455,39 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.2], rotY: Math.PI, color: "#eba834" }
+      ]
+    }
+  },
+  {
+    id: "shot_fb_elena_cabin3",
+    storyNodeId: "n1_elena_arrival",
+    shotCode: "SC-FB-01",
+    chapter: { zh: "背景闪回 · 3号舱", en: "FLASHBACK · CABIN 3", ja: "回想 · 第3区画" },
+    title: { zh: "3 号舱减压反锁监控回放", en: "Cabin 3 Lockout Flashback", ja: "第3区画 隔離ロック回想" },
+    framing: "28mm Cold Security Flashback",
+    cameraMove: { zh: "高压冷雾喷涌瞬间，艾琳娜冷静扣死气闸门锁", en: "Hand-held CCTV vantage as pressurized fog erupts and Dr. Vance seals the bulkhead", ja: "減圧霧の中でエレナが隔壁をロックする監視映像" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/reactions/elena_flinch.jpg",
+    videoSrc: "./videos/story/fb_elena_cabin3.mp4",
+    fallbackVideoSrc: "./videos/elena/flinch.mp4",
+    blocking: {
+      zone: "inner_corridor",
+      alertLight: "cyan",
+      camera: {
+        pos: [4.6, 1.95, 2.2],
+        target: [6.7, 1.35, -0.8],
+        fov: 45,
+        lensLabel: "28mm CCTV Flashback",
+        axisNote: {
+          zh: "高位冷光监控仰俯斜角，呈现艾琳娜关死 3 号舱防爆门动作。",
+          en: "Cold overhead CCTV axis capturing the Cabin 3 lockout moment.",
+          ja: "高所監視カメラ角度でロック瞬間を記録。"
+        }
+      },
+      actors: [
+        { id: "v01", label: "艾琳娜 (V-01)", pos: [6.5, 0, -0.7], rotY: -Math.PI / 2, color: "#5bbad5" }
       ]
     }
   },
@@ -507,6 +612,78 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     }
   },
   {
+    id: "shot_elena_outcome_admit",
+    storyNodeId: "n1_corridor_admit",
+    shotCode: "SC-01C-ADMIT",
+    chapter: { zh: "第 1 夜 · 放行后果", en: "NIGHT 01 · ADMITTED", ja: "第1夜 · 許可結果" },
+    title: { zh: "放行艾琳娜进舱（口型）", en: "Elena Enters Corridor (Lip-Sync)", ja: "エレナ入室（口型同期）" },
+    framing: "40mm Airlock Threshold",
+    cameraMove: { zh: "气闸门开启寒雾涌入，艾琳娜进门时冷静交待封锁医疗室", en: "Airlock opens into cold corridor; Elena exhales vapor and commands medbay seal", ja: "扉が開き冷気と共にエレナが入室し指示を出す" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: true,
+    speakerName: { zh: "艾琳娜·万斯博士 (V-01)", en: "Dr. Elena Vance (V-01)", ja: "エレナ医師 (V-01)" },
+    lipSyncLine: {
+      zh: "「算你识相。医疗室需要马上封锁供电，别让任何人打扰我。」",
+      en: "\"Smart call. Seal medbay power right now—no interruptions.\"",
+      ja: "「賢明な判断ね。誰にも邪魔させないで。」"
+    },
+    posterSrc: "./portraits/reactions/chamber_admit.jpg",
+    videoSrc: "./videos/story/n1_elena_outcome_admit.mp4",
+    fallbackVideoSrc: "./videos/chamber/admit.mp4",
+    blocking: {
+      zone: "inner_corridor",
+      alertLight: "cyan",
+      camera: {
+        pos: [4.8, 1.5, 1.8],
+        target: [6.7, 1.42, -0.8],
+        fov: 40,
+        lensLabel: "40mm Anamorphic f/2.0",
+        axisNote: {
+          zh: "走廊内门侧跟拍机位，衔接放行转场进入内舱。",
+          en: "Interior airlock corridor lens trailing Elena as she steps past Gate 0.",
+          ja: "内扉側からエレナの入室を捉える。"
+        }
+      },
+      actors: [
+        { id: "v01", label: "艾琳娜 (V-01)", pos: [6.6, 0, -0.75], rotY: -Math.PI / 2, color: "#5bbad5", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_elena_outcome_purge",
+    storyNodeId: "n1_corridor_purge",
+    shotCode: "SC-01C-PURGE",
+    chapter: { zh: "第 1 夜 · 净化后果", en: "NIGHT 01 · PURGED", ja: "第1夜 · 焼却結果" },
+    title: { zh: "过渡舱 1,100°C 高温净化", en: "1,100°C Vestibule Purge", ja: "1,100°C 高温焼却実行" },
+    framing: "35mm Armored Glass Wide",
+    cameraMove: { zh: "橙白烈焰隔窗暴燃吞没前舱，控制台表面泛起热浪倒影", en: "Locked Booth POV as 1,100°C jets roar through armored vestibule", ja: "防爆ガラス越しに1,100°Cの炎が噴き上がる" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/reactions/chamber_purge.jpg",
+    videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
+    fallbackVideoSrc: "./videos/chamber/purge.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "red",
+      camera: {
+        pos: [0.0, 1.48, 1.65],
+        target: [0.0, 1.35, -0.9],
+        fov: 45,
+        lensLabel: "35mm Anamorphic f/2.4",
+        axisNote: {
+          zh: "0 号窗口安全距离固定广角，忠实记录高温烈焰冲刷玻璃。",
+          en: "Safe interior setback framing blazing furnace surge across Z=0 glass.",
+          ja: "安全距離35mmで火炎の衝撃を正面から捉える。"
+        }
+      },
+      actors: [
+        { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" }
+      ]
+    }
+  },
+  {
     id: "shot_corridor_aftermath",
     storyNodeId: "n1_corridor_admit",
     shotCode: "SC-01C",
@@ -536,6 +713,39 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "door", label: "B区医疗气闸门", pos: [6.8, 0, -0.8], rotY: -Math.PI / 2, color: "#5bbad5" }
+      ]
+    }
+  },
+  {
+    id: "shot_fb_leo_powerbay",
+    storyNodeId: "n1_leo_arrival",
+    shotCode: "SC-FB-02",
+    chapter: { zh: "背景闪回 · 动力舱", en: "FLASHBACK · POWER BAY", ja: "回想 · 動力室" },
+    title: { zh: "动力舱电弧爆闪与里奥脱队", en: "Power Bay 2 Sparks & Flight", ja: "動力室火花・リオ離脱" },
+    framing: "35mm Dynamic Storm Cam",
+    cameraMove: { zh: "白色工具箱拖拽雪痕与舱内电弧火光交错，里奥仓惶冲出风雪门", en: "Urgent storm tracking as Leo grabs cryo kit amidst exploding power bay sparks", ja: "火花が散る動力室から工具箱を抱えて飛び出す" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/reactions/leo_flinch.jpg",
+    videoSrc: "./videos/story/fb_leo_powerbay.mp4",
+    fallbackVideoSrc: "./videos/leo/flinch.mp4",
+    blocking: {
+      zone: "outer_blizzard",
+      alertLight: "amber",
+      camera: {
+        pos: [-0.8, 1.55, -0.2],
+        target: [0.3, 1.25, -2.5],
+        fov: 42,
+        lensLabel: "35mm Handheld Flashback",
+        axisNote: {
+          zh: "风雪外舱肩扛抓拍，体现动力舱事故现场混乱紧迫感。",
+          en: "Exterior handheld angle capturing panicked flight into the storm.",
+          ja: "屋外手持ちカメラで逃走の緊迫感を演出。"
+        }
+      },
+      actors: [
+        { id: "v02", label: "佐藤里奥 (V-02)", pos: [0.3, 0, -2.4], rotY: 0, color: "#eba834" }
       ]
     }
   },
@@ -616,6 +826,78 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" },
         { id: "v02", label: "佐藤里奥 (V-02)", pos: [0.0, 0, -0.78], rotY: 0, color: "#eba834", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_leo_outcome_admit",
+    storyNodeId: "n1_leo_aftermath",
+    shotCode: "SC-02C-1",
+    chapter: { zh: "第 1 夜 · 里奥入舱", en: "NIGHT 01 · LEO INSIDE", ja: "第1夜 · リオ入室" },
+    title: { zh: "放行里奥进舱：擦灰低语（口型）", en: "Leo Enters Corridor (Lip-Sync)", ja: "リオ入室後の囁き（口型）" },
+    framing: "40mm Medium Inside Gate",
+    cameraMove: { zh: "里奥提箱进门后长舒一口气，压低声音对 #09 拜托保密", en: "Leo exhales relief inside the threshold, glancing sideways while thanking #09", ja: "入室後にほっとして口止めを頼むリオ" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: true,
+    speakerName: { zh: "佐藤里奥 (V-02)", en: "Leo Sato (V-02)", ja: "佐藤レオ (V-02)" },
+    lipSyncLine: {
+      zh: "「谢了兄弟，备用阀放这儿了……别告诉站长我差点把工具弄丢了。」",
+      en: "\"Thanks pal—just don't tell the commander I nearly lost the kit.\"",
+      ja: "「助かったよ……隊長には内緒にしてくれ。」"
+    },
+    posterSrc: "./portraits/leo.jpg",
+    videoSrc: "./videos/story/n1_leo_outcome_admit.mp4",
+    fallbackVideoSrc: "./videos/leo/idle.mp4",
+    blocking: {
+      zone: "inner_corridor",
+      alertLight: "amber",
+      camera: {
+        pos: [5.0, 1.48, 1.6],
+        target: [6.4, 1.38, -0.7],
+        fov: 40,
+        lensLabel: "40mm Anamorphic f/2.0",
+        axisNote: {
+          zh: "内舱安全通道中近景，暖琥珀壁灯下展现紧张退潮后的心理松懈。",
+          en: "Warm interior corridor medium capturing Leo's nervous relief.",
+          ja: "内廊下で緊張が解けた瞬間の中景。"
+        }
+      },
+      actors: [
+        { id: "v02", label: "佐藤里奥 (V-02)", pos: [6.3, 0, -0.65], rotY: -Math.PI / 2, color: "#eba834", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_n1_cliffhanger",
+    storyNodeId: "n1_leo_aftermath",
+    shotCode: "SC-02C-2",
+    chapter: { zh: "第 1 夜 · 悬念尾声", en: "NIGHT 01 · CLIFFHANGER", ja: "第1夜 · 次夜予告" },
+    title: { zh: "第 1 夜片尾悬念：深廊黑影", en: "Night 1 Cliffhanger: Corridor Shadow", ja: "第1夜終盤：廊下の異影" },
+    framing: "28mm Haunted Corridor Long Shot",
+    cameraMove: { zh: "远端荧光灯突然频闪，陌生高大人影静立尽头凝望 0 号岗亭", en: "Slow ominous zoom down flooded cold corridor as a tall figure stands motionless", ja: "遠端の明滅下に立ち尽くす謎の人影へ迫るズーム" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+    videoSrc: "./videos/story/n1_cliffhanger_shadow.mp4",
+    fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+    blocking: {
+      zone: "inner_corridor",
+      alertLight: "red",
+      camera: {
+        pos: [4.4, 1.75, 2.3],
+        target: [6.9, 1.4, -2.2],
+        fov: 46,
+        lensLabel: "28mm Cold Thriller Wide",
+        axisNote: {
+          zh: "走廊尽头纵深构图，为第 2–5 夜拉响高能悬念钩子。",
+          en: "Deep corridor silhouette framing the hook into Nights 2–5.",
+          ja: "長い廊下の突き当たりに立つ影で第2〜5夜へ繋ぐ。"
+        }
+      },
+      actors: [
+        { id: "shadow", label: "未知黑影", pos: [6.8, 0, -2.1], rotY: 0, color: "#e04634" }
       ]
     }
   }

@@ -17,6 +17,7 @@ interface Props {
   lang: Locale;
   operatorName?: string;
   motionPaused?: boolean;
+  voiceEnabled?: boolean;
   initialStep?: number;
   onUnlockNode?: (nodeIds: string[], edgeIds?: string[]) => void;
   onOpenStoryMap?: () => void;
@@ -27,6 +28,7 @@ export function IntakeModal({
   lang,
   operatorName = "",
   motionPaused = false,
+  voiceEnabled = true,
   initialStep = 0,
   onUnlockNode,
   onOpenStoryMap,
@@ -57,9 +59,11 @@ export function IntakeModal({
     return (
       <section className="fmv-intake-shell" id="intake-panel" data-step={step + 1}>
         <InteractiveMoviePlayer
+          key={currentNode.id}
           node={currentNode}
           lang={lang}
           motionPaused={motionPaused}
+          voiceEnabled={voiceEnabled}
           operatorBadge={tl(
             { zh: `值班卡 // ${displayOp}`, en: `BADGE // ${displayOp}`, ja: `当直証 // ${displayOp}` },
             lang

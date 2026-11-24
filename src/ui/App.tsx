@@ -1387,8 +1387,11 @@ export function App() {
             history.find((h) => h.visitorId === "V-02")?.decision === "PURGE";
           const leoVerdictNode = isPurge ? "n1_leo_purge" : "n1_leo_admit";
           const edgeToVerdict = isPurge ? "e_n1l_con_purge" : "e_n1l_con_admit";
-          const edgeToHub = isPurge ? "e_n1l_purge_hub" : "e_n1l_admit_hub";
-          unlockStoryNodes([leoVerdictNode, "nights_2_5_hub"], [edgeToVerdict, edgeToHub]);
+          const edgeToAfter = isPurge ? "e_n1l_purge_after" : "e_n1l_admit_after";
+          unlockStoryNodes([leoVerdictNode, "n1_leo_aftermath"], [edgeToVerdict, edgeToAfter]);
+          setActiveStoryNodeId("n1_leo_aftermath");
+          resetVisitorState(safeIdx + 1, activeVisitors, false, fuelLeft, nextOverdraft);
+          return;
         }
         setActiveStoryNodeId(null);
       }
@@ -1402,16 +1405,66 @@ export function App() {
   };
 
   const handleSelectBoothStoryChoice = (choice: StoryChoice) => {
-    playBoothSfx("ptt", sfx);
     const curId = activeStoryNodeId;
     const edge = STORY_EDGES.find((e) => e.from === curId && e.to === choice.nextNodeId);
-    unlockStoryNodes([choice.nextNodeId], edge ? [edge.id] : []);
+    const extraNodes: string[] = [choice.nextNodeId];
+    const extraEdges: string[] = edge ? [edge.id] : [];
+
+    if (choice.directVerdict) {
+      const isPurge = choice.directVerdict === "PURGE";
+      const usedOverdraft = isPurge && fuelLeft <= 0;
+      const nextFuel = isPurge && fuelLeft > 0 ? fuelLeft - 1 : fuelLeft;
+      stopIntercomVoice();
+      playBoothSfx(isPurge ? "purge" : "admit", sfx);
+      if (isPurge) {
+        if (fuelLeft > 0) setFuelLeft(nextFuel);
+        else setEmergencyOverdraftUsed(true);
+      }
+      const existingDecision = history.some((h) => h.visitorId === visitor.id);
+      if (!existingDecision) {
+        setHistory((prev) => [
+          ...prev,
+          {
+            visitorId: visitor.id,
+            decision: choice.directVerdict!,
+            wasMimic: currentRoll.isMimic,
+            excuse: SHIFT_EXCUSES[0]!
+          }
+        ]);
+      }
+
+      if (visitor.id === "V-01") {
+        extraNodes.push(isPurge ? "n1_elena_purge" : "n1_elena_admit");
+        extraEdges.push(isPurge ? "e_n1e_purge_corr" : "e_n1e_admit_corr");
+        const v2Idx = activeVisitors.findIndex((v) => v.id === "V-02");
+        if (v2Idx > safeIdx) {
+          resetVisitorState(v2Idx, activeVisitors, false, nextFuel, usedOverdraft);
+        }
+      } else if (visitor.id === "V-02") {
+        extraNodes.push(isPurge ? "n1_leo_purge" : "n1_leo_admit");
+        extraEdges.push(isPurge ? "e_n1l_purge_after" : "e_n1l_admit_after");
+      }
+    } else {
+      playBoothSfx("ptt", sfx);
+    }
+
+    if (choice.nextNodeId === "nights_2_5_hub") {
+      extraEdges.push("e_n1l_after_hub");
+    }
+    unlockStoryNodes(extraNodes, extraEdges);
 
     const nextNode = getStoryNode(choice.nextNodeId);
     if (nextNode && nextNode.kind === "movie") {
       setActiveStoryNodeId(nextNode.id);
     } else {
       setActiveStoryNodeId(null);
+      if (
+        choice.nextNodeId === "nights_2_5_hub" &&
+        visitor.id === "V-02" &&
+        safeIdx < activeVisitors.length - 1
+      ) {
+        resetVisitorState(safeIdx + 1, activeVisitors, true, fuelLeft, emergencyOverdraftUsed);
+      }
     }
 
     if (choice.boothEffect) {
@@ -1463,6 +1516,7 @@ export function App() {
       nodeId === "n1_corridor_purge" ||
       nodeId === "n1_leo_arrival" ||
       nodeId === "n1_leo_react_intercom" ||
+      nodeId === "n1_leo_aftermath" ||
       nodeId === "n1_leo_confront"
     ) {
       const idx = Math.max(0, activeVisitors.findIndex((v) => v.id === "V-02"));
@@ -2043,6 +2097,7 @@ export function App() {
             lang={lang}
             operatorName={operatorName}
             motionPaused={motionPaused}
+            voiceEnabled={voice}
             initialStep={prologueInitialStep}
             onUnlockNode={unlockStoryNodes}
             onOpenStoryMap={() => setStoryMapOpen(true)}
@@ -2116,10 +2171,39 @@ export function App() {
               {activeStoryNodeId && getStoryNode(activeStoryNodeId) ? (
                 <div className="fmv-booth-overlay" id="fmv-booth-overlay">
                   <InteractiveMoviePlayer
+                    key={activeStoryNodeId}
                     node={getStoryNode(activeStoryNodeId)!}
                     lang={lang}
                     motionPaused={motionPaused}
                     voiceEnabled={voice}
+                    clipsOverride={
+                      activeStoryNodeId === "n1_leo_aftermath" &&
+                      (verdictState === "PURGE" ||
+                        history.find((h) => h.visitorId === "V-02")?.decision === "PURGE")
+                        ? [
+                            {
+                              id: "n1_leo_outcome_purge",
+                              videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
+                              fallbackVideoSrc: "./videos/chamber/purge.mp4",
+                              posterSrc: "./portraits/reactions/chamber_purge.jpg",
+                              fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
+                              hasAudio: false,
+                              badge: { zh: "净化实况 · 1,100°C", en: "THERMAL PURGE", ja: "高温焼却" },
+                              speaker: {
+                                zh: "0 号隔离窗 // 里奥已净化",
+                                en: "GATE 0 // LEO PURGED",
+                                ja: "第0関門 // リオ焼却"
+                              },
+                              subtitle: {
+                                zh: "热浪吞没了过渡舱，那只白色工具箱也在烈焰中化为灰烬。",
+                                en: "1,100°C flames consume both figure and tool chest inside the vestibule.",
+                                ja: "高温の炎が前室ごと工具箱を焼き尽くした。"
+                              }
+                            },
+                            getStoryNode("n1_leo_aftermath")!.clips![1]!
+                          ]
+                        : undefined
+                    }
                     operatorBadge={
                       operatorName.trim() ? `#09 · ${operatorName.trim()}` : "#09"
                     }

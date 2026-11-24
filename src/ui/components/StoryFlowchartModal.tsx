@@ -56,8 +56,8 @@ const CHAPTER_GROUPS: Array<{ id: StoryChapterId; startCol: number; spanCols: nu
   { id: "prologue", startCol: 0, spanCols: 3 },
   { id: "night1_elena", startCol: 3, spanCols: 4 },
   { id: "night1_corridor", startCol: 7, spanCols: 1 },
-  { id: "night1_leo", startCol: 8, spanCols: 4 },
-  { id: "nights_2_5", startCol: 12, spanCols: 1 }
+  { id: "night1_leo", startCol: 8, spanCols: 5 },
+  { id: "nights_2_5", startCol: 13, spanCols: 1 }
 ];
 
 function kindBadgeText(node: StoryNode, lang: Locale): string {

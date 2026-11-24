@@ -14,12 +14,25 @@ export interface StoryBoothEffect {
   systemNote: LocalizedText;
 }
 
+export interface StoryClipSegment {
+  id: string;
+  videoSrc: string;
+  fallbackVideoSrc: string;
+  posterSrc: string;
+  fallbackPosterSrc: string;
+  hasAudio?: boolean;
+  speaker: LocalizedText;
+  subtitle: LocalizedText;
+  badge?: LocalizedText;
+}
+
 export interface StoryChoice {
   id: string;
   label: LocalizedText;
   sublabel?: LocalizedText;
   nextNodeId: string;
   intakeOptionIndex?: number;
+  directVerdict?: "ADMIT" | "PURGE";
   boothEffect?: StoryBoothEffect;
 }
 
@@ -36,6 +49,7 @@ export interface StoryNode {
   fallbackVideoSrc: string;
   posterSrc: string;
   fallbackPosterSrc: string;
+  clips?: readonly StoryClipSegment[];
   timerSec?: number;
   choices?: readonly StoryChoice[];
   visitorId?: string;
@@ -87,19 +101,19 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "prologue",
     code: "SC-00A",
     title: {
-      zh: "停电夜的复盘",
-      en: "Blackout Debrief",
-      ja: "停電夜の査問"
+      zh: "极夜前传 · 冰芯失守",
+      en: "Polar Prequel · Ice-Core Breach",
+      ja: "極夜前日譚 · 氷床突破"
     },
     subtitle: {
-      zh: "你所在的小组漏报了一个安全隐患，导致一名同事受伤。极夜停电前最后一次复盘会上，所有人都在等你的第一句话。",
-      en: "Your unit left a hazard unreported and a teammate was injured. In the last debrief before polar blackout, all eyes turn to you.",
-      ja: "班の報告漏れで同僚が負傷した。極夜の停電直前の反省会で、全員があなたの第一声を待っている。"
+      zh: "地下深冰钻井突然报警，外面的东西开始学人说话。复盘会上，所有人都在等你表态。",
+      en: "Deep ice-core alarms blare across the frozen station. Something outside has begun mimicking human voices.",
+      ja: "深層氷床の警報が鳴り響く。外の何かが人間の声を真似し始めた。"
     },
     speaker: {
-      zh: "值班档案 // 接班记忆 01",
-      en: "MEMORY REEL // RECORD 01",
-      ja: "当直記録 // 回想 01"
+      zh: "前传档案 // 事故回放",
+      en: "PREQUEL REEL // BREACH ARCHIVE",
+      ja: "前日譚記録 // 事故映像"
     },
     kind: "movie",
     hasAudio: false,
@@ -107,6 +121,65 @@ export const STORY_NODES: readonly StoryNode[] = [
     fallbackVideoSrc: "./videos/lobby/bg.mp4",
     posterSrc: "./portraits/story/prologue_01.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+    clips: [
+      {
+        id: "prequel_icecore_breach",
+        videoSrc: "./videos/story/prequel_icecore_breach.mp4",
+        fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+        posterSrc: "./portraits/story/prologue_01.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "前传监控 01", en: "PREQUEL 01", ja: "前日譚 01" },
+        speaker: {
+          zh: "斯瓦尔巴深冰钻井台 // 02:14",
+          en: "SVALBARD ICE-CORE RIG // 02:14",
+          ja: "氷床掘削基地 // 02:14"
+        },
+        subtitle: {
+          zh: "三千八百米冻土层被钻开后，全站断电。暴风雪里混进了会模仿人类声音的“伪人”。",
+          en: "After breaching 3,800 meters of permafrost, station power failed. Something in the blizzard began copying human voices.",
+          ja: "地下3,800メートルの永久凍土を貫いた直後に停電。吹雪の中に人の声を真似る何かが紛れ込んだ。"
+        }
+      },
+      {
+        id: "prequel_op08_warning",
+        videoSrc: "./videos/story/prequel_op08_warning.mp4",
+        fallbackVideoSrc: "./videos/operator09/idle.mp4",
+        posterSrc: "./portraits/operator09.jpg",
+        fallbackPosterSrc: "./portraits/operator09.jpg",
+        hasAudio: true,
+        badge: { zh: "原声口型 · 前任遗言", en: "LIP-SYNC · #08", ja: "口型音声 · #08" },
+        speaker: {
+          zh: "前任值班员 #08 // 失联前录像",
+          en: "PREVIOUS WATCHSTANDER #08",
+          ja: "前任当直官 #08"
+        },
+        subtitle: {
+          zh: "“记住：真人会怕、会认错；越是完美得像教科书的，越不是人。”",
+          en: "\"Remember this: real humans mess up and admit fear. Anything that sounds too clean is a mimic.\"",
+          ja: "「忘れるな。生身の人間は失敗を認める。完璧すぎる言い訳をする奴ほど人間じゃない。」"
+        }
+      },
+      {
+        id: "prologue_01_main",
+        videoSrc: "./videos/story/prologue_01.mp4",
+        fallbackVideoSrc: "./videos/lobby/bg.mp4",
+        posterSrc: "./portraits/story/prologue_01.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "接班考核 01", en: "HANDOVER 01", ja: "引継試験 01" },
+        speaker: {
+          zh: "0 号岗亭 // 你的过去",
+          en: "GATE 0 // YOUR PAST",
+          ja: "第0関門 // あなたの過去"
+        },
+        subtitle: {
+          zh: "现在轮到你值夜班了。先回答站长一个简单的问题：以前小组漏报隐患连累队友受伤时，你是怎么说的？",
+          en: "It is your watch now. First question on the shift form: when your team missed a hazard earlier, what did you say?",
+          ja: "今夜からあなたの当直だ。まず一つだけ答えてくれ。以前報告漏れで仲間が怪我をした時、どう答えた？"
+        }
+      }
+    ],
     row: 1,
     col: 0,
     choices: [
@@ -267,9 +340,9 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "night1_elena",
     code: "SC-01A",
     title: {
-      zh: "暴雪拍窗 · 艾琳娜",
-      en: "Storm Knock · Elena",
-      ja: "吹雪の叩扉・エレナ"
+      zh: "往事闪回 · 暴雪拍窗",
+      en: "Flashback · Storm Knock · Elena",
+      ja: "回想 · 吹雪の叩扉・エレナ"
     },
     subtitle: {
       zh: "“外面的供暖管全炸了！再不开门我就冻死在这儿了！”",
@@ -287,7 +360,47 @@ export const STORY_NODES: readonly StoryNode[] = [
     fallbackVideoSrc: "./videos/elena/idle.mp4",
     posterSrc: "./portraits/story/n1_elena_knock.jpg",
     fallbackPosterSrc: "./portraits/elena.jpg",
-    timerSec: 12,
+    clips: [
+      {
+        id: "fb_elena_cabin3",
+        videoSrc: "./videos/story/fb_elena_cabin3.mp4",
+        fallbackVideoSrc: "./videos/elena/flinch.mp4",
+        posterSrc: "./portraits/reactions/elena_flinch.jpg",
+        fallbackPosterSrc: "./portraits/elena.jpg",
+        hasAudio: false,
+        badge: { zh: "背景故事 · 3号舱回放", en: "FLASHBACK · CABIN 3", ja: "過去映像 · 第3区画" },
+        speaker: {
+          zh: "一周前 · 3号舱监控录像",
+          en: "ONE WEEK AGO // CABIN 3 CAM",
+          ja: "一週間前 // 第3区画監視映像"
+        },
+        subtitle: {
+          zh: "一周前 3 号舱漏气时，监控拍到艾琳娜为了自保，反手把两名护工锁死在了门外。",
+          en: "Last week when Cabin 3 leaked, cameras caught Elena slamming the bulkhead shut and locking two orderlies outside.",
+          ja: "先週第3区画で減圧が起きた時、彼女は自分を守るため仲間2人を外に締め出した。"
+        }
+      },
+      {
+        id: "n1_elena_knock",
+        videoSrc: "./videos/story/n1_elena_knock.mp4",
+        fallbackVideoSrc: "./videos/elena/idle.mp4",
+        posterSrc: "./portraits/story/n1_elena_knock.jpg",
+        fallbackPosterSrc: "./portraits/elena.jpg",
+        hasAudio: true,
+        badge: { zh: "原声口型 · 门外求助", en: "LIP-SYNC · KNOCK", ja: "口型音声 · 現在" },
+        speaker: {
+          zh: "V-01 // 艾琳娜·万斯医生",
+          en: "V-01 // DR. ELENA VANCE",
+          ja: "V-01 // エレナ医師"
+        },
+        subtitle: {
+          zh: "“外面的供暖管全炸了！再不开门我就冻死在这儿了！”",
+          en: "\"The outer heating lines just blew! Open the door or I'll freeze out here!\"",
+          ja: "「外の暖房管が破裂した！早く開けないとここで凍死する！」"
+        }
+      }
+    ],
+    timerSec: 15,
     row: 1,
     col: 3,
     choices: [
@@ -295,21 +408,21 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "elena_open_intercom",
         nextNodeId: "n1_elena_react_intercom",
         label: {
-          zh: "直接开麦质问她 3 号舱失压事故",
-          en: "Open intercom: confront Cabin 3 depressurization",
-          ja: "通話を開き第3区画の減圧事故を問い詰める"
+          zh: "直接问她：你把同事锁在门外了？",
+          en: "Ask directly: Did you lock your teammates outside?",
+          ja: "直接聞く：仲間を外に締め出したの？"
         },
         sublabel: {
-          zh: "剧情演绎 // 触发口型回应片段",
-          en: "FMV BRANCH // LIP-SYNC RESPONSE",
-          ja: "映像分岐 // 反応ムービーへ"
+          zh: "继续看她怎么回答（口型剧情）",
+          en: "Watch her answer (Lip-Sync)",
+          ja: "返答ムービーを見る"
         },
         boothEffect: {
           action: "intercom",
           systemNote: {
-            zh: "【剧情切入】你追问 3 号舱减压门为何提前反锁，艾琳娜当场急声辩称这是为了保住站里唯一的手术医生。",
-            en: "[SCENE ENTRY] You pressed her on locking Cabin 3; Elena snapped back claiming she saved the station's only surgeon.",
-            ja: "【場面導入】第3区画のロックを追及すると、エレナは唯一の執刀医を守るためだったと即座に反論した。"
+            zh: "【剧情切入】你打开对讲机质问 3 号舱旧账，看她敢不敢承认。",
+            en: "[SCENE ENTRY] You ask her straight about locking Cabin 3.",
+            ja: "【場面導入】第3区画の件を直接問い詰める。"
           }
         }
       },
@@ -317,21 +430,21 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "elena_open_strobe",
         nextNodeId: "n1_elena_react_strobe",
         label: {
-          zh: "先打强光频闪压低她的防备",
-          en: "Trigger pupil strobe before speaking",
-          ja: "まずストロボ閃光で瞳孔反射を測る"
+          zh: "先照强光，看看她的反应",
+          en: "Flash the bright light to test her reaction",
+          ja: "まず強い光を当てて反応を見る"
         },
         sublabel: {
-          zh: "剧情演绎 + 消耗 1 电量 // 触发怒斥片段",
-          en: "FMV BRANCH + STROBE (1 PWR)",
-          ja: "映像分岐 + センサー先制 (1 PWR)"
+          zh: "闪光测试 // 看她慌不慌（口型剧情）",
+          en: "Flash Probe // Watch reaction",
+          ja: "フラッシュ検査（映像）"
         },
         boothEffect: {
           action: "strobe",
           systemNote: {
-            zh: "【剧情切入】脉冲强光刺向艾琳娜双眼的瞬间，她猛地抬手遮挡并隔窗厉声呵斥你去核对她的配给档案。",
-            en: "[SCENE ENTRY] The strobe pulse flashed across her lenses; Elena shielded her eyes and ordered you to verify her medbay logs.",
-            ja: "【場面導入】閃光を受けたエレナは思わず目を庇い、ガラス越しに配給記録を確認しろと怒鳴り返した。"
+            zh: "【剧情切入】强光扫过她的眼镜，她猛地抬手遮挡并大声回嘴。",
+            en: "[SCENE ENTRY] Bright strobe hits her lenses—she flinches and snaps back.",
+            ja: "【場面導入】強い光を浴びて激しく反応した。"
           }
         }
       },
@@ -339,21 +452,21 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "elena_open_dossier",
         nextNodeId: "n1_elena_confront",
         label: {
-          zh: "暂不开麦，直接切入档案对比审讯",
-          en: "Hold mic, jump to dossier & interrogation",
-          ja: "通話前に調書を開いて直接尋問へ"
+          zh: "先进窗口再决定",
+          en: "Open control booth first",
+          ja: "先にブースで確認する"
         },
         sublabel: {
-          zh: "直接审讯 // 先核对记录",
-          en: "DIRECT TO BOOTH",
-          ja: "直接尋問へ"
+          zh: "自由提问或直接拍板",
+          en: "Free chat or decide",
+          ja: "自由質問・直接判定"
         },
         boothEffect: {
           action: "dossier",
           systemNote: {
-            zh: "【剧情切入】你关掉麦克风静音开关，先核对她留在站内的事故与配给记录。",
-            en: "[SCENE ENTRY] You mute the exterior mic to review her internal station records before probing.",
-            ja: "【場面導入】マイクを切ったまま、彼女の過去記録と配給監査を先に確認した。"
+            zh: "【剧情切入】你先在窗口旁静静观察，再决定放行还是净化。",
+            en: "[SCENE ENTRY] You watch quietly from the window before deciding.",
+            ja: "【場面導入】窓辺で静かに観察する。"
           }
         }
       }
@@ -384,17 +497,51 @@ export const STORY_NODES: readonly StoryNode[] = [
     fallbackVideoSrc: "./videos/elena/lean_in.mp4",
     posterSrc: "./portraits/reactions/elena_lean_in.jpg",
     fallbackPosterSrc: "./portraits/elena.jpg",
-    timerSec: 10,
     row: 0,
     col: 4,
     choices: [
       {
+        id: "elena_react_admit",
+        nextNodeId: "n1_corridor_admit",
+        directVerdict: "ADMIT",
+        label: {
+          zh: "开门放她进来",
+          en: "Open the gate & let her in",
+          ja: "ドアを開けて通す"
+        },
+        sublabel: {
+          zh: "她没扯谎遮掩，直接看放行结局",
+          en: "ADMIT // Watch outcome movie",
+          ja: "許可 // 結果ムービーへ"
+        }
+      },
+      {
+        id: "elena_react_purge",
+        nextNodeId: "n1_corridor_purge",
+        directVerdict: "PURGE",
+        label: {
+          zh: "拒绝开门，启动净化",
+          en: "Refuse entry & purge chamber",
+          ja: "入室拒否・焼却する"
+        },
+        sublabel: {
+          zh: "觉得可疑，直接拉闸净化看后果",
+          en: "PURGE [-1 FUEL] // Watch outcome",
+          ja: "焼却 [-1 FUEL] // 結果へ"
+        }
+      },
+      {
         id: "elena_react_to_booth",
         nextNodeId: "n1_elena_confront",
         label: {
-          zh: "追击口供漏洞：切入自由审讯对质",
-          en: "Press the contradiction: enter live interrogation",
-          ja: "証言の矛盾を追及：自由尋問へ進む"
+          zh: "进防爆窗细问几句（可选）",
+          en: "Ask more at the window (Optional)",
+          ja: "窓辺で詳しく聞く（任意）"
+        },
+        sublabel: {
+          zh: "想再多问一句或用扫描仪就点这里",
+          en: "Optional chat & scanner",
+          ja: "自由質問と検査"
         }
       }
     ]
@@ -424,17 +571,51 @@ export const STORY_NODES: readonly StoryNode[] = [
     fallbackVideoSrc: "./videos/elena/flinch.mp4",
     posterSrc: "./portraits/reactions/elena_flinch.jpg",
     fallbackPosterSrc: "./portraits/elena.jpg",
-    timerSec: 10,
     row: 2,
     col: 4,
     choices: [
       {
+        id: "elena_strobe_admit",
+        nextNodeId: "n1_corridor_admit",
+        directVerdict: "ADMIT",
+        label: {
+          zh: "开门放她进来",
+          en: "Open the gate & let her in",
+          ja: "ドアを開けて通す"
+        },
+        sublabel: {
+          zh: "强光反应正常，直接放行看后果",
+          en: "ADMIT // Watch outcome movie",
+          ja: "許可 // 結果ムービーへ"
+        }
+      },
+      {
+        id: "elena_strobe_purge",
+        nextNodeId: "n1_corridor_purge",
+        directVerdict: "PURGE",
+        label: {
+          zh: "拒绝开门，启动净化",
+          en: "Refuse entry & purge chamber",
+          ja: "入室拒否・焼却する"
+        },
+        sublabel: {
+          zh: "怀疑她是假冒的，直接启动净化",
+          en: "PURGE [-1 FUEL] // Watch outcome",
+          ja: "焼却 [-1 FUEL] // 結果へ"
+        }
+      },
+      {
         id: "elena_strobe_to_booth",
         nextNodeId: "n1_elena_confront",
         label: {
-          zh: "记录瞳孔反应：进入防爆窗审讯",
-          en: "Log pupil response: enter interrogation booth",
-          ja: "瞳孔反応を記録：検疫ブース尋問へ"
+          zh: "进防爆窗细问几句（可选）",
+          en: "Ask more at the window (Optional)",
+          ja: "窓辺で詳しく聞く（任意）"
+        },
+        sublabel: {
+          zh: "再深入问几个问题",
+          en: "Optional detailed chat",
+          ja: "任意で追加質問"
         }
       }
     ]
@@ -540,27 +721,66 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "night1_corridor",
     code: "SC-01C-A",
     title: {
-      zh: "医疗室冷光异动",
-      en: "Cold Spark in Medbay",
-      ja: "医務室廊下の冷光"
+      zh: "放行后果 · 医疗室寒光",
+      en: "Outcome · Medbay Cold Spark",
+      ja: "許可結果 · 医務室の異変"
     },
     subtitle: {
-      zh: "放行艾琳娜二十分钟后，内舱医疗走廊的荧光灯突然整排频闪。门缝下渗出一道奇怪的寒霜——仿佛有人在门内反复试探门锁。",
-      en: "Twenty minutes after admitting Elena, the medbay corridor lights strobe. Frost creeps beneath the heavy door—someone inside is testing the latch.",
-      ja: "エレナを通過させて20分後、医務室廊下の蛍光灯が一斉に明滅する。扉の隙間から異常な霜が滲み、内側で誰かが鍵を試している気配がする。"
+      zh: "内舱门开锁后，艾琳娜独自走入走廊深处；二十分钟后，门灯开始诡异闪烁。",
+      en: "The airlock opens for Elena. Twenty minutes later, medbay lights flicker above frost seeping under the door.",
+      ja: "扉が開きエレナは中へ入った。20分後、医務室の照明が不気味に明滅し始める。"
     },
     speaker: {
-      zh: "走廊监控 // 放行后遗症",
-      en: "CORRIDOR CAM // AFTERMATH",
-      ja: "廊下監視 // 通過後の異変"
+      zh: "走廊监控 // 放行后果",
+      en: "CORRIDOR CAM // ADMIT OUTCOME",
+      ja: "廊下監視 // 許可の結果"
     },
     kind: "movie",
-    hasAudio: false,
-    videoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+    hasAudio: true,
+    videoSrc: "./videos/story/n1_elena_outcome_admit.mp4",
     fallbackVideoSrc: "./videos/chamber/admit.mp4",
-    posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
-    fallbackPosterSrc: "./portraits/reactions/chamber_admit.jpg",
-    timerSec: 10,
+    posterSrc: "./portraits/reactions/chamber_admit.jpg",
+    fallbackPosterSrc: "./portraits/elena.jpg",
+    clips: [
+      {
+        id: "n1_elena_outcome_admit",
+        videoSrc: "./videos/story/n1_elena_outcome_admit.mp4",
+        fallbackVideoSrc: "./videos/chamber/admit.mp4",
+        posterSrc: "./portraits/reactions/chamber_admit.jpg",
+        fallbackPosterSrc: "./portraits/elena.jpg",
+        hasAudio: true,
+        badge: { zh: "原声口型 · 进门瞬间", en: "LIP-SYNC · ADMIT", ja: "口型音声 · 入室" },
+        speaker: {
+          zh: "V-01 // 艾琳娜走入走廊",
+          en: "V-01 // ELENA ENTERS BAY",
+          ja: "V-01 // エレナ入室"
+        },
+        subtitle: {
+          zh: "“算你识相。医疗室需要马上封锁供电，别让任何人打扰我。”",
+          en: "\"Smart call. Seal off medbay power right now—and don't let anyone interrupt me.\"",
+          ja: "「賢明な判断ね。これから医務室に籠もる、誰にも邪魔させないで。」"
+        }
+      },
+      {
+        id: "n1_corridor_aftermath_admit",
+        videoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+        fallbackVideoSrc: "./videos/chamber/admit.mp4",
+        posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+        fallbackPosterSrc: "./portraits/reactions/chamber_admit.jpg",
+        hasAudio: false,
+        badge: { zh: "走廊监控 · 二十分钟后", en: "CORRIDOR CAM", ja: "監視映像" },
+        speaker: {
+          zh: "B区医疗走廊监控",
+          en: "SECTOR B MEDBAY CAM",
+          ja: "B区画廊下カメラ"
+        },
+        subtitle: {
+          zh: "荧光灯整排闪烁，门缝下渗出诡异寒霜——像是有人在门内反复试探门锁。",
+          en: "Fluorescents strobe overhead as frost creeps beneath the heavy door.",
+          ja: "蛍光灯が激しく明滅し、扉の隙間から不気味な霜が滲み出している。"
+        }
+      }
+    ],
     row: 0,
     col: 7,
     choices: [
@@ -568,16 +788,16 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "corridor_lock_medbay",
         nextNodeId: "n1_leo_arrival",
         label: {
-          zh: "远程落锁医疗室 B 通道，只留应急通风",
-          en: "Remote-lock Medbay Corridor B latch",
-          ja: "医務室B通路を遠隔ロックする"
+          zh: "悄悄反锁医疗室门，迎接下一位",
+          en: "Lock medbay door quietly & watch outside",
+          ja: "医務室を静かにロックして次へ"
         },
         boothEffect: {
           action: "intercom",
           systemNote: {
-            zh: "【支线记录】你悄悄锁死了医疗室走廊 B 的电磁门锁。外面雪地里，另一个拖着重物的身影正靠近……",
-            en: "[BRANCH NOTE] You sealed Medbay Corridor B's mag-lock. Outside in the snow, someone hauling heavy gear approaches.",
-            ja: "【分岐記録】医務室Bの電磁錠を遠隔で閉じた。その直後、外の雪原から重いケースを引く影が近づく……"
+            zh: "【剧情延续】你悄悄锁好走廊门，这时窗外风雪里走来了一个拎工具箱的年轻人……",
+            en: "[NEXT SCENE] You lock the corridor door as a young mechanic approaches through the storm.",
+            ja: "【展開】廊下をロックした直後、吹雪の中から次の訪問者が現れた……"
           }
         }
       },
@@ -585,16 +805,16 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "corridor_keep_watch",
         nextNodeId: "n1_leo_arrival",
         label: {
-          zh: "不动声色切回监视画面，留意内舱动静",
-          en: "Keep silent watch and hold the outer post",
-          ja: "刺激せず監視カメラを戻して外扉に備える"
+          zh: "先不管她，继续盯着外门",
+          en: "Ignore it for now & watch the outer gate",
+          ja: "今は気にせず外扉を見守る"
         },
         boothEffect: {
           action: "intercom",
           systemNote: {
-            zh: "【支线记录】你没有打草惊蛇，只把走廊频闪时间记在心里。几秒后，外门传感器再次响起提示。",
-            en: "[BRANCH NOTE] You left the door untouched and noted the flicker timestamp. Seconds later, the outer sensor chimes.",
-            ja: "【分岐記録】扉には触れず異常時刻だけを控えた。数秒後、外扉センサーが再び反応する。"
+            zh: "【剧情延续】你切回外门画面——窗外又出现了新的身影。",
+            en: "[NEXT SCENE] You switch back to the outer window—someone else is outside.",
+            ja: "【展開】外扉の画面に戻すと、新たな人影が近づいていた。"
           }
         }
       }
@@ -605,27 +825,66 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "night1_corridor",
     code: "SC-01C-B",
     title: {
-      zh: "通风管道的叩击",
-      en: "Knocking in the Ducts",
-      ja: "換気ダクトのノック音"
+      zh: "净化后果 · 管道回响",
+      en: "Outcome · Purge & Duct Knock",
+      ja: "焼却結果 · ダクトの異音"
     },
     subtitle: {
-      zh: "焚化炉还在冷却，站内走廊顶部的金属通风口却传出三声节奏怪异的敲击——像是谁从管壁另一侧学着你的动作。",
-      en: "While the furnace cools, three rhythmic metallic knocks echo from the corridor air duct above—mimicking the beat of your hand on the desk.",
-      ja: "焼却炉が冷え切る前、内廊下天井の換気ダクトから奇妙な3度のノック音が響いた。あなたの指先を真似るようなリズムだった。"
+      zh: "1,100°C 高温净化吞没过渡舱。炉火退去后，头顶通风管却传来三声诡异敲击……",
+      en: "1,100°C flames engulf the vestibule. As the furnace cools, three strange knocks echo in the ceiling duct.",
+      ja: "1,100°Cの炎が前室を焼く。冷却直後、天井ダクトから3度の不気味なノック音が響く……"
     },
     speaker: {
-      zh: "走廊监控 // 净化后遗症",
-      en: "CORRIDOR CAM // COOLING CYCLE",
-      ja: "廊下監視 // 焼却後の異音"
+      zh: "隔离仓与走廊监控 // 净化后果",
+      en: "CHAMBER & CORRIDOR // PURGE OUTCOME",
+      ja: "焼却炉と廊下監視"
     },
     kind: "movie",
     hasAudio: false,
-    videoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+    videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
     fallbackVideoSrc: "./videos/chamber/purge.mp4",
-    posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+    posterSrc: "./portraits/reactions/chamber_purge.jpg",
     fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
-    timerSec: 10,
+    clips: [
+      {
+        id: "n1_elena_outcome_purge",
+        videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
+        fallbackVideoSrc: "./videos/chamber/purge.mp4",
+        posterSrc: "./portraits/reactions/chamber_purge.jpg",
+        fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
+        hasAudio: false,
+        badge: { zh: "净化实况 · 1,100°C", en: "THERMAL PURGE", ja: "高温焼却" },
+        speaker: {
+          zh: "0 号隔离窗 // 高温净化炉",
+          en: "GATE 0 // THERMAL SURGE",
+          ja: "第0関門 // 高温焼却炉"
+        },
+        subtitle: {
+          zh: "橙白烈焰在防爆玻璃后轰鸣着吞没了一切，燃料减少 1 格。",
+          en: "White-hot flames roar behind armored glass, consuming 1 bar of heating fuel.",
+          ja: "轟音と共に白熱の炎がすべてを焼き尽くす（燃料 -1）。"
+        }
+      },
+      {
+        id: "n1_corridor_aftermath_purge",
+        videoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+        fallbackVideoSrc: "./videos/chamber/purge.mp4",
+        posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+        fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
+        hasAudio: false,
+        badge: { zh: "走廊监控 · 通风口异响", en: "DUCT ECHO", ja: "ダクト異音" },
+        speaker: {
+          zh: "站内走廊顶部通风管",
+          en: "OVERHEAD AIR DUCT",
+          ja: "天井換気ダクト"
+        },
+        subtitle: {
+          zh: "炉壁刚冷却，头顶通风管就传来三声金属敲击——就像窗外还有同伙在回应。",
+          en: "As the furnace cools, three metallic knocks ring out above—as if something else heard the blast.",
+          ja: "炉が冷え切る直前、天井から3度の金属音が響いた。"
+        }
+      }
+    ],
     row: 2,
     col: 7,
     choices: [
@@ -633,16 +892,16 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "corridor_seal_vent",
         nextNodeId: "n1_leo_arrival",
         label: {
-          zh: "手动关闭走廊副通风闸门",
-          en: "Shut secondary corridor intake damper",
-          ja: "廊下の補助換気ダンパーを閉じる"
+          zh: "关掉通风管道，迎接下一位",
+          en: "Shut air vent & watch next arrival",
+          ja: "換気口を閉じて次の訪問者へ"
         },
         boothEffect: {
           action: "intercom",
           systemNote: {
-            zh: "【支线记录】副通风闸门咔哒合拢，敲击声戛然而止。外舱警戒雷达突然捕捉到下一名接近者。",
-            en: "[BRANCH NOTE] The intake damper snaps shut and the knocking stops. Outer radar picks up a new arrival.",
-            ja: "【分岐記録】換気ダンパーを閉じた瞬間、ノック音は止んだ。外郭レーダーに新たな接近者が映る。"
+            zh: "【剧情延续】你关上了副通风口，这时风雪里又走来了一名拎工具箱的青年。",
+            en: "[NEXT SCENE] You seal the vent just as a mechanic arrives in the snow.",
+            ja: "【展開】換気口を閉じると、吹雪の中に新たな人影が現れた。"
           }
         }
       },
@@ -650,16 +909,16 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "corridor_brace_booth",
         nextNodeId: "n1_leo_arrival",
         label: {
-          zh: "稳住呼吸，把注意力拉回 0 号外窗",
-          en: "Steady your breath and return eyes to Gate 0",
-          ja: "呼吸を整えて第0隔離窓へ意識を戻す"
+          zh: "先不管异响，继续值班",
+          en: "Ignore the sound & keep watch",
+          ja: "音は気にせず当直を続ける"
         },
         boothEffect: {
           action: "intercom",
           systemNote: {
-            zh: "【支线记录】或许只是热胀冷缩。你收回视线——风雪里已经多了一个拖箱子的身影。",
-            en: "[BRANCH NOTE] Thermal contraction, maybe. You look back outside—a figure hauling a tool chest is already there.",
-            ja: "【分岐記録】熱収縮の軋みかもしれない。視線を外に戻すと、ケースを引く人影が近づいていた。"
+            zh: "【剧情延续】窗外风雪里已经多了一个拖箱子的身影。",
+            en: "[NEXT SCENE] A figure dragging a white tool chest appears outside.",
+            ja: "【展開】窓の外に白い工具箱を引く人影が現れた。"
           }
         }
       }
@@ -670,9 +929,9 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "night1_leo",
     code: "SC-02A",
     title: {
-      zh: "拖箱抵窗 · 佐藤里奥",
-      en: "Tool Chest Arrival · Leo",
-      ja: "工具箱の訪問者・リオ"
+      zh: "往事闪回 · 拖箱抵窗",
+      en: "Flashback · Tool Chest Arrival · Leo",
+      ja: "回想 · 工具箱の訪問者・リオ"
     },
     subtitle: {
       zh: "“值班员！快放我进去，我带了二号动力舱的备用阀门工具！”",
@@ -690,7 +949,47 @@ export const STORY_NODES: readonly StoryNode[] = [
     fallbackVideoSrc: "./videos/leo/idle.mp4",
     posterSrc: "./portraits/story/n1_leo_arrival.jpg",
     fallbackPosterSrc: "./portraits/leo.jpg",
-    timerSec: 12,
+    clips: [
+      {
+        id: "fb_leo_powerbay",
+        videoSrc: "./videos/story/fb_leo_powerbay.mp4",
+        fallbackVideoSrc: "./videos/leo/flinch.mp4",
+        posterSrc: "./portraits/reactions/leo_flinch.jpg",
+        fallbackPosterSrc: "./portraits/leo.jpg",
+        hasAudio: false,
+        badge: { zh: "背景故事 · 动力舱暴走", en: "FLASHBACK · POWER BAY", ja: "過去映像 · 動力室" },
+        speaker: {
+          zh: "两小时前 · 2号动力舱监控",
+          en: "TWO HOURS AGO // POWER BAY 2 CAM",
+          ja: "2時間前 // 第2動力室"
+        },
+        subtitle: {
+          zh: "两小时前动力舱电弧爆闪，里奥抱起白色工具箱独自从应急风雪闸门跑了出来。",
+          en: "Two hours ago sparks erupted in Power Bay 2—Leo grabbed his white tool chest and bolted through the storm hatch alone.",
+          ja: "2時間前、動力室で火花が散る中、リオは白い工具箱を抱えて一人で吹雪の中へ逃げ出した。"
+        }
+      },
+      {
+        id: "n1_leo_arrival_main",
+        videoSrc: "./videos/story/n1_leo_arrival.mp4",
+        fallbackVideoSrc: "./videos/leo/idle.mp4",
+        posterSrc: "./portraits/story/n1_leo_arrival.jpg",
+        fallbackPosterSrc: "./portraits/leo.jpg",
+        hasAudio: true,
+        badge: { zh: "原声口型 · 抵窗求助", en: "LIP-SYNC · ARRIVAL", ja: "口型音声 · 現在" },
+        speaker: {
+          zh: "V-02 // 佐藤里奥",
+          en: "V-02 // LEO SATO",
+          ja: "V-02 // 佐藤レオ"
+        },
+        subtitle: {
+          zh: "“值班员！快放我进去，我带了二号动力舱的备用阀门工具！”",
+          en: "\"Watchstander! Let me in—I hauled the spare thermal valve rig from Power Bay 2!\"",
+          ja: "「当直官！早く開けてくれ、第2動力室の予備バルブ一式を持ってきたんだ！」"
+        }
+      }
+    ],
+    timerSec: 15,
     row: 1,
     col: 8,
     choices: [
@@ -698,21 +997,21 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "leo_open_intercom",
         nextNodeId: "n1_leo_react_intercom",
         label: {
-          zh: "追问他为何独自脱离班组车队",
-          en: "Confront why he left the engineering convoy alone",
-          ja: "なぜ単独で班の隊列から離れたのか問い詰める"
+          zh: "问他：车队出事你怎么自己回来了？",
+          en: "Ask him: Why did you run back alone without the crew?",
+          ja: "聞く：どうして仲間を置いて一人で逃げたの？"
         },
         sublabel: {
-          zh: "剧情演绎 // 触发口型急辩片段",
-          en: "FMV BRANCH // LIP-SYNC RESPONSE",
-          ja: "映像分岐 // 弁解ムービーへ"
+          zh: "继续看他怎么回答（口型剧情）",
+          en: "Watch him reply (Lip-Sync)",
+          ja: "返答ムービーを見る"
         },
         boothEffect: {
           action: "intercom",
           systemNote: {
-            zh: "【剧情切入】你没有立刻收下他递来的维修人情，质问他为何脱队独行，里奥急忙隔窗辩白。",
-            en: "[SCENE ENTRY] Refusing his repair favor, you confront him on splitting from the convoy.",
-            ja: "【場面導入】修理の恩着せを突っぱねて単独行動の理由を追及すると、リオは慌てて弁解を始めた。"
+            zh: "【剧情切入】你没有立刻开门，追问他为什么独自脱离车队。",
+            en: "[SCENE ENTRY] Before opening, you ask why he split from the convoy alone.",
+            ja: "【場面導入】なぜ隊列を離れたのか直接問い詰める。"
           }
         }
       },
@@ -720,21 +1019,21 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "leo_open_thermal",
         nextNodeId: "n1_leo_confront",
         label: {
-          zh: "用强光频闪测试他对刺激的反应",
-          en: "Sweep strobe across his face & gloves",
-          ja: "閃光テストで反応と視線の揺れを見る"
+          zh: "先照强光，看他会不会眨眼躲闪",
+          en: "Flash the bright light & watch if he blinks",
+          ja: "強い光を当てて瞬きや反応を見る"
         },
         sublabel: {
-          zh: "直接审讯 + 消耗 1 电量 // 生理探测",
-          en: "SENSOR PROBE (1 PWR)",
-          ja: "センサー先制 (1 PWR)"
+          zh: "消耗 1 电量 // 直接窗口观察",
+          en: "1 PWR FLASH // Open booth",
+          ja: "センサー検査 // ブースへ"
         },
         boothEffect: {
           action: "strobe",
           systemNote: {
-            zh: "【剧情切入】你在他拍门催促时闪过脉冲强光，捕捉他下意识遮眼瞬间的脉搏跳动。",
-            en: "[SCENE ENTRY] You flash the strobe while he pounds the glass, tracking his startle pulse spike.",
-            ja: "【場面導入】扉を叩くリオへ閃光を浴びせ、怯む瞬間の脈拍変化を捉えた。"
+            zh: "【剧情切入】强光扫过里奥脸颊，捕捉到他猛地躲闪时的反应。",
+            en: "[SCENE ENTRY] Strobe light hits Leo's soot-streaked face as he flinches.",
+            ja: "【場面導入】閃光を受けて怯むリオの反応を記録した。"
           }
         }
       },
@@ -742,21 +1041,21 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "leo_open_dossier",
         nextNodeId: "n1_leo_confront",
         label: {
-          zh: "先查看里奥的身份档案与过往记录",
-          en: "Open Leo's dossier before responding",
-          ja: "返答前にリオの経歴記録を確認する"
+          zh: "先进窗口再决定",
+          en: "Open control booth first",
+          ja: "先にブースで確認する"
         },
         sublabel: {
-          zh: "直接审讯 // 核对背景",
-          en: "CHECK INTEL",
-          ja: "経歴確認優先"
+          zh: "自由提问或直接拍板",
+          en: "Free chat or decide",
+          ja: "自由質問・直接判定"
         },
         boothEffect: {
           action: "dossier",
           systemNote: {
-            zh: "【剧情切入】你先调出里奥在动力舱与维修记录相关的底层档案，再决定从哪句话切入。",
-            en: "[SCENE ENTRY] You review Leo's power bay maintenance logs before opening the intercom.",
-            ja: "【場面導入】動力室の点検記録を確認してから尋問に入る。"
+            zh: "【剧情切入】你在窗口旁先看清了里奥的记录，再决定开门还是净化。",
+            en: "[SCENE ENTRY] You check Leo's logs calmly at the window before deciding.",
+            ja: "【場面導入】窓口で記録を見てから判断する。"
           }
         }
       }
@@ -787,17 +1086,51 @@ export const STORY_NODES: readonly StoryNode[] = [
     fallbackVideoSrc: "./videos/leo/lean_in.mp4",
     posterSrc: "./portraits/reactions/leo_lean_in.jpg",
     fallbackPosterSrc: "./portraits/leo.jpg",
-    timerSec: 10,
     row: 0,
     col: 9,
     choices: [
       {
+        id: "leo_react_admit",
+        nextNodeId: "n1_leo_aftermath",
+        directVerdict: "ADMIT",
+        label: {
+          zh: "开门放他进来",
+          en: "Open the gate & let him in",
+          ja: "ドアを開けて通す"
+        },
+        sublabel: {
+          zh: "看起来只是吓坏了的小机械师，放行看后果",
+          en: "ADMIT // Watch Night 1 ending",
+          ja: "許可 // 第1夜結末へ"
+        }
+      },
+      {
+        id: "leo_react_purge",
+        nextNodeId: "n1_leo_aftermath",
+        directVerdict: "PURGE",
+        label: {
+          zh: "拒绝开门，启动净化",
+          en: "Refuse entry & purge chamber",
+          ja: "入室拒否・焼却する"
+        },
+        sublabel: {
+          zh: "别轻信眼泪，直接拉闸净化看后果",
+          en: "PURGE [-1 FUEL] // Watch Night 1 ending",
+          ja: "焼却 [-1 FUEL] // 第1夜結末へ"
+        }
+      },
+      {
         id: "leo_react_to_booth",
         nextNodeId: "n1_leo_confront",
         label: {
-          zh: "盯紧躲闪视线：进入防爆窗审讯",
-          en: "Press his darting gaze: enter live interrogation",
-          ja: "逸れた視線を追う：自由尋問へ"
+          zh: "进防爆窗细问几句（可选）",
+          en: "Ask more at the window (Optional)",
+          ja: "窓辺で詳しく聞く（任意）"
+        },
+        sublabel: {
+          zh: "想再多问一句或用扫描仪就点这里",
+          en: "Optional chat & scanner",
+          ja: "自由質問と検査"
         }
       }
     ]
@@ -859,8 +1192,8 @@ export const STORY_NODES: readonly StoryNode[] = [
     choices: [
       {
         id: "leo_admit_next",
-        nextNodeId: "nights_2_5_hub",
-        label: { zh: "进入第 2–5 夜极夜长夜", en: "Continue to Nights 2–5", ja: "第2〜5夜へ進む" }
+        nextNodeId: "n1_leo_aftermath",
+        label: { zh: "观看第 1 夜片尾后果", en: "Watch Night 1 Ending", ja: "第1夜の結末を見る" }
       }
     ]
   },
@@ -893,8 +1226,84 @@ export const STORY_NODES: readonly StoryNode[] = [
     choices: [
       {
         id: "leo_purge_next",
+        nextNodeId: "n1_leo_aftermath",
+        label: { zh: "观看第 1 夜片尾后果", en: "Watch Night 1 Ending", ja: "第1夜の結末を見る" }
+      }
+    ]
+  },
+  {
+    id: "n1_leo_aftermath",
+    chapter: "night1_leo",
+    code: "SC-02C",
+    title: {
+      zh: "首夜尾声 · 走廊黑影",
+      en: "Night 1 Cliffhanger · Corridor Shadow",
+      ja: "第1夜終盤 · 廊下の影"
+    },
+    subtitle: {
+      zh: "里奥刚进站内走廊就低声嘀咕；午夜换班钟响前，监控深处突然站着一道陌生黑影。",
+      en: "After Leo's verdict settles, the corridor feed catches an unidentifiable silhouette standing motionless toward Gate 0.",
+      ja: "リオの判定が下った深夜、監視カメラの奥に正体不明の人影が映り込む。"
+    },
+    speaker: {
+      zh: "第 1 夜结尾 // 悬念片尾",
+      en: "NIGHT 01 FINALE // CLIFFHANGER",
+      ja: "第1夜エンディング // 謎の影"
+    },
+    kind: "movie",
+    hasAudio: true,
+    videoSrc: "./videos/story/n1_leo_outcome_admit.mp4",
+    fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+    posterSrc: "./portraits/leo.jpg",
+    fallbackPosterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+    clips: [
+      {
+        id: "n1_leo_outcome_admit",
+        videoSrc: "./videos/story/n1_leo_outcome_admit.mp4",
+        fallbackVideoSrc: "./videos/leo/idle.mp4",
+        posterSrc: "./portraits/leo.jpg",
+        fallbackPosterSrc: "./portraits/reactions/chamber_admit.jpg",
+        hasAudio: true,
+        badge: { zh: "原声口型 · 第 1 夜收尾", en: "LIP-SYNC · LEO ADMIT", ja: "口型音声 · リオ入室" },
+        speaker: {
+          zh: "V-02 // 佐藤里奥进舱后",
+          en: "V-02 // LEO STEPS INSIDE",
+          ja: "V-02 // リオ入室後"
+        },
+        subtitle: {
+          zh: "“谢了兄弟，备用阀放这儿了……别告诉站长我差点把工具弄丢了。”",
+          en: "\"Thanks pal, parts are right here... just don't tell the commander I nearly lost the kit.\"",
+          ja: "「助かったよ、予備パーツはここだ……落としかけたことは隊長には内緒にしてくれ。」"
+        }
+      },
+      {
+        id: "n1_cliffhanger_shadow",
+        videoSrc: "./videos/story/n1_cliffhanger_shadow.mp4",
+        fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+        posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "片尾悬念 · 走廊黑影", en: "CLIFFHANGER · SHADOW", ja: "次回予告 · 廊下の影" },
+        speaker: {
+          zh: "03:00 // 内舱长廊 7 号监控",
+          en: "03:00 // INNER CORRIDOR CAM 07",
+          ja: "03:00 // 内廊下監視 07"
+        },
+        subtitle: {
+          zh: "廊灯咔嗒闪烁，一个很高的人影站在走廊尽头一动不动盯着岗亭方向——明天，更危险的访客要来了。",
+          en: "A corridor bulb flickers over a tall, still figure staring straight at Gate 0. Worse arrivals wait tomorrow night.",
+          ja: "照明が点滅する奥に誰かが立ち尽くしている——第2夜、さらなる訪問者が迫る。"
+        }
+      }
+    ],
+    row: 1,
+    col: 12,
+    choices: [
+      {
+        id: "n1_aftermath_continue",
         nextNodeId: "nights_2_5_hub",
-        label: { zh: "进入第 2–5 夜极夜长夜", en: "Continue to Nights 2–5", ja: "第2〜5夜へ進む" }
+        label: { zh: "继续下一夜", en: "Continue to Night 2", ja: "第2夜へ進む" },
+        sublabel: { zh: "夜色更深了 · 进入第 2–5 夜", en: "Enter Nights 2–5", ja: "第2〜5夜へ" }
       }
     ]
   },
@@ -923,7 +1332,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     posterSrc: "./portraits/operator09.jpg",
     fallbackPosterSrc: "./portraits/operator09.jpg",
     row: 1,
-    col: 12
+    col: 13
   }
 ];
 
@@ -934,7 +1343,11 @@ export const STORY_EDGES: readonly StoryEdge[] = [
   { id: "e_n1e_arr_int", from: "n1_elena_arrival", to: "n1_elena_react_intercom", branch: "default" },
   { id: "e_n1e_arr_str", from: "n1_elena_arrival", to: "n1_elena_react_strobe", branch: "default" },
   { id: "e_n1e_arr_con", from: "n1_elena_arrival", to: "n1_elena_confront", branch: "default" },
+  { id: "e_n1e_int_admit", from: "n1_elena_react_intercom", to: "n1_corridor_admit", branch: "admit" },
+  { id: "e_n1e_int_purge", from: "n1_elena_react_intercom", to: "n1_corridor_purge", branch: "purge" },
   { id: "e_n1e_int_con", from: "n1_elena_react_intercom", to: "n1_elena_confront", branch: "default" },
+  { id: "e_n1e_str_admit", from: "n1_elena_react_strobe", to: "n1_corridor_admit", branch: "admit" },
+  { id: "e_n1e_str_purge", from: "n1_elena_react_strobe", to: "n1_corridor_purge", branch: "purge" },
   { id: "e_n1e_str_con", from: "n1_elena_react_strobe", to: "n1_elena_confront", branch: "default" },
   {
     id: "e_n1e_con_admit",
@@ -956,6 +1369,7 @@ export const STORY_EDGES: readonly StoryEdge[] = [
   { id: "e_corr_purge_leo", from: "n1_corridor_purge", to: "n1_leo_arrival", branch: "purge" },
   { id: "e_n1l_arr_int", from: "n1_leo_arrival", to: "n1_leo_react_intercom", branch: "default" },
   { id: "e_n1l_arr_con", from: "n1_leo_arrival", to: "n1_leo_confront", branch: "default" },
+  { id: "e_n1l_int_after", from: "n1_leo_react_intercom", to: "n1_leo_aftermath", branch: "default" },
   { id: "e_n1l_int_con", from: "n1_leo_react_intercom", to: "n1_leo_confront", branch: "default" },
   {
     id: "e_n1l_con_admit",
@@ -971,8 +1385,9 @@ export const STORY_EDGES: readonly StoryEdge[] = [
     label: { zh: "净化", en: "PURGE", ja: "焼却" },
     branch: "purge"
   },
-  { id: "e_n1l_admit_hub", from: "n1_leo_admit", to: "nights_2_5_hub", branch: "admit" },
-  { id: "e_n1l_purge_hub", from: "n1_leo_purge", to: "nights_2_5_hub", branch: "purge" }
+  { id: "e_n1l_admit_after", from: "n1_leo_admit", to: "n1_leo_aftermath", branch: "admit" },
+  { id: "e_n1l_purge_after", from: "n1_leo_purge", to: "n1_leo_aftermath", branch: "purge" },
+  { id: "e_n1l_after_hub", from: "n1_leo_aftermath", to: "nights_2_5_hub", branch: "default" }
 ];
 
 const STORY_NODE_MAP = new Map<string, StoryNode>(STORY_NODES.map((n) => [n.id, n]));
@@ -1000,11 +1415,18 @@ export function getPreloadVideoUrls(node: StoryNode): string[] {
       seen.add(url);
     }
   };
+  for (const clip of node.clips ?? []) {
+    if (clip.videoSrc) seen.add(clip.videoSrc);
+    if (clip.fallbackVideoSrc) seen.add(clip.fallbackVideoSrc);
+  }
   for (const choice of node.choices ?? []) {
     const target = getStoryNode(choice.nextNodeId);
     if (!target) continue;
     add(target.videoSrc);
     add(target.fallbackVideoSrc);
+    for (const clip of target.clips ?? []) {
+      add(clip.videoSrc);
+    }
   }
   return [...seen];
 }

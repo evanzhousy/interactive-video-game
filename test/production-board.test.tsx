@@ -21,10 +21,10 @@ describe("Production Studio (Visual Asset Board + Storyboard + Three.js 3D Block
   it("maintains cast visual/voice assets and links every storyboard shot to a valid story node and 3D rig", () => {
     expect(CAST_VISUAL_ASSETS.length).toBe(9);
     expect(LOOK_DEV_SWATCHES.length).toBe(4);
-    expect(STUDIO_STORYBOARD_SHOTS.length).toBe(9);
+    expect(STUDIO_STORYBOARD_SHOTS.length).toBe(17);
 
     const lipSyncShots = STUDIO_STORYBOARD_SHOTS.filter((s) => s.hasNativeAudio);
-    expect(lipSyncShots.length).toBe(5);
+    expect(lipSyncShots.length).toBe(8);
 
     for (const cast of CAST_VISUAL_ASSETS) {
       expect(cast.portraitSrc).toBeTruthy();
@@ -59,13 +59,13 @@ describe("Production Studio (Visual Asset Board + Storyboard + Three.js 3D Block
     await act(async () => {
       (document.getElementById("tab-studio-storyboard") as HTMLButtonElement).click();
     });
-    expect(document.querySelectorAll("[data-storyboard-shot]").length).toBe(9);
+    expect(document.querySelectorAll("[data-storyboard-shot]").length).toBe(17);
 
     // Switch to 3D Blocking Stage tab
     await act(async () => {
       (document.getElementById("tab-studio-blocking") as HTMLButtonElement).click();
     });
-    expect(document.querySelectorAll("[data-blocking-shot]").length).toBe(9);
+    expect(document.querySelectorAll("[data-blocking-shot]").length).toBe(17);
     await act(async () => {
       (document.querySelector('[data-blocking-shot="shot_elena_arrival"]') as HTMLButtonElement).click();
     });
