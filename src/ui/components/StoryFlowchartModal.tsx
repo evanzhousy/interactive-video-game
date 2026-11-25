@@ -57,12 +57,18 @@ const CHAPTER_GROUPS: Array<{ id: StoryChapterId; startCol: number; spanCols: nu
   { id: "night1_elena", startCol: 3, spanCols: 4 },
   { id: "night1_corridor", startCol: 7, spanCols: 1 },
   { id: "night1_leo", startCol: 8, spanCols: 5 },
-  { id: "nights_2_5", startCol: 13, spanCols: 1 }
+  { id: "night2_power", startCol: 13, spanCols: 2 },
+  { id: "night3_storm", startCol: 15, spanCols: 2 },
+  { id: "night4_mutiny", startCol: 17, spanCols: 2 },
+  { id: "night5_finale", startCol: 19, spanCols: 2 }
 ];
 
 function kindBadgeText(node: StoryNode, lang: Locale): string {
+  if (node.kind === "ending") {
+    return tl({ zh: "🎬 电影结局", en: "🎬 FILM ENDING", ja: "🎬 映画結末" }, lang);
+  }
   if (node.kind === "interrogation") {
-    return tl({ zh: "AI 自由审讯", en: "LIVE INTERROGATION", ja: "AI 自由尋問" }, lang);
+    return tl({ zh: "🛡️ 高玩鉴真支线", en: "🛡️ SIDE QUEST AUDIT", ja: "🛡️ 任意尋問支線" }, lang);
   }
   if (node.kind === "verdict_branch") {
     return node.id.endsWith("admit")
@@ -93,8 +99,9 @@ export function StoryFlowchartModal({
   const stats = getStoryCompletionStats([...unlockedSet]);
 
   const maxCol = Math.max(...STORY_NODES.map((n) => n.col));
+  const maxRow = Math.max(2, ...STORY_NODES.map((n) => n.row));
   const canvasW = PAD_X * 2 + (maxCol + 1) * NODE_W + maxCol * COL_GAP;
-  const canvasH = PAD_Y + 3 * NODE_H + 2 * ROW_GAP + 24;
+  const canvasH = PAD_Y + (maxRow + 1) * NODE_H + maxRow * ROW_GAP + 24;
 
   const nodeMap = new Map<string, StoryNode>(STORY_NODES.map((n) => [n.id, n]));
 

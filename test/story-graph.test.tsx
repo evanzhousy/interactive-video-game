@@ -22,10 +22,10 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   });
 
-  it("maintains referential integrity across all 18 story nodes, multi-clip segments, edges, fallbacks, and prologue intake mapping", () => {
+  it("maintains referential integrity across all 31 story nodes, multi-clip segments, edges, fallbacks, and prologue intake mapping", () => {
     const nodeIds = new Set(STORY_NODES.map((n) => n.id));
-    expect(STORY_NODES.length).toBe(18);
-    expect(nodeIds.size).toBe(18);
+    expect(STORY_NODES.length).toBe(31);
+    expect(nodeIds.size).toBe(31);
 
     for (const edge of STORY_EDGES) {
       expect(nodeIds.has(edge.from)).toBe(true);
@@ -75,7 +75,7 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(p1Preload).toContain("./videos/chamber/whiteout.mp4");
 
     const stats = getStoryCompletionStats(["prologue_01", "prologue_02", "unknown_node"]);
-    expect(stats).toEqual({ unlockedCount: 2, totalCount: 18, percent: 11 });
+    expect(stats).toEqual({ unlockedCount: 2, totalCount: 31, percent: 6 });
   });
 
   it("deduplicates and persists unlocked story nodes and edges in compendium state", () => {
@@ -211,8 +211,99 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     await act(async () => {
       (document.querySelector('[data-story-choice="n1_aftermath_continue"]') as HTMLButtonElement).click();
     });
+    expect(
+      document.querySelector("#fmv-booth-overlay [data-story-node='n2_arthur_standoff']")
+    ).not.toBeNull();
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("supports complete zero-minigame 5-night movie playthrough to Ending A and optional side-quest booth detour + Lobby Challenge Mode", async () => {
+    const container = document.getElementById("root")!;
+    let root = createRoot(container);
+
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // Click primary Watch Interactive Film CTA
+    await act(async () => {
+      (document.getElementById("btn-lobby-start") as HTMLButtonElement).click();
+    });
+    for (let i = 0; i < 3; i++) {
+      await act(async () => {
+        (document.querySelector(".option-card") as HTMLButtonElement).click();
+      });
+    }
+    await act(async () => {
+      (document.getElementById("btn-start-shift") as HTMLButtonElement).click();
+    });
+
+    const clickChoice = async (choiceId: string) => {
+      await act(async () => {
+        const el = document.querySelector(`[data-story-choice="${choiceId}"]`) as HTMLButtonElement;
+        expect(el).not.toBeNull();
+        el.click();
+      });
+    };
+
+    // Pure movie path across Nights 1 -> 5 without ever playing booth minigame
+    await clickChoice("elena_open_intercom");
+    await clickChoice("elena_react_admit");
+    await clickChoice("corridor_lock_medbay");
+    await clickChoice("leo_open_intercom");
+    await clickChoice("leo_react_admit");
+    await clickChoice("n1_aftermath_continue");
+    await clickChoice("n2_arthur_trust");
+    await clickChoice("n2_marcus_purge");
+    await clickChoice("n3_ingrid_admit");
+    await clickChoice("n3_ana_admit");
+    await clickChoice("n4_linmei_purge");
+    await clickChoice("n4_hannah_admit");
+    await clickChoice("n5_choose_dawn");
+
+    expect(
+      document.querySelector("#fmv-booth-overlay [data-story-node='ending_dawn_break']")
+    ).not.toBeNull();
+    expect(document.getElementById("fmv-ending-card")).not.toBeNull();
+    expect(loadCompendium().unlockedEndings).toContain("A");
+
+    // Verify optional side-quest booth detour + return to movie
+    await act(async () => {
+      (document.getElementById("btn-ending-storymap") as HTMLButtonElement).click();
+    });
+    await act(async () => {
+      (document.querySelector('[data-jump-node="n2_arthur_standoff"]') as HTMLButtonElement).click();
+    });
+    await clickChoice("n2_arthur_side_audit");
     expect(document.getElementById("fmv-booth-overlay")).toBeNull();
+    expect(document.getElementById("btn-return-movie")).not.toBeNull();
     expect(document.getElementById("main-booth")?.textContent).toContain("V-03");
+
+    await act(async () => {
+      (document.getElementById("btn-return-movie") as HTMLButtonElement).click();
+    });
+    expect(
+      document.querySelector("#fmv-booth-overlay [data-story-node='n2_marcus_clash']")
+    ).not.toBeNull();
+
+    // Unmount, clear storage, and verify Lobby Challenge Mode opens V-01 booth directly
+    await act(async () => {
+      root.unmount();
+    });
+    window.localStorage.clear();
+    document.body.innerHTML = '<div id="root"></div>';
+    root = createRoot(document.getElementById("root")!);
+    await act(async () => {
+      root.render(<App />);
+    });
+    await act(async () => {
+      (document.getElementById("btn-lobby-challenge") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("fmv-booth-overlay")).toBeNull();
+    expect(document.getElementById("main-booth")?.textContent).toContain("V-01");
 
     await act(async () => {
       root.unmount();

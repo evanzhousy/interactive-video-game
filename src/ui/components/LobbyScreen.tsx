@@ -68,6 +68,7 @@ interface Props {
   motionPaused: boolean;
   onToggleMotionPaused: (next: boolean) => void;
   onStartNewShift: () => void;
+  onStartChallengeMode: () => void;
   onContinueShift: (save: SavedShiftState) => void;
   onClearSavedShift: () => void;
   onOpenArchive: () => void;
@@ -94,6 +95,7 @@ export function LobbyScreen({
   motionPaused,
   onToggleMotionPaused,
   onStartNewShift,
+  onStartChallengeMode,
   onContinueShift,
   onClearSavedShift,
   onOpenArchive,
@@ -349,14 +351,53 @@ export function LobbyScreen({
             <span className="gta-menu-label">
               {tl(
                 {
-                  zh: "开始新班次 // NEW SHIFT",
-                  en: "START NEW SHIFT",
-                  ja: "新規当直を開始 // NEW SHIFT"
+                  zh: "观看互动电影 // 完整 5 夜剧情",
+                  en: "WATCH INTERACTIVE FILM // 5-NIGHT STORY",
+                  ja: "インタラクティブ映画を観る // 全5夜本編"
                 },
                 lang
               )}
+              <small className="gta-menu-sub">
+                {tl(
+                  {
+                    zh: "零门槛纯点剧情抉择，无需玩小游戏也能体验 4 大电影结局",
+                    en: "Pure cinematic story path — reach all endings with story choices alone",
+                    ja: "難解な操作不要・選択だけで全結末まで完走可能"
+                  },
+                  lang
+                )}
+              </small>
             </span>
             <span className="gta-menu-arrow">▶</span>
+          </Button>
+
+          <Button
+            id="btn-lobby-challenge"
+            className="gta-menu-item challenge"
+            onClick={onStartChallengeMode}
+          >
+            <span className="gta-menu-idx">⚔</span>
+            <span className="gta-menu-label">
+              {tl(
+                {
+                  zh: "🛡️ 伪人鉴真挑战 // MIMIC AUDIT MODE",
+                  en: "🛡️ MIMIC AUDIT CHALLENGE // SIDE MODE",
+                  ja: "🛡️ 擬態体監査チャレンジ // 高難度モード"
+                },
+                lang
+              )}
+              <small className="gta-menu-sub">
+                {tl(
+                  {
+                    zh: "高玩支线玩法 · 8 人防爆窗审讯 + 扫描仪 + 燃料生存",
+                    en: "Hardcore detective booth · scanners, psychology & fuel survival",
+                    ja: "高難度サイドモード · 防爆窓尋問・センサー・燃料管理"
+                  },
+                  lang
+                )}
+              </small>
+            </span>
+            <span className="gta-menu-arrow">⚡</span>
           </Button>
 
           {savedShift ? (

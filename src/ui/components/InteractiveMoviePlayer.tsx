@@ -26,6 +26,10 @@ interface Props {
   onSelectChoice: (choice: StoryChoice, index: number) => void;
   onSkip?: () => void;
   onOpenStoryMap?: () => void;
+  unlockedEndingsCount?: number;
+  sideQuestClueCount?: number;
+  onReturnLobby?: () => void;
+  onEnterChallengeMode?: () => void;
   footerExtra?: ReactNode;
 }
 
@@ -43,6 +47,10 @@ export function InteractiveMoviePlayer({
   onSelectChoice,
   onSkip,
   onOpenStoryMap,
+  unlockedEndingsCount = 0,
+  sideQuestClueCount = 0,
+  onReturnLobby,
+  onEnterChallengeMode,
   footerExtra
 }: Props) {
   const segments: readonly StoryClipSegment[] =
@@ -411,14 +419,20 @@ export function InteractiveMoviePlayer({
                     ? "is-verdict-admit"
                     : choice.directVerdict === "PURGE"
                       ? "is-verdict-purge"
-                      : ""
+                      : choice.isSideQuest
+                        ? "is-side-quest"
+                        : ""
                 }`.trim()}
                 onClick={() => {
                   timerFiredRef.current = true;
                   onSelectChoice(choice, idx);
                 }}
               >
-                <span className="opt-index">0{idx + 1}</span>
+                <span className="opt-index">
+                  {choice.isSideQuest
+                    ? tl({ zh: "支线", en: "SIDE", ja: "支線" }, lang)
+                    : `0${idx + 1}`}
+                </span>
                 <span className="fmv-choice-copy">
                   <span className="fmv-choice-main">{tl(choice.label, lang)}</span>
                   {choice.sublabel ? (
@@ -427,6 +441,68 @@ export function InteractiveMoviePlayer({
                 </span>
               </Button>
             ))}
+          </div>
+        ) : null}
+
+        {node.kind === "ending" ? (
+          <div className="fmv-ending-card" id="fmv-ending-card" role="region" aria-label={tl(node.title, lang)}>
+            <div className="fmv-ending-meta">
+              <span className="fmv-ending-badge">
+                {node.endingTag
+                  ? tl(node.endingTag, lang)
+                  : tl({ zh: "电影结局已达成", en: "FILM ENDING COMPLETE", ja: "結末到達" }, lang)}
+              </span>
+              <span className="fmv-ending-stats">
+                {tl(
+                  {
+                    zh: `全片结局收集：${unlockedEndingsCount}/7 · 支线审讯鉴真：${sideQuestClueCount} 次`,
+                    en: `ENDINGS COLLECTED: ${unlockedEndingsCount}/7 · SIDE AUDITS: ${sideQuestClueCount}`,
+                    ja: `収集済み結末：${unlockedEndingsCount}/7 · 支線尋問：${sideQuestClueCount}回`
+                  },
+                  lang
+                )}
+              </span>
+            </div>
+            <div className="fmv-ending-actions">
+              {onOpenStoryMap ? (
+                <Button
+                  type="button"
+                  id="btn-ending-storymap"
+                  className="ctrl-btn amber"
+                  onClick={onOpenStoryMap}
+                >
+                  {tl({ zh: "故事线分支图 · 刷其他结局", en: "STORY MAP · OTHER ENDINGS", ja: "分岐マップ · 他結末へ" }, lang)}
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                id="btn-ending-replay"
+                className="ctrl-btn"
+                onClick={handleReplayClip}
+              >
+                {tl({ zh: "↻ 重播结局", en: "↻ REPLAY ENDING", ja: "↻ 結末再生" }, lang)}
+              </Button>
+              {onEnterChallengeMode ? (
+                <Button
+                  type="button"
+                  id="btn-ending-challenge"
+                  className="ctrl-btn"
+                  onClick={onEnterChallengeMode}
+                >
+                  {tl({ zh: "🛡️ 体验高玩伪人鉴真模式", en: "🛡️ MIMIC AUDIT CHALLENGE", ja: "🛡️ 擬態体監査モードへ" }, lang)}
+                </Button>
+              ) : null}
+              {onReturnLobby ? (
+                <Button
+                  type="button"
+                  id="btn-ending-lobby"
+                  className="ctrl-btn"
+                  onClick={onReturnLobby}
+                >
+                  {tl({ zh: "返回首页", en: "RETURN HOME", ja: "ホームへ" }, lang)}
+                </Button>
+              ) : null}
+            </div>
           </div>
         ) : null}
 

@@ -265,6 +265,8 @@ export function App() {
   const [compendiumOpen, setCompendiumOpen] = useState(false);
   const [storyMapOpen, setStoryMapOpen] = useState(false);
   const [activeStoryNodeId, setActiveStoryNodeId] = useState<string | null>(null);
+  const [sideQuestReturnNodeId, setSideQuestReturnNodeId] = useState<string | null>(null);
+  const [sideQuestClues, setSideQuestClues] = useState<string[]>([]);
   const [prologueInitialStep, setPrologueInitialStep] = useState(0);
   const returnStageRef = useRef<Exclude<Stage, "studio">>("lobby");
 
@@ -764,6 +766,8 @@ export function App() {
       setFuelLeft(initFuel);
       setEmergencyOverdraftUsed(false);
       setBoggartUsedIds([]);
+      setSideQuestReturnNodeId(null);
+      setSideQuestClues([]);
       setStage("booth");
       resetVisitorState(0, roster, true, initFuel, false, freshRunSeed);
       if (roster[0]?.id === "V-01") {
@@ -779,6 +783,39 @@ export function App() {
     if (modeOverride === "seeded") {
       void loadSeededRoster(freshRunSeed, lang, false);
     }
+  };
+
+  const handleStartChallengeMode = () => {
+    const freshDailySeed = getDailyShiftSeed();
+    const freshRunSeed =
+      campaignMode === "daily"
+        ? freshDailySeed
+        : campaignMode === "seeded"
+          ? (seedDraft.trim() || generateRunSeed("seeded"))
+          : generateRunSeed(campaignMode);
+    const roster =
+      campaignMode === "seeded"
+        ? (seededRoster ?? getVisitorsForMode("seeded", freshRunSeed))
+        : getVisitorsForMode(campaignMode, freshDailySeed);
+    const initFuel = getInitialFuel(campaignMode);
+    playBoothSfx("ptt", sfx);
+    transitionStage(() => {
+      setDailySeed(freshDailySeed);
+      setRunSeed(freshRunSeed);
+      setSeedDraft(freshRunSeed);
+      setRolls(rollShiftForMode(campaignMode, roster, freshRunSeed));
+      setHistory([]);
+      setCrisisHistory([]);
+      setActiveCrisis(null);
+      setFuelLeft(initFuel);
+      setEmergencyOverdraftUsed(false);
+      setBoggartUsedIds([]);
+      setSideQuestReturnNodeId(null);
+      setSideQuestClues([]);
+      setActiveStoryNodeId(null);
+      setStage("booth");
+      resetVisitorState(0, roster, true, initFuel, false, freshRunSeed);
+    });
   };
 
   const handleRestartFromIntake = () => {
@@ -1336,6 +1373,42 @@ export function App() {
   };
 
   const handleNextVisitor = () => {
+    // If inside an optional movie side-quest audit, return seamlessly to the movie story node
+    if (sideQuestReturnNodeId !== null) {
+      const returnNode = sideQuestReturnNodeId;
+      const isElenaCorridor = returnNode === "n1_corridor_admit" && visitor.id === "V-01";
+      const isPurge =
+        verdictState === "PURGE" ||
+        history.find((h) => h.visitorId === visitor.id)?.decision === "PURGE";
+      const targetNodeId = isElenaCorridor
+        ? isPurge
+          ? "n1_corridor_purge"
+          : "n1_corridor_admit"
+        : returnNode;
+      stopIntercomVoice();
+      playBoothSfx("ptt", sfx);
+      setSideQuestClues((prev) => (prev.includes(visitor.id) ? prev : [...prev, visitor.id]));
+      setSideQuestReturnNodeId(null);
+
+      if (visitor.id === "V-01" && safeIdx < activeVisitors.length - 1) {
+        const elenaVerdictNode = isPurge ? "n1_elena_purge" : "n1_elena_admit";
+        const edgeToVerdict = isPurge ? "e_n1e_con_purge" : "e_n1e_con_admit";
+        const edgeToCorridor = isPurge ? "e_n1e_purge_corr" : "e_n1e_admit_corr";
+        unlockStoryNodes([elenaVerdictNode, targetNodeId], [edgeToVerdict, edgeToCorridor]);
+        resetVisitorState(safeIdx + 1, activeVisitors, false, fuelLeft, emergencyOverdraftUsed);
+      } else if (visitor.id === "V-02") {
+        const leoVerdictNode = isPurge ? "n1_leo_purge" : "n1_leo_admit";
+        const edgeToVerdict = isPurge ? "e_n1l_con_purge" : "e_n1l_con_admit";
+        const edgeToAfter = isPurge ? "e_n1l_purge_after" : "e_n1l_admit_after";
+        unlockStoryNodes([leoVerdictNode, targetNodeId], [edgeToVerdict, edgeToAfter]);
+      } else {
+        unlockStoryNodes([targetNodeId]);
+      }
+      setEmergencyOverdraftUsed(false);
+      setActiveStoryNodeId(targetNodeId);
+      return;
+    }
+
     if (campaignMode === "demo" && safeIdx >= activeVisitors.length - 1) {
       stopIntercomVoice();
       playBoothSfx("purge", sfx);
@@ -1405,11 +1478,55 @@ export function App() {
   };
 
   const handleSelectBoothStoryChoice = (choice: StoryChoice) => {
+    if (choice.triggerNight5Audit) {
+      stopIntercomVoice();
+      playBoothSfx("purge", sfx);
+      setActiveStoryNodeId(null);
+      setSideQuestReturnNodeId(null);
+      transitionStage(() => setStage("night5"));
+      return;
+    }
+
     const curId = activeStoryNodeId;
     const edge = STORY_EDGES.find((e) => e.from === curId && e.to === choice.nextNodeId);
     const extraNodes: string[] = [choice.nextNodeId];
     const extraEdges: string[] = edge ? [edge.id] : [];
 
+    if (choice.sideQuestVisitorId) {
+      const targetIdx = Math.max(
+        0,
+        activeVisitors.findIndex((v) => v.id === choice.sideQuestVisitorId)
+      );
+      stopIntercomVoice();
+      playBoothSfx("ptt", sfx);
+      setSideQuestReturnNodeId(choice.sideQuestReturnNodeId ?? null);
+      unlockStoryNodes(extraNodes, extraEdges);
+      if (targetIdx !== safeIdx || verdictState !== "NONE") {
+        resetVisitorState(targetIdx, activeVisitors, true, fuelLeft, false);
+      } else {
+        speakIntercomLine({
+          visitorId: visitor.id,
+          locale: lang,
+          text: tl(visitor.openingLine, lang),
+          lineId: "opening",
+          enabled: voice
+        });
+      }
+      setActiveStoryNodeId(null);
+      if (choice.boothEffect) {
+        if (choice.boothEffect.action === "dossier") {
+          setDossierCollapsed(false);
+          setActiveTab("baseline");
+        }
+        setTranscript((prev) => [
+          ...prev,
+          { speaker: "system", text: choice.boothEffect!.systemNote }
+        ]);
+      }
+      return;
+    }
+
+    let updatedHistory = history;
     if (choice.directVerdict) {
       const isPurge = choice.directVerdict === "PURGE";
       const usedOverdraft = isPurge && fuelLeft <= 0;
@@ -1420,27 +1537,32 @@ export function App() {
         if (fuelLeft > 0) setFuelLeft(nextFuel);
         else setEmergencyOverdraftUsed(true);
       }
-      const existingDecision = history.some((h) => h.visitorId === visitor.id);
+      const curNode = curId ? getStoryNode(curId) : undefined;
+      const decisionVisitorId = curNode?.visitorId ?? visitor.id;
+      const existingDecision = history.some((h) => h.visitorId === decisionVisitorId);
       if (!existingDecision) {
-        setHistory((prev) => [
-          ...prev,
+        const entryRoll =
+          rolls.find((r) => r.visitorId === decisionVisitorId) ?? currentRoll;
+        updatedHistory = [
+          ...history,
           {
-            visitorId: visitor.id,
+            visitorId: decisionVisitorId,
             decision: choice.directVerdict!,
-            wasMimic: currentRoll.isMimic,
+            wasMimic: entryRoll.isMimic,
             excuse: SHIFT_EXCUSES[0]!
           }
-        ]);
+        ];
+        setHistory(updatedHistory);
       }
 
-      if (visitor.id === "V-01") {
+      if (decisionVisitorId === "V-01") {
         extraNodes.push(isPurge ? "n1_elena_purge" : "n1_elena_admit");
         extraEdges.push(isPurge ? "e_n1e_purge_corr" : "e_n1e_admit_corr");
         const v2Idx = activeVisitors.findIndex((v) => v.id === "V-02");
         if (v2Idx > safeIdx) {
           resetVisitorState(v2Idx, activeVisitors, false, nextFuel, usedOverdraft);
         }
-      } else if (visitor.id === "V-02") {
+      } else if (decisionVisitorId === "V-02") {
         extraNodes.push(isPurge ? "n1_leo_purge" : "n1_leo_admit");
         extraEdges.push(isPurge ? "e_n1l_purge_after" : "e_n1l_admit_after");
       }
@@ -1448,23 +1570,29 @@ export function App() {
       playBoothSfx("ptt", sfx);
     }
 
-    if (choice.nextNodeId === "nights_2_5_hub") {
-      extraEdges.push("e_n1l_after_hub");
-    }
-    unlockStoryNodes(extraNodes, extraEdges);
-
     const nextNode = getStoryNode(choice.nextNodeId);
-    if (nextNode && nextNode.kind === "movie") {
+    if (nextNode?.endingId) {
+      clearSavedShift();
+      setSavedShiftSnapshot(null);
+      const endingId = nextNode.endingId;
+      setCompendium((prev) => {
+        const withProgress = recordStoryProgress(prev, extraNodes, extraEdges);
+        return recordRunCompletion({
+          current: withProgress,
+          ending: endingId,
+          campaignMode,
+          history: updatedHistory,
+          boggartUsedIds
+        }).next;
+      });
+    } else {
+      unlockStoryNodes(extraNodes, extraEdges);
+    }
+
+    if (nextNode && (nextNode.kind === "movie" || nextNode.kind === "ending")) {
       setActiveStoryNodeId(nextNode.id);
     } else {
       setActiveStoryNodeId(null);
-      if (
-        choice.nextNodeId === "nights_2_5_hub" &&
-        visitor.id === "V-02" &&
-        safeIdx < activeVisitors.length - 1
-      ) {
-        resetVisitorState(safeIdx + 1, activeVisitors, true, fuelLeft, emergencyOverdraftUsed);
-      }
     }
 
     if (choice.boothEffect) {
@@ -1486,6 +1614,7 @@ export function App() {
   const handleJumpToStoryNode = (nodeId: string) => {
     stopIntercomVoice();
     playBoothSfx("ptt", sfx);
+    setSideQuestReturnNodeId(null);
 
     const pIdx = PROLOGUE_NODE_IDS.indexOf(nodeId as (typeof PROLOGUE_NODE_IDS)[number]);
     if (pIdx >= 0) {
@@ -1495,48 +1624,25 @@ export function App() {
       return;
     }
 
-    if (
-      nodeId === "n1_elena_arrival" ||
-      nodeId === "n1_elena_react_intercom" ||
-      nodeId === "n1_elena_react_strobe" ||
-      nodeId === "n1_elena_confront"
-    ) {
-      const idx = Math.max(0, activeVisitors.findIndex((v) => v.id === "V-01"));
-      const showMovie = nodeId !== "n1_elena_confront";
-      transitionStage(() => {
-        setStage("booth");
-        resetVisitorState(idx, activeVisitors, !showMovie, fuelLeft, false);
-        setActiveStoryNodeId(showMovie ? nodeId : null);
-      });
-      return;
-    }
+    const targetNode = getStoryNode(nodeId);
+    if (!targetNode) return;
 
-    if (
-      nodeId === "n1_corridor_admit" ||
-      nodeId === "n1_corridor_purge" ||
-      nodeId === "n1_leo_arrival" ||
-      nodeId === "n1_leo_react_intercom" ||
-      nodeId === "n1_leo_aftermath" ||
-      nodeId === "n1_leo_confront"
-    ) {
-      const idx = Math.max(0, activeVisitors.findIndex((v) => v.id === "V-02"));
-      const showMovie = nodeId !== "n1_leo_confront";
-      transitionStage(() => {
-        setStage("booth");
-        resetVisitorState(idx, activeVisitors, !showMovie, fuelLeft, false);
-        setActiveStoryNodeId(showMovie ? nodeId : null);
-      });
-      return;
-    }
+    const preferredVisitorId =
+      targetNode.visitorId ??
+      (nodeId === "n1_corridor_admit" || nodeId === "n1_corridor_purge" || nodeId === "n1_leo_aftermath"
+        ? "V-02"
+        : "V-01");
+    const vIdx = Math.max(
+      0,
+      activeVisitors.findIndex((v) => v.id === preferredVisitorId)
+    );
+    const isMovieOrEnding = targetNode.kind === "movie" || targetNode.kind === "ending";
 
-    if (nodeId === "nights_2_5_hub") {
-      const idx = Math.min(2, activeVisitors.length - 1);
-      transitionStage(() => {
-        setStage("booth");
-        resetVisitorState(idx, activeVisitors, true, fuelLeft, false);
-        setActiveStoryNodeId(null);
-      });
-    }
+    transitionStage(() => {
+      setStage("booth");
+      resetVisitorState(vIdx, activeVisitors, !isMovieOrEnding, fuelLeft, false);
+      setActiveStoryNodeId(isMovieOrEnding ? targetNode.id : null);
+    });
   };
 
   const handleResolveCrisisOption = (option: CrisisOption) => {
@@ -1605,6 +1711,9 @@ export function App() {
     return newlyUnlockedAchievements;
   };
 
+  const isCinemaMode =
+    stage === "intake" || (stage === "booth" && activeStoryNodeId !== null);
+
   return (
     <div
       className={`booth-shell ${stage === "lobby" ? "is-lobby" : ""} ${stage === "booth" ? "is-gta-booth" : ""}`.trim()}
@@ -1612,7 +1721,7 @@ export function App() {
     >
       <OverlayHost />
       {stage !== "lobby" ? (
-      <header className="topbar">
+      <header className={`topbar ${isCinemaMode ? "is-cinema-mode" : ""}`}>
         <div className="topbar-brand">
           <Button
             id="btn-return-lobby"
@@ -1628,7 +1737,7 @@ export function App() {
           </span>
         </div>
 
-        <div className="stepper" aria-label="Visitor progress">
+        <div className="stepper cinema-hide" aria-label="Visitor progress">
           {activeVisitors.map((v, idx) => (
             <span
               key={v.id}
@@ -1648,6 +1757,7 @@ export function App() {
         </div>
 
         <div className="topbar-controls">
+          <span className="cinema-hide" style={{ display: "contents" }}>
           <Select<CampaignMode>
             items={campaignModeItems}
             value={campaignMode}
@@ -1679,6 +1789,7 @@ export function App() {
               ))}
             </SelectContent>
           </Select>
+          </span>
 
           <Button
             id="btn-studio"
@@ -1768,7 +1879,7 @@ export function App() {
                     },
                     lang
                   )}
-                  className={`ctrl-btn ${!onboardingDismissed && visitor.id === "V-01" ? "amber" : ""}`}
+                  className={`ctrl-btn cinema-hide ${!onboardingDismissed && visitor.id === "V-01" ? "amber" : ""}`}
                   onPressedChange={(pressed) => {
                     const nextDismissed = !pressed;
                     setOnboardingDismissed(nextDismissed);
@@ -1805,7 +1916,7 @@ export function App() {
                     },
                     lang
                   )}
-                  className={`ctrl-btn ${sysDrawerOpen ? "amber" : ""}`}
+                  className={`ctrl-btn cinema-hide ${sysDrawerOpen ? "amber" : ""}`}
                   onPressedChange={setSysDrawerOpen}
                 />
               }
@@ -1952,9 +2063,15 @@ export function App() {
                 ? "n1_elena_confront"
                 : stage === "booth" && visitor.id === "V-02"
                   ? "n1_leo_confront"
-                  : stage === "booth" || stage === "crisis" || stage === "night5"
-                    ? "nights_2_5_hub"
-                    : null
+                  : stage === "booth" && (visitor.id === "V-03" || visitor.id === "V-04")
+                    ? "n2_side_audit"
+                    : stage === "booth" && (visitor.id === "V-05" || visitor.id === "V-06")
+                      ? "n3_side_audit"
+                      : stage === "booth" && (visitor.id === "V-07" || visitor.id === "V-08")
+                        ? "n4_side_audit"
+                        : stage === "night5"
+                          ? "n5_final_mirror"
+                          : null
         }
         onJumpToNode={handleJumpToStoryNode}
       />
@@ -2067,6 +2184,7 @@ export function App() {
               setPrologueInitialStep(0);
               transitionStage(() => setStage("intake"));
             }}
+            onStartChallengeMode={handleStartChallengeMode}
             onContinueShift={(save) => {
               playBoothSfx("ptt", sfx);
               setActiveStoryNodeId(null);
@@ -2209,10 +2327,10 @@ export function App() {
                     }
                     onSelectChoice={handleSelectBoothStoryChoice}
                     onOpenStoryMap={() => setStoryMapOpen(true)}
-                    onSkip={() => {
-                      playBoothSfx("ptt", sfx);
-                      setActiveStoryNodeId(null);
-                    }}
+                    unlockedEndingsCount={compendium.unlockedEndings.length}
+                    sideQuestClueCount={sideQuestClues.length}
+                    onReturnLobby={handleReturnToLobby}
+                    onEnterChallengeMode={handleStartChallengeMode}
                   />
                 </div>
               ) : null}
@@ -2239,6 +2357,42 @@ export function App() {
 
               {/* TOP-LEFT FLOATING SUBJECT, ALERTS & GTA OBJECTIVE CHECKLIST */}
               <div className="gta-hud-topleft">
+                {sideQuestReturnNodeId !== null && !activeStoryNodeId ? (
+                  <div className="side-quest-return-bar" id="side-quest-return-bar">
+                    <span>
+                      {tl(
+                        {
+                          zh: "🛡️ 支线 · 伪人深度鉴真模式",
+                          en: "🛡️ SIDE QUEST · BOOTH AUDIT",
+                          ja: "🛡️ 任意支線 · 防爆窓尋問中"
+                        },
+                        lang
+                      )}
+                    </span>
+                    <Button
+                      type="button"
+                      id="btn-return-movie"
+                      className="ctrl-btn amber"
+                      onClick={() => {
+                        const target = sideQuestReturnNodeId;
+                        stopIntercomVoice();
+                        playBoothSfx("ptt", sfx);
+                        setSideQuestReturnNodeId(null);
+                        unlockStoryNodes([target]);
+                        setActiveStoryNodeId(target);
+                      }}
+                    >
+                      {tl(
+                        {
+                          zh: "← 返回电影主线继续观看",
+                          en: "← Return to Movie",
+                          ja: "← 映画本編へ戻る"
+                        },
+                        lang
+                      )}
+                    </Button>
+                  </div>
+                ) : null}
                 <div className="gta-mission-plate">
                   <span className="gta-mission-night">NIGHT 0{visitor.night}</span>
                   <span className="gta-mission-subject">

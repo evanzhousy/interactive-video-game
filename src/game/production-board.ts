@@ -900,6 +900,272 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
         { id: "shadow", label: "未知黑影", pos: [6.8, 0, -2.1], rotY: 0, color: "#e04634" }
       ]
     }
+  },
+  // === CINEMA PACK 3: NIGHTS 2–5 FULL INTERACTIVE MOVIE SHOTS ===
+  {
+    id: "shot_n2_arthur_command",
+    storyNodeId: "n2_arthur_standoff",
+    shotCode: "SC-03A",
+    chapter: { zh: "第 2 夜 · 夺权危机", en: "NIGHT 02 · COMMAND", ja: "第2夜 · 指揮権争い" },
+    title: { zh: "站长亚瑟最后的交权通牒", en: "Arthur's Command Ultimatum", ja: "アーサー所長の最後通牒" },
+    framing: "50mm Close-Up · Keyframe",
+    cameraMove: { zh: "强压威严的贴窗近景，呼吸白雾随台词扑向玻璃", en: "Tight authoritarian close-up through frosted Gate 0 blast window", ja: "威圧的な防爆窓越しのクロースアップ" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/arthur.jpg",
+    videoSrc: "./videos/arthur/lean_in.mp4",
+    fallbackVideoSrc: "./videos/arthur/lean_in.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "amber",
+      camera: {
+        pos: [0.25, 1.45, 1.4],
+        target: [-1.1, 1.42, 0.0],
+        fov: 38,
+        lensLabel: "50mm Anamorphic f/2.0",
+        axisNote: {
+          zh: "窗外低角度仰拍站长亚瑟，强调等级压迫感。",
+          en: "Low-angle glass POV highlighting command authority.",
+          ja: "少し煽りの構図で所長の威圧感を強調。"
+        }
+      },
+      actors: [
+        { id: "v03", label: "亚瑟站长 (V-03)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_n2_marcus_warning",
+    storyNodeId: "n2_marcus_clash",
+    shotCode: "SC-03B",
+    chapter: { zh: "第 2 夜 · 夺权危机", en: "NIGHT 02 · COMMAND", ja: "第2夜 · 指揮権争い" },
+    title: { zh: "安保队长马库斯焦急叩门", en: "Capt. Marcus Urgent Plea", ja: "マーカス隊長の緊急要請" },
+    framing: "50mm Handheld",
+    cameraMove: { zh: "应急红灯扫过头盔反光面罩，手持紧迫推近", en: "Handheld push-in lit by crimson corridor alarm strobes", ja: "非常赤い光が照らす手持ちクローズアップ" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/marcus.jpg",
+    videoSrc: "./videos/marcus/idle.mp4",
+    fallbackVideoSrc: "./videos/marcus/idle.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "red",
+      camera: {
+        pos: [0.35, 1.48, 1.5],
+        target: [-1.2, 1.44, 0.05],
+        fov: 40,
+        lensLabel: "50mm Anamorphic",
+        axisNote: {
+          zh: "红警灯光斜照马库斯侧脸，营造有人失踪后的紧张氛围。",
+          en: "Red beacon shadows capture post-disappearance paranoia.",
+          ja: "赤色警光が行方不明発生後の緊張を映す。"
+        }
+      },
+      actors: [
+        { id: "v04", label: "马库斯 (V-04)", pos: [-1.2, 0, 0.05], rotY: Math.PI / 2, color: "#eba834", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_n3_ingrid_sample",
+    storyNodeId: "n3_storm_blackout",
+    shotCode: "SC-04A",
+    chapter: { zh: "第 3 夜 · 磁暴断电", en: "NIGHT 03 · BLACKOUT", ja: "第3夜 · 磁気嵐停電" },
+    title: { zh: "英格丽德怀抱渗血低温样本罐", en: "Ingrid With Bleeding Cryo Canister", ja: "血塗れの凍結検体容器を持つイングリッド" },
+    framing: "50mm Cold Cyan",
+    cameraMove: { zh: "手电散光穿透磁暴暗影，在样本罐与脸部之间微摇聚焦", en: "Flashlight beam cuts through storm blackout between cryo tube and eyes", ja: "停電下、懐中電灯が検体と顔を照らす" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/ingrid.jpg",
+    videoSrc: "./videos/ingrid/lean_in.mp4",
+    fallbackVideoSrc: "./videos/ingrid/lean_in.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "cyan",
+      camera: {
+        pos: [0.2, 1.44, 1.45],
+        target: [-1.15, 1.38, 0.0],
+        fov: 38,
+        lensLabel: "50mm Blackout Thriller",
+        axisNote: {
+          zh: "磁暴全黑环境下仅凭手持应急光源切出临床冷峻感。",
+          en: "Handheld flashlight key-light under total Night 3 sensor blackout.",
+          ja: "全センサー停止中の手持ち光による緊張構図。"
+        }
+      },
+      actors: [
+        { id: "v06", label: "英格丽德 (V-06)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_n3_ana_truth",
+    storyNodeId: "n3_ana_betrayal",
+    shotCode: "SC-04B",
+    chapter: { zh: "第 3 夜 · 磁暴断电", en: "NIGHT 03 · BLACKOUT", ja: "第3夜 · 磁気嵐停電" },
+    title: { zh: "安娜急促喘息揭发供氧阴谋", en: "Ana O2 Sabotage Warning", ja: "アナの酸素妨害警告" },
+    framing: "65mm Tight Portrait",
+    cameraMove: { zh: "喘息雾气打在玻璃上，紧盯眼底恐惧的 65mm 超近景", en: "Breath fogs the frost glass as 65mm lens locks on terrified eyes", ja: "息で曇る窓越しの65mmクローズアップ" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/ana.jpg",
+    videoSrc: "./videos/ana/flinch.mp4",
+    fallbackVideoSrc: "./videos/ana/flinch.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "red",
+      camera: {
+        pos: [0.18, 1.42, 1.28],
+        target: [-1.05, 1.4, 0.0],
+        fov: 32,
+        lensLabel: "65mm Close-Up",
+        axisNote: {
+          zh: "贴窗雾气与微红供氧警报交错，突显时间所剩无几。",
+          en: "Steam mist and red O2 alarm beacon build claustrophobia.",
+          ja: "霧と酸素警報灯が切迫感を高める。"
+        }
+      },
+      actors: [
+        { id: "v05", label: "安娜 (V-05)", pos: [-1.05, 0, 0.0], rotY: Math.PI / 2, color: "#e04634", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_n4_linmei_plea",
+    storyNodeId: "n4_linmei_conspiracy",
+    shotCode: "SC-05A",
+    chapter: { zh: "第 4 夜 · 逃生叛变", en: "NIGHT 04 · MUTINY", ja: "第4夜 · 脱出反乱" },
+    title: { zh: "林梅的潜艇撤离密约", en: "Lin Mei's Escape Sub Deal", ja: "リンメイの潜水艦密約" },
+    framing: "50mm Calm Persuasion",
+    cameraMove: { zh: "极稳冷光中景，用镇定到诡异的笑意抛出潜艇诱饵", en: "Steadicam close medium spotlighting eerily calm persuasion", ja: "不気味なほど落ち着いた説得を捉える中景" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/linmei.jpg",
+    videoSrc: "./videos/linmei/lean_in.mp4",
+    fallbackVideoSrc: "./videos/linmei/lean_in.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "amber",
+      camera: {
+        pos: [0.22, 1.44, 1.38],
+        target: [-1.1, 1.42, 0.0],
+        fov: 38,
+        lensLabel: "50mm Anamorphic",
+        axisNote: {
+          zh: "与前夜恐慌访客相反，用过度理性的冷静制造“高阶伪人”不安感。",
+          en: "Uncanny composure contrasts with prior panicked arrivals.",
+          ja: "異常な冷静さがかえって不気味さを際立たせる。"
+        }
+      },
+      actors: [
+        { id: "v07", label: "林梅 (V-07)", pos: [-1.1, 0, 0.0], rotY: Math.PI / 2, color: "#eba834", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_n4_hannah_tape",
+    storyNodeId: "n4_hannah_whistle",
+    shotCode: "SC-05B",
+    chapter: { zh: "第 4 夜 · 逃生叛变", en: "NIGHT 04 · MUTINY", ja: "第4夜 · 脱出反乱" },
+    title: { zh: "汉娜举起前任 #08 黑匣子", en: "Hannah Holds Up #08's Black Box", ja: "ハンナの#08ブラックボックス" },
+    framing: "40mm Storm Handheld",
+    cameraMove: { zh: "镜头从沾血黑匣子快甩回汉娜撕裂般呐喊的面部", en: "Rack focus from battered recorder to Hannah screaming through sleet", ja: "傷だらけの録音機から叫ぶハンナへフォーカス移動" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/hannah.jpg",
+    videoSrc: "./videos/hannah/flinch.mp4",
+    fallbackVideoSrc: "./videos/hannah/flinch.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "red",
+      camera: {
+        pos: [0.28, 1.46, 1.48],
+        target: [-1.15, 1.42, 0.0],
+        fov: 42,
+        lensLabel: "40mm Storm Chaos",
+        axisNote: {
+          zh: "黎明前最高烈度的外部冲击镜头，将黑匣子悬念推向顶峰。",
+          en: "Peak pre-dawn chaos elevating #08's secret into Night 5.",
+          ja: "夜明け前最大のクライマックス演出。"
+        }
+      },
+      actors: [
+        { id: "v08", label: "汉娜 (V-08)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#49b882", speaking: true }
+      ]
+    }
+  },
+  {
+    id: "shot_n5_mirror_confront",
+    storyNodeId: "n5_final_mirror",
+    shotCode: "SC-06A",
+    chapter: { zh: "第 5 夜 · 终局结局", en: "NIGHT 05 · FINALES", ja: "第5夜 · 終局結末" },
+    title: { zh: "第 5 夜镜面对峙：窗外另一个“你”", en: "Night 5 Mirror: Your Double Outside", ja: "第5夜鏡像対峙：外のもう一人の自分" },
+    framing: "50mm Hitchcock Double",
+    cameraMove: { zh: "极昼绯红天光与青蓝站内光交汇，门外自己的替身缓缓抬头开口", en: "Blood-red polar dawn meets booth cyan as OP#09's double locks eyes", ja: "極地の朝焼けと室内の冷光が交差する鏡像対決" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/operator09.jpg",
+    videoSrc: "./videos/operator09/idle.mp4",
+    fallbackVideoSrc: "./videos/operator09/idle.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "red",
+      camera: {
+        pos: [0.2, 1.44, 1.35],
+        target: [-1.1, 1.42, 0.0],
+        fov: 38,
+        lensLabel: "50mm Mirror Climax",
+        axisNote: {
+          zh: "对称构图形成“防爆窗即镜面”的心理惊悚高潮。",
+          en: "Symmetrical framing turns the blast window into a mirror.",
+          ja: "対称構図が防爆窓を『鏡』に見立てる最高潮カット。"
+        }
+      },
+      actors: [
+        { id: "op09_double", label: "另一个你 (#09 镜像)", pos: [-1.1, 0, 0.0], rotY: Math.PI / 2, color: "#e04634", speaking: true },
+        { id: "op09", label: "值班员 #09 (玩家)", pos: [1.3, 0, 0.1], rotY: -Math.PI / 2, color: "#49b882" }
+      ]
+    }
+  },
+  {
+    id: "shot_n5_ending_dawn",
+    storyNodeId: "ending_dawn_break",
+    shotCode: "SC-END-A",
+    chapter: { zh: "第 5 夜 · 终局结局", en: "NIGHT 05 · FINALES", ja: "第5夜 · 終局結末" },
+    title: { zh: "真结局 A：破冰救援潜艇冲出极昼", en: "Ending A: Submarine Breaks The Pack Ice", ja: "真結末A：氷を砕く救助潜水艦" },
+    framing: "24mm Epilogue Helicopter Wide",
+    cameraMove: { zh: "航拍式大远景拉升：黑钢救援潜艇撞碎十米冰脊浮出斯瓦尔巴红日海面", en: "Sweeping aerial pull-back as rescue sub breaches sunlit Svalbard ice", ja: "朝日を受ける砕氷潜水艦の壮大な空撮フィナーレ" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/lobby_bg.jpg",
+    videoSrc: "./videos/chamber/admit.mp4",
+    fallbackVideoSrc: "./videos/chamber/admit.mp4",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "amber",
+      camera: {
+        pos: [2.8, 2.6, 5.2],
+        target: [-2.0, 0.6, 0.0],
+        fov: 52,
+        lensLabel: "24mm Anamorphic Sunrise Epilogue",
+        axisNote: {
+          zh: "长夜结束，画面切出狭小岗亭进入开阔冰原日出，完成全片情绪释放。",
+          en: "Leaves the claustrophobic booth for sweeping polar dawn.",
+          ja: "閉鎖空間から広大な極地の夜明けへ解放される終幕ショット。"
+        }
+      },
+      actors: [
+        { id: "sub", label: "破冰救援潜艇", pos: [-2.0, 0.2, 0.0], rotY: 0.4, color: "#49b882" }
+      ]
+    }
   }
 ];
 

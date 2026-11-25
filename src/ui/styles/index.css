@@ -6757,3 +6757,83 @@ dialog::backdrop,
     min-height: 320px;
   }
 }
+
+/* ==================== PURE CINEMA MODE & TWO-TRACK LOBBY ==================== */
+.topbar.is-cinema-mode .cinema-hide {
+  display: none !important;
+}
+
+.gta-menu-item.challenge {
+  border-color: rgba(74, 163, 200, 0.42);
+  background: linear-gradient(115deg, rgba(16, 31, 44, 0.92), rgba(10, 18, 26, 0.88));
+}
+
+.gta-menu-item.challenge:hover {
+  border-color: rgba(74, 163, 200, 0.85);
+}
+
+.fmv-choice-btn.is-side-quest {
+  border-color: rgba(235, 168, 52, 0.5);
+  background: linear-gradient(120deg, rgba(44, 32, 12, 0.82), rgba(16, 18, 22, 0.88));
+}
+
+.fmv-choice-btn.is-side-quest:hover {
+  border-color: rgba(246, 195, 86, 0.95);
+}
+
+.fmv-ending-card {
+  margin-top: 10px;
+  padding: 14px 16px;
+  border: 1px solid rgba(235, 168, 52, 0.55);
+  background: linear-gradient(145deg, rgba(10, 14, 18, 0.94), rgba(22, 27, 34, 0.9));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fmv-ending-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.fmv-ending-badge {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--amber-bright);
+  padding: 3px 9px;
+  border: 1px solid rgba(235, 168, 52, 0.55);
+  background: rgba(235, 168, 52, 0.14);
+}
+
+.fmv-ending-stats {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #cfe0ea;
+}
+
+.fmv-ending-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.side-quest-return-bar {
+  position: relative;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 14px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(235, 168, 52, 0.5);
+  background: rgba(14, 20, 26, 0.92);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  color: #f4d68c;
+}
