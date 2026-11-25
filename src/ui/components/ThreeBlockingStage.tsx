@@ -2,13 +2,35 @@ import { Button } from "@ui-sdk/react/button";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { tl } from "../../game/i18n.js";
-import type { StoryboardShot } from "../../game/production-board.js";
+import {
+  resolveAssetByTag,
+  type CameraBlocking3D,
+  type StoryboardShot,
+  type WhiteboxRenderMode
+} from "../../game/production-board.js";
+import {
+  createOutpostWhiteboxSet,
+  rebuildShotBlockingRig,
+  renderShotWhiteboxSnapshot,
+  type OutpostSceneHandles
+} from "../../game/three-whitebox-renderer.js";
 import type { Locale } from "../../game/types.js";
+
+export interface CapturedShotFrame {
+  clayDataUrl: string | null;
+  depthDataUrl: string | null;
+  litDataUrl: string | null;
+  cameraOverride: CameraBlocking3D;
+  capturedAt: number;
+}
 
 interface Props {
   shot: StoryboardShot;
   lang: Locale;
   motionPaused: boolean;
+  cameraOverride?: CameraBlocking3D;
+  onChangeCameraOverride?: (shotId: string, nextCam: CameraBlocking3D) => void;
+  onCaptureToStoryboard?: (shotId: string, frame: CapturedShotFrame) => void;
 }
 
 type ViewMode = "orbit" | "pov";
@@ -19,15 +41,87 @@ const ALERT_COLORS: Record<"amber" | "red" | "cyan", number> = {
   cyan: 0x5bbad5
 };
 
-export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
-  const hostRef = useRef<HTMLDivElement | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("orbit");
-  const [webglReady, setWebglReady] = useState(true);
+const LENS_PRESETS: ReadonlyArray<{ mm: number; fov: number; lensLabel: string }> = [
+  { mm: 24, fov: 73, lensLabel: "24mm Anamorphic" },
+  { mm: 35, fov: 54, lensLabel: "35mm Anamorphic" },
+  { mm: 50, fov: 39, lensLabel: "50mm Anamorphic" },
+  { mm: 65, fov: 31, lensLabel: "65mm Anamorphic" },
+  { mm: 85, fov: 24, lensLabel: "85mm Anamorphic" }
+];
 
+const AXIS_CONFIG = [
+  { key: "X", idx: 0, min: -10, max: 12, step: 0.1 },
+  { key: "Y", idx: 1, min: 0.1, max: 6, step: 0.05 },
+  { key: "Z", idx: 2, min: -9, max: 9, step: 0.1 }
+] as const;
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
+}
+
+function cloneCamera(cam: CameraBlocking3D): CameraBlocking3D {
+  return {
+    ...cam,
+    pos: [cam.pos[0], cam.pos[1], cam.pos[2]],
+    target: [cam.target[0], cam.target[1], cam.target[2]]
+  };
+}
+
+function clearGroup(grp: THREE.Group): void {
+  while (grp.children.length > 0) {
+    const ch = grp.children[0];
+    if (!ch) break;
+    grp.remove(ch);
+    ch.traverse((obj) => {
+      if (
+        obj instanceof THREE.Mesh ||
+        obj instanceof THREE.LineSegments ||
+        obj instanceof THREE.Line ||
+        obj instanceof THREE.Points
+      ) {
+        obj.geometry?.dispose?.();
+        const m = obj.material;
+        if (Array.isArray(m)) m.forEach((mm) => mm.dispose?.());
+        else m?.dispose?.();
+      }
+    });
+  }
+}
+
+export function ThreeBlockingStage({
+  shot,
+  lang,
+  motionPaused,
+  cameraOverride,
+  onChangeCameraOverride,
+  onCaptureToStoryboard
+}: Props) {
+  const hostRef = useRef<HTMLDivElement | null>(null);
+  const canvasMountRef = useRef<HTMLDivElement | null>(null);
+
+  const [renderMode, setRenderMode] = useState<WhiteboxRenderMode>("clay");
+  const [viewMode, setViewMode] = useState<ViewMode>("orbit");
+  const [showSafeFrame, setShowSafeFrame] = useState(true);
+  const [webglReady, setWebglReady] = useState(true);
+  const [captureSynced, setCaptureSynced] = useState(false);
+  const [localCamOverride, setLocalCamOverride] = useState<CameraBlocking3D | undefined>(cameraOverride);
+
+  useEffect(() => {
+    setLocalCamOverride(cameraOverride);
+  }, [shot.id, cameraOverride]);
+
+  const effectiveCam: CameraBlocking3D = localCamOverride ?? shot.blocking.camera;
+
+  const renderModeRef = useRef<WhiteboxRenderMode>(renderMode);
+  renderModeRef.current = renderMode;
   const viewModeRef = useRef<ViewMode>(viewMode);
   viewModeRef.current = viewMode;
   const motionPausedRef = useRef(motionPaused);
   motionPausedRef.current = motionPaused;
+  const activeShotRef = useRef(shot);
+  activeShotRef.current = shot;
+  const effectiveCamRef = useRef<CameraBlocking3D>(effectiveCam);
+  effectiveCamRef.current = effectiveCam;
 
   const orbitRef = useRef({
     yaw: -0.68,
@@ -38,17 +132,26 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
     lastY: 0
   });
 
-  const activeShotRef = useRef(shot);
-  activeShotRef.current = shot;
-
-  // Trigger scene rebuild of actor & camera rigs cleanly whenever `shot` changes
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const outpostHandlesRef = useRef<OutpostSceneHandles | null>(null);
   const dynamicGroupRef = useRef<THREE.Group | null>(null);
   const camRigGroupRef = useRef<THREE.Group | null>(null);
-  const alertLightRef = useRef<THREE.PointLight | null>(null);
+  const syncTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (syncTimerRef.current !== null) {
+        window.clearTimeout(syncTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const host = hostRef.current;
-    if (!host) return;
+    const mount = canvasMountRef.current;
+    if (!host || !mount) return;
 
     let renderer: THREE.WebGLRenderer | null = null;
     try {
@@ -58,7 +161,12 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
         setWebglReady(false);
         return;
       }
-      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true,
+        powerPreference: "high-performance"
+      });
     } catch {
       setWebglReady(false);
       return;
@@ -71,131 +179,27 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
     const initH = Math.max(260, host.clientHeight || 420);
     renderer.setSize(initW, initH);
     renderer.domElement.className = "three-blocking-canvas";
-    host.innerHTML = "";
-    host.appendChild(renderer.domElement);
+    mount.innerHTML = "";
+    mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x03070b, 0.045);
+    const camera = new THREE.PerspectiveCamera(48, initW / initH, 0.25, 24);
 
-    const camera = new THREE.PerspectiveCamera(48, initW / initH, 0.1, 60);
+    const outpostHandles = createOutpostWhiteboxSet(scene);
+    outpostHandles.applyRenderMode(renderModeRef.current);
 
-    // Architectural Lighting (Polar Cyan Exterior + Sodium Amber Booth)
-    scene.add(new THREE.AmbientLight(0x88b4c8, 0.72));
-    const dirLight = new THREE.DirectionalLight(0xd9f0fa, 0.9);
-    dirLight.position.set(-4, 7, 5);
-    scene.add(dirLight);
-
-    const boothWarmLight = new THREE.PointLight(0xeba834, 2.8, 8);
-    boothWarmLight.position.set(0, 2.3, 1.8);
-    scene.add(boothWarmLight);
-
-    const blizzardRimLight = new THREE.PointLight(0x5bbad5, 3.2, 10);
-    blizzardRimLight.position.set(-1.5, 2.6, -3.5);
-    scene.add(blizzardRimLight);
-
-    const alertLight = new THREE.PointLight(0xeba834, 2.2, 9);
-    alertLight.position.set(5.5, 2.2, -0.8);
-    scene.add(alertLight);
-    alertLightRef.current = alertLight;
-
-    // Outpost 0 Static Physical Architecture Set
-    const staticSet = new THREE.Group();
-    scene.add(staticSet);
-
-    const grid = new THREE.GridHelper(20, 20, 0x2a4858, 0x101c26);
-    staticSet.add(grid);
-
-    const steelMat = new THREE.MeshStandardMaterial({
-      color: 0x101922,
-      roughness: 0.72,
-      metalness: 0.45
-    });
-    const amberEdgeMat = new THREE.MeshStandardMaterial({
-      color: 0xeba834,
-      emissive: 0x6b4408,
-      roughness: 0.35
-    });
-    const cyanGlassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x5bbad5,
-      transparent: true,
-      opacity: 0.24,
-      roughness: 0.12,
-      metalness: 0.1
-    });
-
-    // Blast Window Wall (Z = 0) with Central Viewport Cutout Frame
-    const frameLeft = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.8, 0.18), steelMat);
-    frameLeft.position.set(-2.3, 1.4, 0);
-    const frameRight = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.8, 0.18), steelMat);
-    frameRight.position.set(2.1, 1.4, 0);
-    const frameSill = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.85, 0.18), steelMat);
-    frameSill.position.set(0, 0.425, 0);
-    const frameHeader = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.45, 0.18), steelMat);
-    frameHeader.position.set(0, 2.575, 0);
-    const blastGlass = new THREE.Mesh(new THREE.BoxGeometry(2.05, 1.52, 0.04), cyanGlassMat);
-    blastGlass.position.set(0, 1.61, 0);
-    staticSet.add(frameLeft, frameRight, frameSill, frameHeader, blastGlass);
-
-    // Amber window sill bezel highlights Z=0 glass plane cleanly
-    const sillTrim = new THREE.Mesh(new THREE.BoxGeometry(2.08, 0.05, 0.22), amberEdgeMat);
-    sillTrim.position.set(0, 0.85, 0);
-    staticSet.add(sillTrim);
-
-    // Operator #09 Console Desk (Booth South Side Z = +1.45)
-    const consoleDesk = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.78, 0.72), steelMat);
-    consoleDesk.position.set(0, 0.39, 1.45);
-    const consoleTrim = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.04, 0.48), amberEdgeMat);
-    consoleTrim.position.set(0, 0.8, 1.42);
-    staticSet.add(consoleDesk, consoleTrim);
-
-    // Inner Medical Corridor Wall & Airlock Frame (X = +4.2 .. +7.6)
-    const corridorDeck = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.04, 7.2), steelMat);
-    corridorDeck.position.set(5.9, 0.02, -0.2);
-    const airlockDoor = new THREE.Mesh(new THREE.BoxGeometry(0.18, 2.5, 1.45), steelMat);
-    airlockDoor.position.set(7.2, 1.25, -0.8);
-    const airlockSeal = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.52, 0.08), amberEdgeMat);
-    airlockSeal.position.set(7.2, 1.26, -0.05);
-    staticSet.add(corridorDeck, airlockDoor, airlockSeal);
-
-    // 180-Degree Continuity Axis Line along Z=0
-    const axisPts = [new THREE.Vector3(-4.5, 0.03, 0), new THREE.Vector3(4.5, 0.03, 0)];
-    const axisGeo = new THREE.BufferGeometry().setFromPoints(axisPts);
-    const axisLine = new THREE.Line(
-      axisGeo,
-      new THREE.LineDashedMaterial({ color: 0xeba834, dashSize: 0.25, gapSize: 0.14 })
-    );
-    axisLine.computeLineDistances();
-    staticSet.add(axisLine);
-
-    // Outer Blizzard Drifting 3D Snow Particles (Z < 0)
-    const snowCount = 240;
-    const snowPositions = new Float32Array(snowCount * 3);
-    for (let i = 0; i < snowCount; i++) {
-      snowPositions[i * 3] = (Math.random() - 0.5) * 9.5;
-      snowPositions[i * 3 + 1] = Math.random() * 3.4;
-      snowPositions[i * 3 + 2] = -0.35 - Math.random() * 6.5;
-    }
-    const snowGeo = new THREE.BufferGeometry();
-    const snowPosAttr = new THREE.BufferAttribute(snowPositions, 3);
-    snowGeo.setAttribute("position", snowPosAttr);
-    const snowMat = new THREE.PointsMaterial({
-      color: 0xbde6f5,
-      size: 0.06,
-      transparent: true,
-      opacity: 0.72
-    });
-    const snowPoints = new THREE.Points(snowGeo, snowMat);
-    scene.add(snowPoints);
-
-    // Dynamic groups for Actors & Camera Frustum Rig (rebuilt cleanly per shot)
     const dynamicGroup = new THREE.Group();
     const camRigGroup = new THREE.Group();
     scene.add(dynamicGroup);
     scene.add(camRigGroup);
+
+    rendererRef.current = renderer;
+    sceneRef.current = scene;
+    cameraRef.current = camera;
+    outpostHandlesRef.current = outpostHandles;
     dynamicGroupRef.current = dynamicGroup;
     camRigGroupRef.current = camRigGroup;
 
-    // Resize & Orbit Input
     const resizeObs = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const w = Math.max(280, Math.round(entry.contentRect.width));
@@ -243,51 +247,55 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
     let rafId = 0;
     const lookTarget = new THREE.Vector3(0, 1.2, 0);
     const desiredCamPos = new THREE.Vector3();
+    const desiredTarget = new THREE.Vector3();
 
     const animate = () => {
       const curShot = activeShotRef.current;
+      const curCam = effectiveCamRef.current;
+      const snowAttr = outpostHandles.snowPosAttr;
 
-      // Drift blizzard particles outside window
-      if (!motionPausedRef.current) {
-        for (let i = 0; i < snowCount; i++) {
-          const xi = i * 3;
-          const yi = xi + 1;
-          const nx = (snowPositions[xi] ?? 0) + 0.022;
-          const ny = (snowPositions[yi] ?? 0) - 0.009;
-          snowPositions[xi] = nx > 4.75 ? -4.75 : nx;
-          snowPositions[yi] = ny < 0 ? 3.4 : ny;
+      if (!motionPausedRef.current && snowAttr) {
+        for (let i = 0; i < snowAttr.count; i++) {
+          const nx = snowAttr.getX(i) + 0.022;
+          const ny = snowAttr.getY(i) - 0.009;
+          snowAttr.setX(i, nx > 4.75 ? -4.75 : nx);
+          snowAttr.setY(i, ny < 0 ? 3.4 : ny);
         }
-        snowPosAttr.needsUpdate = true;
+        snowAttr.needsUpdate = true;
       }
 
       if (viewModeRef.current === "pov") {
         camRigGroup.visible = false;
-        const [cx, cy, cz] = curShot.blocking.camera.pos;
-        const [tx, ty, tz] = curShot.blocking.camera.target;
+        const [cx, cy, cz] = curCam.pos;
+        const [tx, ty, tz] = curCam.target;
         desiredCamPos.set(cx, cy, cz);
-        camera.position.lerp(desiredCamPos, motionPausedRef.current ? 1 : 0.14);
-        lookTarget.lerp(new THREE.Vector3(tx, ty, tz), motionPausedRef.current ? 1 : 0.14);
-        if (Math.abs(camera.fov - curShot.blocking.camera.fov) > 0.2) {
-          camera.fov += (curShot.blocking.camera.fov - camera.fov) * 0.18;
+        desiredTarget.set(tx, ty, tz);
+        const lerpAlpha = motionPausedRef.current ? 1 : 0.16;
+        camera.position.lerp(desiredCamPos, lerpAlpha);
+        lookTarget.lerp(desiredTarget, lerpAlpha);
+        if (Math.abs(camera.fov - curCam.fov) > 0.15) {
+          camera.fov += (curCam.fov - camera.fov) * (motionPausedRef.current ? 1 : 0.22);
           camera.updateProjectionMatrix();
         }
         camera.lookAt(lookTarget);
       } else {
         camRigGroup.visible = true;
         const { yaw, pitch, distance } = orbitRef.current;
-        const centerTarget =
-          curShot.blocking.zone === "inner_corridor"
-            ? new THREE.Vector3(5.4, 1.2, -0.4)
-            : new THREE.Vector3(0.2, 1.15, 0.1);
+        if (curShot.blocking.zone === "inner_corridor") {
+          desiredTarget.set(5.4, 1.2, -0.4);
+        } else {
+          desiredTarget.set(0.2, 1.15, 0.1);
+        }
         desiredCamPos.set(
-          centerTarget.x + Math.sin(yaw) * Math.cos(pitch) * distance,
-          centerTarget.y + Math.sin(pitch) * distance,
-          centerTarget.z + Math.cos(yaw) * Math.cos(pitch) * distance
+          desiredTarget.x + Math.sin(yaw) * Math.cos(pitch) * distance,
+          desiredTarget.y + Math.sin(pitch) * distance,
+          desiredTarget.z + Math.cos(yaw) * Math.cos(pitch) * distance
         );
-        camera.position.lerp(desiredCamPos, motionPausedRef.current ? 1 : 0.16);
-        lookTarget.lerp(centerTarget, motionPausedRef.current ? 1 : 0.16);
-        if (Math.abs(camera.fov - 48) > 0.2) {
-          camera.fov += (48 - camera.fov) * 0.16;
+        const lerpAlpha = motionPausedRef.current ? 1 : 0.16;
+        camera.position.lerp(desiredCamPos, lerpAlpha);
+        lookTarget.lerp(desiredTarget, lerpAlpha);
+        if (Math.abs(camera.fov - 48) > 0.15) {
+          camera.fov += (48 - camera.fov) * (motionPausedRef.current ? 1 : 0.18);
           camera.updateProjectionMatrix();
         }
         camera.lookAt(lookTarget);
@@ -306,149 +314,150 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
       window.removeEventListener("pointerup", onPointerUp);
       domEl.removeEventListener("wheel", onWheel);
 
-      scene.traverse((obj) => {
-        if (obj instanceof THREE.Mesh || obj instanceof THREE.Line || obj instanceof THREE.Points) {
-          obj.geometry?.dispose?.();
-          const m = obj.material;
-          if (Array.isArray(m)) m.forEach((mm) => mm.dispose?.());
-          else m?.dispose?.();
-        }
-      });
+      clearGroup(dynamicGroup);
+      clearGroup(camRigGroup);
+      outpostHandles.dispose();
       renderer?.dispose();
+      domEl.remove();
+
+      rendererRef.current = null;
+      sceneRef.current = null;
+      cameraRef.current = null;
+      outpostHandlesRef.current = null;
       dynamicGroupRef.current = null;
       camRigGroupRef.current = null;
-      alertLightRef.current = null;
     };
   }, []);
 
-  // Update 3D Actors & Cinema Camera Frustum Rig cleanly when `shot` changes
   useEffect(() => {
     const dynamicGroup = dynamicGroupRef.current;
     const camRigGroup = camRigGroupRef.current;
-    const alertLight = alertLightRef.current;
-    if (!dynamicGroup || !camRigGroup) return;
+    const outpostHandles = outpostHandlesRef.current;
+    if (!dynamicGroup || !camRigGroup || !outpostHandles) return;
 
-    const clearGroup = (grp: THREE.Group) => {
-      while (grp.children.length > 0) {
-        const ch = grp.children[0]!;
-        grp.remove(ch);
-        ch.traverse((obj) => {
-          if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments || obj instanceof THREE.Line) {
-            obj.geometry?.dispose?.();
-            const m = obj.material;
-            if (Array.isArray(m)) m.forEach((mm) => mm.dispose?.());
-            else m?.dispose?.();
-          }
-        });
+    outpostHandles.alertLight.color.setHex(ALERT_COLORS[shot.blocking.alertLight]);
+    rebuildShotBlockingRig(dynamicGroup, camRigGroup, shot, renderMode, effectiveCam);
+    outpostHandles.applyRenderMode(renderMode);
+  }, [shot, renderMode, effectiveCam]);
+
+  const commitCameraOverride = (nextCam: CameraBlocking3D) => {
+    setLocalCamOverride(nextCam);
+    onChangeCameraOverride?.(shot.id, nextCam);
+  };
+
+  const handleSelectLens = (preset: { mm: number; fov: number; lensLabel: string }) => {
+    const nextCam = cloneCamera(effectiveCam);
+    nextCam.fov = preset.fov;
+    nextCam.lensLabel = preset.lensLabel;
+    commitCameraOverride(nextCam);
+  };
+
+  const handleAxisChange = (field: "pos" | "target", axisIdx: 0 | 1 | 2, nextVal: number) => {
+    const nextCam = cloneCamera(effectiveCam);
+    nextCam[field][axisIdx] = round2(nextVal);
+    commitCameraOverride(nextCam);
+  };
+
+  const handleResetCamera = () => {
+    const defaultCam = cloneCamera(shot.blocking.camera);
+    setLocalCamOverride(undefined);
+    onChangeCameraOverride?.(shot.id, defaultCam);
+  };
+
+  const handleCaptureToStoryboard = () => {
+    let clayDataUrl = renderShotWhiteboxSnapshot(shot, {
+      renderMode: "clay",
+      width: 640,
+      height: 360,
+      cameraOverride: effectiveCam
+    });
+    let depthDataUrl = renderShotWhiteboxSnapshot(shot, {
+      renderMode: "depth",
+      width: 640,
+      height: 360,
+      cameraOverride: effectiveCam
+    });
+    let litDataUrl = renderShotWhiteboxSnapshot(shot, {
+      renderMode: "lit",
+      width: 640,
+      height: 360,
+      cameraOverride: effectiveCam
+    });
+
+    const fallbackLiveUrl = (() => {
+      try {
+        const renderer = rendererRef.current;
+        const scene = sceneRef.current;
+        const camera = cameraRef.current;
+        if (!renderer) return null;
+        if (scene && camera) renderer.render(scene, camera);
+        return renderer.domElement.toDataURL("image/png");
+      } catch {
+        return null;
       }
+    })();
+
+    if (renderMode === "clay" && !clayDataUrl) clayDataUrl = fallbackLiveUrl;
+    if (renderMode === "depth" && !depthDataUrl) depthDataUrl = fallbackLiveUrl;
+    if (renderMode === "lit" && !litDataUrl) litDataUrl = fallbackLiveUrl;
+
+    const frame: CapturedShotFrame = {
+      clayDataUrl,
+      depthDataUrl,
+      litDataUrl,
+      cameraOverride: cloneCamera(effectiveCam),
+      capturedAt: Date.now()
     };
 
-    clearGroup(dynamicGroup);
-    clearGroup(camRigGroup);
-
-    if (alertLight) {
-      alertLight.color.setHex(ALERT_COLORS[shot.blocking.alertLight]);
+    onCaptureToStoryboard?.(shot.id, frame);
+    setCaptureSynced(true);
+    if (syncTimerRef.current !== null) {
+      window.clearTimeout(syncTimerRef.current);
     }
+    syncTimerRef.current = window.setTimeout(() => {
+      setCaptureSynced(false);
+    }, 2400);
+  };
 
-    // Build Character Blocking Rigs
-    for (const actor of shot.blocking.actors) {
-      const rig = new THREE.Group();
-      rig.position.set(actor.pos[0], actor.pos[1], actor.pos[2]);
-      rig.rotation.y = actor.rotY;
-
-      const mat = new THREE.MeshStandardMaterial({
-        color: actor.color,
-        emissive: actor.speaking ? actor.color : "#000000",
-        emissiveIntensity: actor.speaking ? 0.38 : 0,
-        roughness: 0.45
-      });
-
-      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.3, 1.15, 16), mat);
-      torso.position.y = 0.72;
-      const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 12), mat);
-      head.position.y = 1.48;
-      const nose = new THREE.Mesh(
-        new THREE.ConeGeometry(0.06, 0.14, 8),
-        new THREE.MeshBasicMaterial({ color: 0xffffff })
-      );
-      nose.rotation.x = Math.PI / 2;
-      nose.position.set(0, 1.48, 0.18);
-
-      const baseRing = new THREE.Mesh(
-        new THREE.RingGeometry(0.32, actor.speaking ? 0.48 : 0.39, 24),
-        new THREE.MeshBasicMaterial({
-          color: actor.color,
-          side: THREE.DoubleSide,
-          transparent: true,
-          opacity: actor.speaking ? 0.92 : 0.48
-        })
-      );
-      baseRing.rotation.x = -Math.PI / 2;
-      baseRing.position.y = 0.04;
-
-      rig.add(torso, head, nose, baseRing);
-      dynamicGroup.add(rig);
-    }
-
-    // Build Cinema Camera Body & Viewing Frustum Pyramid
-    const [cx, cy, cz] = shot.blocking.camera.pos;
-    const [tx, ty, tz] = shot.blocking.camera.target;
-    const camPos = new THREE.Vector3(cx, cy, cz);
-    const camTgt = new THREE.Vector3(tx, ty, tz);
-
-    const camContainer = new THREE.Group();
-    camContainer.position.copy(camPos);
-    camContainer.lookAt(camTgt);
-
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(0.28, 0.2, 0.36),
-      new THREE.MeshStandardMaterial({ color: 0x1e2832, metalness: 0.7, roughness: 0.3 })
-    );
-    const lens = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.08, 0.09, 0.22, 16),
-      new THREE.MeshStandardMaterial({ color: 0xeba834, metalness: 0.8, roughness: 0.2 })
-    );
-    lens.rotation.x = Math.PI / 2;
-    lens.position.z = 0.24;
-    camContainer.add(body, lens);
-
-    // Wireframe FOV Frustum Cone extending halfway toward target
-    const dist = Math.max(1.2, Math.min(4.2, camPos.distanceTo(camTgt)));
-    const halfH = Math.tan(THREE.MathUtils.degToRad(shot.blocking.camera.fov / 2)) * dist;
-    const halfW = halfH * (16 / 9);
-    const o = new THREE.Vector3(0, 0, 0.28);
-    const tlPt = new THREE.Vector3(-halfW, halfH, dist);
-    const trPt = new THREE.Vector3(halfW, halfH, dist);
-    const blPt = new THREE.Vector3(-halfW, -halfH, dist);
-    const brPt = new THREE.Vector3(halfW, -halfH, dist);
-
-    const frustumPts = [
-      o, tlPt, o, trPt, o, blPt, o, brPt,
-      tlPt, trPt, trPt, brPt, brPt, blPt, blPt, tlPt
-    ];
-    const frustumGeo = new THREE.BufferGeometry().setFromPoints(frustumPts);
-    const frustumLines = new THREE.LineSegments(
-      frustumGeo,
-      new THREE.LineBasicMaterial({ color: 0xeba834, transparent: true, opacity: 0.85 })
-    );
-    camContainer.add(frustumLines);
-    camRigGroup.add(camContainer);
-
-    // Target Reticle Sphere
-    const tgtSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.09, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xe04634, wireframe: true })
-    );
-    tgtSphere.position.copy(camTgt);
-    camRigGroup.add(tgtSphere);
-  }, [shot]);
+  const boundAssets = (shot.boundAssetTags ?? [])
+    .map((tag) => resolveAssetByTag(tag))
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
 
   return (
     <div className="three-stage-wrap">
       <div className="three-toolbar">
         <div className="three-toolbar-meta">
           <span className="fmv-code-badge">{shot.shotCode}</span>
-          <span className="three-lens-badge">{shot.blocking.camera.lensLabel} · FOV {shot.blocking.camera.fov}°</span>
+          <span className="three-lens-badge">
+            {effectiveCam.lensLabel} · FOV {effectiveCam.fov}°
+          </span>
+        </div>
+
+        <div className="three-mode-switch" role="group" aria-label="White-Box Render Mode">
+          <Button
+            type="button"
+            id="btn-three-mode-clay"
+            className={`ctrl-btn ${renderMode === "clay" ? "amber" : ""}`}
+            onClick={() => setRenderMode("clay")}
+          >
+            {tl({ zh: "白模 Clay", en: "Clay", ja: "白模 Clay" }, lang)}
+          </Button>
+          <Button
+            type="button"
+            id="btn-three-mode-depth"
+            className={`ctrl-btn ${renderMode === "depth" ? "amber" : ""}`}
+            onClick={() => setRenderMode("depth")}
+          >
+            {tl({ zh: "深度图 Depth", en: "Depth", ja: "深度 Depth" }, lang)}
+          </Button>
+          <Button
+            type="button"
+            id="btn-three-mode-lit"
+            className={`ctrl-btn ${renderMode === "lit" ? "amber" : ""}`}
+            onClick={() => setRenderMode("lit")}
+          >
+            {tl({ zh: "光影 Lit", en: "Lit", ja: "照明 Lit" }, lang)}
+          </Button>
         </div>
 
         <div className="three-mode-switch" role="group" aria-label="3D Viewport Camera Mode">
@@ -457,7 +466,7 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
             className={`ctrl-btn ${viewMode === "orbit" ? "amber" : ""}`}
             onClick={() => setViewMode("orbit")}
           >
-            {tl({ zh: "导演全局调度 (可拖拽)", en: "DIRECTOR ORBIT (DRAG)", ja: "全体俯瞰 (ドラッグ)" }, lang)}
+            {tl({ zh: "导演全局调度 (Orbit)", en: "Director Orbit", ja: "全体俯瞰 (Orbit)" }, lang)}
           </Button>
           <Button
             type="button"
@@ -465,16 +474,313 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
             className={`ctrl-btn ${viewMode === "pov" ? "amber" : ""}`}
             onClick={() => setViewMode("pov")}
           >
-            {tl({ zh: "实拍机位预览 (POV)", en: "CAMERA LENS POV", ja: "カメラ実写視点" }, lang)}
+            {tl({ zh: "实拍机位取景 (POV)", en: "Camera POV", ja: "実写視点 (POV)" }, lang)}
           </Button>
+          <Button
+            type="button"
+            id="btn-three-safeframe"
+            className={`ctrl-btn ${showSafeFrame ? "amber" : ""}`}
+            aria-pressed={showSafeFrame}
+            onClick={() => setShowSafeFrame((prev) => !prev)}
+          >
+            {tl({ zh: "安全框 16:9 / 2.39:1", en: "Safe Frame 2.39:1", ja: "安全枠 2.39:1" }, lang)}
+          </Button>
+        </div>
+
+        <div className="three-capture-group" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <Button
+            type="button"
+            id="btn-capture-whitebox"
+            className="ctrl-btn amber"
+            onClick={handleCaptureToStoryboard}
+          >
+            {tl(
+              {
+                zh: "📸 拍摄此 3D 机位到分镜板",
+                en: "📸 Capture 3D POV to Storyboard",
+                ja: "📸 3Dカメラを絵コンテへ撮影"
+              },
+              lang
+            )}
+          </Button>
+          {captureSynced ? (
+            <span
+              className="three-capture-badge"
+              style={{
+                padding: "3px 8px",
+                fontSize: "0.72rem",
+                fontFamily: "var(--font-mono)",
+                color: "var(--safe-text)",
+                background: "var(--safe-soft)",
+                border: "1px solid var(--safe-admit)"
+              }}
+            >
+              {tl({ zh: "已同步至分镜板 ✓", en: "Synced to Storyboard ✓", ja: "絵コンテに同期済 ✓" }, lang)}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      {/* Director Camera Tuning Bar */}
+      <div
+        className="three-tuning-bar"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "8px",
+          padding: "8px 12px",
+          borderBottom: "1px solid rgba(235, 168, 52, 0.2)",
+          background: "rgba(9, 14, 20, 0.92)",
+          fontFamily: "var(--font-mono)"
+        }}
+      >
+        <div
+          className="three-lens-presets"
+          style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "6px" }}
+        >
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
+            <span style={{ fontSize: "0.68rem", color: "var(--amber-bright)", letterSpacing: "0.06em" }}>
+              {tl({ zh: "焦段预设 LENS", en: "LENS PRESETS", ja: "焦点距離" }, lang)}
+            </span>
+            {LENS_PRESETS.map((preset) => {
+              const active =
+                Math.round(effectiveCam.fov) === preset.fov ||
+                effectiveCam.lensLabel.includes(`${preset.mm}mm`);
+              return (
+                <Button
+                  key={preset.mm}
+                  type="button"
+                  className={`ctrl-btn ${active ? "amber" : ""}`}
+                  style={{ padding: "3px 8px", fontSize: "0.72rem" }}
+                  onClick={() => handleSelectLens(preset)}
+                >
+                  {preset.mm}mm
+                </Button>
+              );
+            })}
+          </div>
+
+          <Button
+            type="button"
+            id="btn-three-reset-cam"
+            className="ctrl-btn"
+            style={{ padding: "3px 10px", fontSize: "0.72rem" }}
+            onClick={handleResetCamera}
+          >
+            {tl({ zh: "↺ 重置默认机位", en: "↺ Reset Default Camera", ja: "↺ デフォルトへ戻す" }, lang)}
+          </Button>
+        </div>
+
+        <div
+          className="three-xyz-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+            gap: "8px 14px"
+          }}
+        >
+          {(
+            [
+              { field: "pos", label: "CAM POS" },
+              { field: "target", label: "AIM TGT" }
+            ] as const
+          ).map(({ field, label }) => (
+            <div
+              key={field}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "4px",
+                padding: "6px 8px",
+                background: "rgba(15, 22, 29, 0.85)",
+                borderLeft: "2px solid var(--amber-crt)"
+              }}
+            >
+              <span style={{ fontSize: "0.62rem", color: "var(--amber-bright)", letterSpacing: "0.08em" }}>
+                {label}
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                {AXIS_CONFIG.map((axis) => {
+                  const val = effectiveCam[field][axis.idx];
+                  const sliderMin = Math.min(axis.min, Math.floor(val - 3));
+                  const sliderMax = Math.max(axis.max, Math.ceil(val + 3));
+                  return (
+                    <label
+                      key={axis.key}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        fontSize: "0.7rem",
+                        color: "var(--text-primary)",
+                        flex: "1 1 110px"
+                      }}
+                    >
+                      <span style={{ color: "var(--frost-cyan)", width: "12px" }}>{axis.key}</span>
+                      <Button
+                        type="button"
+                        className="ctrl-btn"
+                        style={{ padding: "1px 5px", fontSize: "0.68rem", lineHeight: 1.2 }}
+                        aria-label={`${label} ${axis.key} -0.25`}
+                        onClick={() => handleAxisChange(field, axis.idx, val - 0.25)}
+                      >
+                        -
+                      </Button>
+                      <input
+                        type="range"
+                        min={sliderMin}
+                        max={sliderMax}
+                        step={axis.step}
+                        value={val}
+                        aria-label={`${label} ${axis.key}`}
+                        style={{ flex: "1 1 56px", minWidth: "52px" }}
+                        onChange={(e) => handleAxisChange(field, axis.idx, Number(e.target.value))}
+                      />
+                      <Button
+                        type="button"
+                        className="ctrl-btn"
+                        style={{ padding: "1px 5px", fontSize: "0.68rem", lineHeight: 1.2 }}
+                        aria-label={`${label} ${axis.key} +0.25`}
+                        onClick={() => handleAxisChange(field, axis.idx, val + 0.25)}
+                      >
+                        +
+                      </Button>
+                      <span style={{ minWidth: "36px", textAlign: "right", color: "var(--text-secondary)" }}>
+                        {val.toFixed(2)}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="three-canvas-host" ref={hostRef} aria-label="Three.js 3D Cinematography Blocking Stage">
+        <div
+          ref={canvasMountRef}
+          className="three-canvas-mount"
+          style={{ position: "absolute", inset: 0 }}
+        />
+
+        {viewMode === "pov" && showSafeFrame && webglReady ? (
+          <div
+            className="three-safeframe-overlay"
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 2,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between"
+            }}
+          >
+            {/* Top 2.39:1 Anamorphic Letterbox Crop */}
+            <div
+              style={{
+                height: "12.8%",
+                background: "rgba(3, 7, 11, 0.56)",
+                borderBottom: "1px dashed rgba(235, 168, 52, 0.72)",
+                display: "flex",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                padding: "4px 12px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.64rem",
+                color: "var(--amber-bright)"
+              }}
+            >
+              <span>POV // 16:9 SAFE · 2.39:1 ANAMORPHIC</span>
+              <span>{effectiveCam.lensLabel} · FOV {effectiveCam.fov}°</span>
+            </div>
+
+            {/* Middle 16:9 Action Safe + Rule of Thirds Grid */}
+            <div
+              style={{
+                position: "relative",
+                flex: "1 1 auto",
+                margin: "0 4%",
+                borderLeft: "1px solid rgba(158, 198, 212, 0.36)",
+                borderRight: "1px solid rgba(158, 198, 212, 0.36)"
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "33.33%",
+                  left: 0,
+                  right: 0,
+                  borderTop: "1px solid rgba(158, 198, 212, 0.28)"
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  top: "66.67%",
+                  left: 0,
+                  right: 0,
+                  borderTop: "1px solid rgba(158, 198, 212, 0.28)"
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: "33.33%",
+                  top: 0,
+                  bottom: 0,
+                  borderLeft: "1px solid rgba(158, 198, 212, 0.28)"
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  left: "66.67%",
+                  top: 0,
+                  bottom: 0,
+                  borderLeft: "1px solid rgba(158, 198, 212, 0.28)"
+                }}
+              />
+              {/* Center Reticle */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: "50%",
+                  top: "50%",
+                  width: "16px",
+                  height: "16px",
+                  transform: "translate(-50%, -50%)",
+                  border: "1px solid rgba(235, 168, 52, 0.72)"
+                }}
+              />
+            </div>
+
+            {/* Bottom 2.39:1 Anamorphic Letterbox Crop */}
+            <div
+              style={{
+                height: "12.8%",
+                background: "rgba(3, 7, 11, 0.56)",
+                borderTop: "1px dashed rgba(235, 168, 52, 0.72)",
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "flex-end",
+                padding: "4px 12px",
+                fontFamily: "var(--font-mono)",
+                fontSize: "0.62rem",
+                color: "var(--frost-cyan)"
+              }}
+            >
+              <span>REC // {renderMode.toUpperCase()} PASS</span>
+            </div>
+          </div>
+        ) : null}
+
         {!webglReady ? (
-          <div className="three-fallback-card">
+          <div className="three-fallback-card" style={{ position: "relative", zIndex: 3 }}>
             <div className="section-kicker">3D BLOCKING TELEMETRY // {shot.shotCode}</div>
-            <p>{tl(shot.blocking.camera.axisNote, lang)}</p>
+            <p>{tl(effectiveCam.axisNote, lang)}</p>
           </div>
         ) : null}
       </div>
@@ -483,19 +789,31 @@ export function ThreeBlockingStage({ shot, lang, motionPaused }: Props) {
         <div className="three-telem-chip">
           <span className="telem-k">CAM XYZ</span>
           <span className="telem-v">
-            [{shot.blocking.camera.pos.map((n) => n.toFixed(2)).join(", ")}]
+            [{effectiveCam.pos.map((n) => n.toFixed(2)).join(", ")}]
           </span>
         </div>
         <div className="three-telem-chip">
           <span className="telem-k">AIM XYZ</span>
           <span className="telem-v">
-            [{shot.blocking.camera.target.map((n) => n.toFixed(2)).join(", ")}]
+            [{effectiveCam.target.map((n) => n.toFixed(2)).join(", ")}]
           </span>
         </div>
         <div className="three-telem-chip wide">
           <span className="telem-k">{tl({ zh: "180° 轴线与走位", en: "180° AXIS & BLOCKING", ja: "軸線と動線" }, lang)}</span>
-          <span className="telem-v">{tl(shot.blocking.camera.axisNote, lang)}</span>
+          <span className="telem-v">{tl(effectiveCam.axisNote, lang)}</span>
         </div>
+        {boundAssets.length > 0 ? (
+          <div className="three-telem-chip wide">
+            <span className="telem-k">{tl({ zh: "绑定公共资产", en: "BOUND ASSETS", ja: "紐付け資産" }, lang)}</span>
+            <span className="telem-v" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {boundAssets.map((asset) => (
+                <span key={asset.tag} style={{ color: "var(--frost-cyan)" }}>
+                  {asset.tag} ({tl(asset.name, lang)})
+                </span>
+              ))}
+            </span>
+          </div>
+        ) : null}
       </div>
     </div>
   );
