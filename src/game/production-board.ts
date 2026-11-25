@@ -1,8 +1,14 @@
-import type { LocalizedText } from "./types.js";
+import { tl } from "./i18n.js";
+import type { Locale, LocalizedText } from "./types.js";
 import { ALL_VISITORS } from "./visitors/index.js";
+
+export type AssetKind = "cast" | "prop" | "set";
+export type WhiteboxRenderMode = "clay" | "depth" | "lit";
+export type CameraMotionPreset = "static" | "dolly_in" | "pan" | "handheld" | "pull_back";
 
 export interface CastAssetSpec {
   id: string;
+  assetTag: string; // "@elena", "@leo", "@arthur", "@marcus", "@ana", "@ingrid", "@linmei", "@hannah", "@op09"
   code: string;
   name: LocalizedText;
   role: LocalizedText;
@@ -13,7 +19,44 @@ export interface CastAssetSpec {
   wardrobe: LocalizedText;
   lightingKey: LocalizedText;
   recommendedLens: string;
+  promptAnchor: string;
   colorTag: string;
+}
+
+export interface PropAssetSpec {
+  id: string;
+  assetTag: string; // "@tool_chest" | "@cryo_canister" | "@blackbox" | "@ledger" | "@intercom" | "@purge_valve"
+  code: string;
+  name: LocalizedText;
+  category: LocalizedText;
+  description: LocalizedText;
+  promptAnchor: string;
+  primitive: "box" | "cylinder" | "briefcase" | "tape" | "ledger" | "console";
+  colorTag: string;
+}
+
+export interface SetAssetSpec {
+  id: string;
+  assetTag: string; // "@set_booth" | "@set_vestibule" | "@set_corridor" | "@set_icecore"
+  code: string;
+  zone: "outer_blizzard" | "vestibule" | "booth" | "inner_corridor";
+  name: LocalizedText;
+  description: LocalizedText;
+  lightingRecipe: LocalizedText;
+  promptAnchor: string;
+  previewSrc: string;
+  colorTag: string;
+}
+
+export interface PropBlocking3D {
+  id: string;
+  assetTag: string;
+  label: string;
+  primitive: PropAssetSpec["primitive"];
+  pos: [number, number, number];
+  rotY?: number;
+  scale?: [number, number, number];
+  color: string;
 }
 
 export interface LookDevSwatch {
@@ -56,12 +99,31 @@ export interface StoryboardShot {
   posterSrc: string;
   videoSrc: string;
   fallbackVideoSrc: string;
+  boundAssetTags: readonly string[];
+  motionPreset: CameraMotionPreset;
   blocking: {
     zone: "outer_blizzard" | "vestibule" | "booth" | "inner_corridor";
     alertLight: "amber" | "red" | "cyan";
     camera: CameraBlocking3D;
     actors: readonly ActorBlocking3D[];
+    props?: readonly PropBlocking3D[];
   };
+}
+
+export interface ShotExportPackage {
+  shotCode: string;
+  shotId: string;
+  title: string;
+  aspectRatio: "16:9";
+  lens: string;
+  fov: number;
+  motionPreset: CameraMotionPreset;
+  cameraPos: [number, number, number];
+  cameraTarget: [number, number, number];
+  boundAssets: Array<{ tag: string; name: string; promptAnchor: string }>;
+  lipSyncLine?: string;
+  promptText: string;
+  jsonString: string;
 }
 
 export const LOOK_DEV_SWATCHES: readonly LookDevSwatch[] = [
@@ -111,14 +173,17 @@ const CAST_LOOKDEV_META: Record<
   string,
   {
     slug: string;
+    assetTag: string;
     wardrobe: LocalizedText;
     lightingKey: LocalizedText;
     lens: string;
+    promptAnchor: string;
     colorTag: string;
   }
 > = {
   "V-01": {
     slug: "elena",
+    assetTag: "@elena",
     wardrobe: {
       zh: "银丝圆框眼镜（镜缘结霜）、带血迹蓝绿色外科手术服、落雪深炭灰毛领防寒服",
       en: "Frost-rimmed gold wire glasses, blood-speckled teal surgical scrubs, snow-dusted charcoal fur parka",
@@ -130,10 +195,13 @@ const CAST_LOOKDEV_META: Record<
       ja: "シアン吹雪リム光＋暖色ガラス反射（マット肌）"
     },
     lens: "50mm Anamorphic f/2.0",
+    promptAnchor:
+      "Dr. Elena Vance, woman in her late 30s, frost-rimmed thin round wire glasses, blood-speckled teal surgical scrubs under snow-dusted charcoal fur-hooded parka, matte sub-zero skin, stern clinical gaze, Svalbard -46C polar lighting",
     colorTag: "#5bbad5"
   },
   "V-02": {
     slug: "leo",
+    assetTag: "@leo",
     wardrobe: {
       zh: "沾灰湿黑短发、橄榄灰立领工装衬衫、落雪深灰防寒服、白色耐寒金属工具箱",
       en: "Wet dark hair, olive-grey utility collar jacket, snow-dusted dark parka, battered white cryo tool chest",
@@ -145,10 +213,13 @@ const CAST_LOOKDEV_META: Record<
       ja: "寒雪バックライト＋斜めアンバー窓光"
     },
     lens: "40mm Anamorphic f/2.4",
+    promptAnchor:
+      "Leo Sato, man in his late 20s, wet windswept dark hair, soot smudge on cheek, olive-grey utility collar jacket beneath snow-crusted dark work parka, visible condensation breath, matte realistic skin",
     colorTag: "#eba834"
   },
   "V-03": {
     slug: "arthur",
+    assetTag: "@arthur",
     wardrobe: {
       zh: "金丝背头、考究深驼色羊毛大衣翻领（刻意维持陆上高管体面）",
       en: "Slicked hair, tailored charcoal-camel wool overcoat preserving corporate composure",
@@ -160,10 +231,13 @@ const CAST_LOOKDEV_META: Record<
       ja: "高コントラスト冷色キーライト"
     },
     lens: "50mm Anamorphic f/2.8",
+    promptAnchor:
+      "Director Arthur Pendelton, man in his 50s, neat slicked-back graying hair, tailored charcoal-camel wool overcoat collar over dark turtleneck, crisp authoritative jawline shadow, matte cinematic skin",
     colorTag: "#9ec6d4"
   },
   "V-04": {
     slug: "marcus",
+    assetTag: "@marcus",
     wardrobe: {
       zh: "重型舰长级高领拉绒夹克、肩部反光条与磨损舰队徽章",
       en: "Heavy polar commander fleece jacket with weathered submarine insignia",
@@ -175,10 +249,13 @@ const CAST_LOOKDEV_META: Record<
       ja: "ローキー俯瞰光＋赤色警報補助光"
     },
     lens: "35mm Anamorphic f/2.0",
+    promptAnchor:
+      "Capt. Marcus Thorne, rugged man in his 40s, heavy navy polar commander fleece jacket with weathered submarine fleet patch and reflective shoulder trim, tense furrowed brow under red alarm edge light",
     colorTag: "#e04634"
   },
   "V-05": {
     slug: "ana",
+    assetTag: "@ana",
     wardrobe: {
       zh: "深海减压服内胆、氯丁橡胶颈封与极寒防水连帽风衣",
       en: "Deep-sea neoprene neck seal under waterproof polar shell",
@@ -190,10 +267,13 @@ const CAST_LOOKDEV_META: Record<
       ja: "青・琥珀スプリットライティング"
     },
     lens: "50mm Anamorphic f/2.0",
+    promptAnchor:
+      "Anais Moreau, woman in her 30s, wet dark hair tucked into black neoprene drysuit neck seal under waterproof polar shell, terrified hyper-focused eyes, split cyan-amber lighting, frosted breath vapor",
     colorTag: "#49b882"
   },
   "V-06": {
     slug: "ingrid",
+    assetTag: "@ingrid",
     wardrobe: {
       zh: "白色极地科研防风袄、冰核取样挂牌与结霜针织围巾",
       en: "White polar glaciology parka with frosted knit neck gaiter",
@@ -205,10 +285,13 @@ const CAST_LOOKDEV_META: Record<
       ja: "磁気嵐の拡散冷色光"
     },
     lens: "50mm Anamorphic f/2.0",
+    promptAnchor:
+      "Dr. Ingrid Solberg, Scandinavian woman in her 30s, ice crystals in eyelashes, white polar glaciology parka with frosted knit neck gaiter and lab ID lanyard, diffused geomagnetic storm cyan lighting",
     colorTag: "#7dc7ff"
   },
   "V-07": {
     slug: "linmei",
+    assetTag: "@linmei",
     wardrobe: {
       zh: "深蓝站区指挥值班大衣、严谨扣紧的双层风纪领口",
       en: "Navy discipline officer coat buttoned tightly to the throat",
@@ -220,10 +303,13 @@ const CAST_LOOKDEV_META: Record<
       ja: "対称トップカット照明"
     },
     lens: "65mm Close-Up f/2.0",
+    promptAnchor:
+      "Commissioner Lin Mei, East Asian woman in her 40s, severe neat bun, navy discipline officer coat buttoned tightly to the throat, eerily composed expression, symmetrical overhead interrogation key light",
     colorTag: "#b48ead"
   },
   "V-08": {
     slug: "hannah",
+    assetTag: "@hannah",
     wardrobe: {
       zh: "厚重极地机修连体服外罩深绿羽绒防寒坎肩",
       en: "Heavy polar mechanic coveralls layered under quilted insulated vest",
@@ -235,6 +321,8 @@ const CAST_LOOKDEV_META: Record<
       ja: "アンバー操作盤キー光"
     },
     lens: "50mm Anamorphic f/2.0",
+    promptAnchor:
+      "Hannah Lindqvist, woman in her late 20s, windburned cheeks, heavy grease-stained polar mechanic coveralls under dark green quilted insulated vest, urgent desperate expression through frosted glass",
     colorTag: "#d08770"
   }
 };
@@ -242,6 +330,7 @@ const CAST_LOOKDEV_META: Record<
 export const CAST_VISUAL_ASSETS: readonly CastAssetSpec[] = [
   {
     id: "OP-09",
+    assetTag: "@op09",
     code: "OP-09",
     name: { zh: "值班员 #09（玩家视角）", en: "Operator #09 (Player POV)", ja: "当直官 #09" },
     role: { zh: "0 号隔离岗亭夜间守门人", en: "Gate 0 Night Watchstander", ja: "第0隔離窓 夜間監視員" },
@@ -258,18 +347,23 @@ export const CAST_VISUAL_ASSETS: readonly CastAssetSpec[] = [
       ja: "操作盤アンバー光の照り返し（180度南側軸）"
     },
     recommendedLens: "35mm POV Anamorphic f/2.0",
+    promptAnchor:
+      "Operator #09, Gate 0 night watchstander in slate-grey insulated parka and padded intercom gauntlets holding steel master key, lit from below by warm sodium-amber console instruments",
     colorTag: "#eba834"
   },
   ...ALL_VISITORS.map((v): CastAssetSpec => {
     const meta = CAST_LOOKDEV_META[v.id] ?? {
       slug: "elena",
+      assetTag: `@${v.id.toLowerCase()}`,
       wardrobe: { zh: "极地标准防寒装备", en: "Polar insulated gear", ja: "極地防寒装備" },
       lightingKey: { zh: "冷青与琥珀双色棚拍", en: "Cyan/amber film key", ja: "二色ライティング" },
       lens: "50mm Anamorphic f/2.0",
+      promptAnchor: "Svalbard polar survivor in matte heavy insulated parka, realistic cold film lighting",
       colorTag: "#5bbad5"
     };
     return {
       id: v.id,
+      assetTag: meta.assetTag,
       code: `${v.id} // NIGHT 0${v.night}`,
       name: v.name,
       role: v.role,
@@ -280,9 +374,196 @@ export const CAST_VISUAL_ASSETS: readonly CastAssetSpec[] = [
       wardrobe: meta.wardrobe,
       lightingKey: meta.lightingKey,
       recommendedLens: meta.lens,
+      promptAnchor: meta.promptAnchor,
       colorTag: meta.colorTag
     };
   })
+];
+
+export const PROP_VISUAL_ASSETS: readonly PropAssetSpec[] = [
+  {
+    id: "prop_tool_chest",
+    assetTag: "@tool_chest",
+    code: "PR-01",
+    name: { zh: "耐寒金属工具箱", en: "Cryo Tool Chest", ja: "耐熱工具ケース" },
+    category: { zh: "动力舱设备", en: "Power Bay Gear", ja: "動力室装備" },
+    description: {
+      zh: "2 号动力舱制式白色耐寒工具箱，箱角磕碰沾雪，内含备用热交换阀组件。",
+      en: "Battered white insulated Power Bay 2 tool chest with frost-locked latches and spare thermal valve assembly.",
+      ja: "第2動力室の白い耐熱工具箱。予備サーマルバルブ一式を収納。"
+    },
+    promptAnchor:
+      "Battered matte-white heavy steel cryo tool chest with brushed steel clasps, stenciled Bay 2 markings, snow crusted on hinges",
+    primitive: "briefcase",
+    colorTag: "#eba834"
+  },
+  {
+    id: "prop_cryo_canister",
+    assetTag: "@cryo_canister",
+    code: "PR-02",
+    name: { zh: "渗血低温样本罐", en: "Bleeding Cryo Canister", ja: "血痕付き凍結検体容器" },
+    category: { zh: "冰芯生物样本", en: "Bio-Core Sample", ja: "氷床生体検体" },
+    description: {
+      zh: "双层钛合金低温取样罐，视窗泛着幽冷青光，封口边缘渗出暗红凝结物。",
+      en: "Double-walled titanium cryo canister glowing faint cyan through frost glass with dark frozen crimson seepage at the seal.",
+      ja: "シアンに光るチタン製凍結検体容器。密閉縁に暗赤色の滲み。"
+    },
+    promptAnchor:
+      "Cylindrical brushed-steel cryo bio-containment canister with glowing pale cyan sight-glass and frozen dark red residue around gasket seal",
+    primitive: "cylinder",
+    colorTag: "#5bbad5"
+  },
+  {
+    id: "prop_blackbox",
+    assetTag: "@blackbox",
+    code: "PR-03",
+    name: { zh: "前任 #08 黑匣子磁带机", en: "#08 Magnetic Black Box", ja: "#08 ブラックボックス録音機" },
+    category: { zh: "遗留证物", en: "Evidence Audio", ja: "遺留証拠品" },
+    description: {
+      zh: "前任值班员 #08 遗留的军用级磁带黑匣子，外壳划痕累累并沾染干涸血迹。",
+      en: "Scarred military magnetic tape black-box recorder recovered from #08, housing twin reels behind cracked amber counter window.",
+      ja: "前任#08が残した傷だらけの磁気テープ・ブラックボックス録音機。"
+    },
+    promptAnchor:
+      "Ruggedized dark-slate military magnetic tape black-box recorder with twin exposed reels, amber mechanical counter, snow and dried blood scratches",
+    primitive: "tape",
+    colorTag: "#49b882"
+  },
+  {
+    id: "prop_ledger",
+    assetTag: "@ledger",
+    code: "PR-04",
+    name: { zh: "0 号岗亭钢制记录板与密钥", en: "Shift Ledger & Master Key", ja: "当直日誌とマスターキー" },
+    category: { zh: "岗亭文书", en: "Booth Console", ja: "当直室備品" },
+    description: {
+      zh: "冷轧钢夹板纸质值班台账，压着黄铜铭牌的 0 号气闸物理机械主密钥。",
+      en: "Cold-rolled steel clipboard shift log pinned beneath heavy brass-tagged Gate 0 mechanical master key.",
+      ja: "スチール製クリップボードの当直日誌と真鍮タグ付き機械式マスターキー。"
+    },
+    promptAnchor:
+      "Weathered steel clipboard with paper shift logbook and heavy machined steel Gate 0 master key on brass tag under warm desk lamp",
+    primitive: "ledger",
+    colorTag: "#d08770"
+  },
+  {
+    id: "prop_intercom",
+    assetTag: "@intercom",
+    code: "PR-05",
+    name: { zh: "壁挂按压对讲控制台", en: "PTT Intercom Console", ja: "無線インターホン操作盤" },
+    category: { zh: "审讯终端", en: "Interrogation Rig", ja: "尋問端末" },
+    description: {
+      zh: "双层防爆玻璃下方的倾斜式不锈钢对讲台，带琥珀背光频谱表与红色 PTT 按键。",
+      en: "Sloped brushed-steel PTT intercom console beneath blast glass with glowing amber VU dial and worn red transmit switch.",
+      ja: "防爆窓下の傾斜ステンレス操作盤。アンバー計器と赤色送信ボタン。"
+    },
+    promptAnchor:
+      "Industrial sloped stainless-steel push-to-talk intercom console with warm sodium-amber analog gauges, toggle switches, and heavy coiled handset cord",
+    primitive: "console",
+    colorTag: "#eba834"
+  },
+  {
+    id: "prop_purge_valve",
+    assetTag: "@purge_valve",
+    code: "PR-06",
+    name: { zh: "1,100°C 高温净化阀组", en: "1,100°C Purge Manifold", ja: "1,100°C 焼却バルブ盤" },
+    category: { zh: "防卫系统", en: "Containment Weapon", ja: "防衛機構" },
+    description: {
+      zh: "红黑警戒涂装的高压燃料电磁阀箱，连接过渡舱顶部热力喷口与手轮锁销。",
+      en: "Hazard-striped armored fuel purge manifold housing controlling 1,100°C vestibule incineration jets.",
+      ja: "赤黒警戒塗装の高圧燃料遮断バルブ盤。1,100℃焼却ノズルを直結。"
+    },
+    promptAnchor:
+      "Heavy hazard-red and matte-black steel thermal purge valve housing with pressure gauge, safety interlock pin, and armored fuel conduit",
+    primitive: "box",
+    colorTag: "#e04634"
+  }
+];
+
+export const SET_VISUAL_ASSETS: readonly SetAssetSpec[] = [
+  {
+    id: "set_booth",
+    assetTag: "@set_booth",
+    code: "SET-01",
+    zone: "booth",
+    name: { zh: "0 号隔离岗亭内舱", en: "Gate 0 Watchstander Booth", ja: "第0隔離監視ブース内" },
+    description: {
+      zh: "狭小密闭的钢制值班室（Z > 0），配双层结霜防爆观察窗、琥珀台灯与审讯控制台。",
+      en: "Claustrophobic steel watchstander booth (Z > 0) with frosted double-glazed blast window and sodium-amber console.",
+      ja: "防爆窓とナトリウム灯操作盤を備えた狭小な鋼鉄監視室（Z > 0）。"
+    },
+    lightingRecipe: {
+      zh: "3200K 琥珀控制台低位上打光 + 窗外透入的寒青暴雪冷背光",
+      en: "3200K sodium-amber console uplight balanced against icy cyan window spill",
+      ja: "3200Kアンバー下照らし＋窓からのシアン冷光"
+    },
+    promptAnchor:
+      "Cramped sub-zero steel watchstander booth interior, frosted armored observation window ahead, warm sodium-amber analog desk glow, matte dark steel bulkheads",
+    previewSrc: "./portraits/story/prologue_03.jpg",
+    colorTag: "#eba834"
+  },
+  {
+    id: "set_vestibule",
+    assetTag: "@set_vestibule",
+    code: "SET-02",
+    zone: "vestibule",
+    name: { zh: "Z=0 防爆窗与高温过渡舱", en: "Z=0 Blast Glass & Purge Vestibule", ja: "Z=0 防爆窓・検疫前室" },
+    description: {
+      zh: "隔离门外侧狭长钢制检疫通道（-2.5 < Z < 0），顶部布设 1,100°C 净化喷嘴与结霜玻璃。",
+      en: "Armored airlock vestibule outside blast glass (-2.5 < Z < 0) rigged with overhead 1,100°C purge nozzles and frost-rimmed pane.",
+      ja: "防爆窓外側の装甲検疫前室（-2.5 < Z < 0）。天井に焼却ノズルを装備。"
+    },
+    lightingRecipe: {
+      zh: "冷青主轮廓光 + 琥珀玻璃内壁暖反光 + 净化时全红/白炽热浪",
+      en: "Polar cyan rim key + warm amber glass bounce + crimson/white purge flare",
+      ja: "極夜シアンリム光＋アンバー反射＋焼却時紅蓮光"
+    },
+    promptAnchor:
+      "Frosted double-glazed armored blast window separating warm amber booth from icy steel quarantine airlock vestibule, condensation and ice crystals on steel mullions",
+    previewSrc: "./portraits/story/prologue_02.jpg",
+    colorTag: "#5bbad5"
+  },
+  {
+    id: "set_corridor",
+    assetTag: "@set_corridor",
+    code: "SET-03",
+    zone: "inner_corridor",
+    name: { zh: "B 区医疗内走廊与气闸门", en: "Sector B Medical Corridor & Airlock", ja: "B区画医療廊下・気閘扉" },
+    description: {
+      zh: "岗亭东侧纵深钢铁内廊（X = +4.2..+7.6），头顶荧光管频闪、底缝渗出液氮白雾。",
+      en: "Deep steel interior corridor east of Gate 0 (X = +4.2..+7.6) with flickering cyan fluorescents and creeping floor frost.",
+      ja: "監視室東側の深層鋼鉄通路（X = +4.2..+7.6）。明滅蛍光灯と床霜。"
+    },
+    lightingRecipe: {
+      zh: "冷青闪烁荧光顶灯 + 远端红警旋转警示灯",
+      en: "Flickering cyan corridor fluorescents + distant rotating crimson lockdown beacon",
+      ja: "明滅シアン蛍光灯＋遠端の赤色回転警光"
+    },
+    promptAnchor:
+      "Flooded frost-rimmed underground Svalbard steel corridor, flickering cold cyan fluorescent tubes, heavy watertight airlock bulkhead door, creeping floor vapor",
+    previewSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+    colorTag: "#7dc7ff"
+  },
+  {
+    id: "set_icecore",
+    assetTag: "@set_icecore",
+    code: "SET-04",
+    zone: "outer_blizzard",
+    name: { zh: "极夜暴雪外舱与深冰钻井台", en: "Outer Polar Blizzard & Ice-Core Rig", ja: "極夜吹雪外郭・深層掘削架台" },
+    description: {
+      zh: "-46°C 斯瓦尔巴极夜暴风雪外场（Z < -1.5），零下强风卷雪、探照灯被白雾吞没。",
+      en: "Svalbard -46°C polar night exterior (Z < -1.5) with horizontal sleet, frozen steel catwalks, and cyan floodlights lost in whiteout.",
+      ja: "-46℃極夜の暴風雪外郭（Z < -1.5）。横殴りの雪とシアン投光器。"
+    },
+    lightingRecipe: {
+      zh: "强青白色暴雪漫射光 + 事故现场频闪红警",
+      en: "High-density cyan-white blizzard volumetric glow + distant crimson emergency strobe",
+      ja: "高密度シアン吹雪拡散光＋遠方赤色ストロボ"
+    },
+    promptAnchor:
+      "Svalbard -46C polar night whiteout blizzard outside armored ice-core outpost, horizontal blowing snow, frosted steel catwalks, cyan floodlight beams",
+    previewSrc: "./portraits/reactions/chamber_whiteout.jpg",
+    colorTag: "#9ec6d4"
+  }
 ];
 
 export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
@@ -300,6 +581,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/prologue_01.jpg",
     videoSrc: "./videos/story/prequel_icecore_breach.mp4",
     fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+    boundAssetTags: ["@set_icecore", "@set_corridor", "@cryo_canister", "@purge_valve"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "inner_corridor",
       alertLight: "red",
@@ -316,6 +599,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "crew", label: "撤离钻井班员", pos: [6.5, 0, -1.8], rotY: 0, color: "#e04634" }
+      ],
+      props: [
+        { id: "p_canister", assetTag: "@cryo_canister", label: "渗血低温样本罐", primitive: "cylinder", pos: [6.85, 0, -1.65], color: "#5bbad5" },
+        { id: "p_valve", assetTag: "@purge_valve", label: "高温净化阀组", primitive: "box", pos: [7.05, 0.85, -0.35], rotY: -Math.PI / 2, color: "#e04634" }
       ]
     }
   },
@@ -339,6 +626,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/operator09.jpg",
     videoSrc: "./videos/story/prequel_op08_warning.mp4",
     fallbackVideoSrc: "./videos/operator09/idle.mp4",
+    boundAssetTags: ["@set_booth", "@op09", "@blackbox", "@intercom", "@ledger"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "booth",
       alertLight: "amber",
@@ -355,6 +644,11 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "op08", label: "前任值班员 #08", pos: [0.0, 0, 2.25], rotY: 0, color: "#eba834", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.38, 0.82, 1.42], color: "#eba834" },
+        { id: "p_blackbox", assetTag: "@blackbox", label: "#08 黑匣子磁带机", primitive: "tape", pos: [0.35, 0.82, 1.46], rotY: 0.25, color: "#49b882" },
+        { id: "p_ledger", assetTag: "@ledger", label: "记录板与密钥", primitive: "ledger", pos: [0.02, 0.82, 1.48], color: "#d08770" }
       ]
     }
   },
@@ -372,6 +666,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/prologue_01.jpg",
     videoSrc: "./videos/story/prologue_01.mp4",
     fallbackVideoSrc: "./videos/lobby/bg.mp4",
+    boundAssetTags: ["@set_corridor", "@op09", "@purge_valve"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "inner_corridor",
       alertLight: "amber",
@@ -388,6 +684,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "colleague", label: "前任值班员", pos: [6.5, 0, -1.4], rotY: 0, color: "#5bbad5" }
+      ],
+      props: [
+        { id: "p_valve", assetTag: "@purge_valve", label: "高温净化阀组", primitive: "box", pos: [7.0, 0.85, -0.4], rotY: -Math.PI / 2, color: "#e04634" }
       ]
     }
   },
@@ -405,6 +704,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/prologue_02.jpg",
     videoSrc: "./videos/story/prologue_02.mp4",
     fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
+    boundAssetTags: ["@set_booth", "@set_vestibule", "@op09", "@intercom"],
+    motionPreset: "static",
     blocking: {
       zone: "booth",
       alertLight: "red",
@@ -422,6 +723,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09", label: "OP-09 (主观视角)", pos: [0.0, 0, 2.45], rotY: Math.PI, color: "#eba834" },
         { id: "shadow", label: "走廊撞门人影", pos: [0.2, 0, -4.0], rotY: 0, color: "#e04634" }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
+        { id: "p_ledger", assetTag: "@ledger", label: "记录板与密钥", primitive: "ledger", pos: [0.35, 0.82, 1.44], color: "#d08770" }
       ]
     }
   },
@@ -439,6 +744,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/prologue_03.jpg",
     videoSrc: "./videos/story/prologue_03.mp4",
     fallbackVideoSrc: "./videos/operator09/idle.mp4",
+    boundAssetTags: ["@set_booth", "@op09", "@ledger", "@intercom"],
+    motionPreset: "static",
     blocking: {
       zone: "booth",
       alertLight: "amber",
@@ -455,6 +762,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.2], rotY: Math.PI, color: "#eba834" }
+      ],
+      props: [
+        { id: "p_ledger", assetTag: "@ledger", label: "记录板与密钥", primitive: "ledger", pos: [0.05, 0.82, 1.38], rotY: 0.15, color: "#d08770" },
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.45, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -472,6 +783,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/reactions/elena_flinch.jpg",
     videoSrc: "./videos/story/fb_elena_cabin3.mp4",
     fallbackVideoSrc: "./videos/elena/flinch.mp4",
+    boundAssetTags: ["@set_corridor", "@elena", "@purge_valve"],
+    motionPreset: "handheld",
     blocking: {
       zone: "inner_corridor",
       alertLight: "cyan",
@@ -488,6 +801,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v01", label: "艾琳娜 (V-01)", pos: [6.5, 0, -0.7], rotY: -Math.PI / 2, color: "#5bbad5" }
+      ],
+      props: [
+        { id: "p_valve", assetTag: "@purge_valve", label: "3 号舱气闸阀锁", primitive: "box", pos: [7.0, 0.9, -0.25], rotY: -Math.PI / 2, color: "#e04634" }
       ]
     }
   },
@@ -511,6 +827,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/n1_elena_knock.jpg",
     videoSrc: "./videos/story/n1_elena_knock.mp4",
     fallbackVideoSrc: "./videos/elena/idle.mp4",
+    boundAssetTags: ["@set_vestibule", "@set_booth", "@elena", "@op09", "@intercom"],
+    motionPreset: "static",
     blocking: {
       zone: "vestibule",
       alertLight: "cyan",
@@ -528,6 +846,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" },
         { id: "v01", label: "艾琳娜 (V-01)", pos: [0.0, 0, -0.75], rotY: 0, color: "#5bbad5", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -551,6 +872,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/reactions/elena_lean_in.jpg",
     videoSrc: "./videos/story/n1_elena_react_intercom.mp4",
     fallbackVideoSrc: "./videos/elena/lean_in.mp4",
+    boundAssetTags: ["@set_vestibule", "@elena", "@op09", "@intercom"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "vestibule",
       alertLight: "amber",
@@ -568,6 +891,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" },
         { id: "v01", label: "艾琳娜 (V-01)", pos: [0.0, 0, -0.68], rotY: 0, color: "#5bbad5", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -575,7 +901,7 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     id: "shot_elena_react_strobe",
     storyNodeId: "n1_elena_react_strobe",
     shotCode: "SC-01B-2",
-    chapter: { zh: "第 1 夜 · 强光分岐", en: "NIGHT 01 · STROBE", ja: "第1夜 · 閃光分岐" },
+    chapter: { zh: "第 1 夜 · 强光分支", en: "NIGHT 01 · STROBE", ja: "第1夜 · 閃光分岐" },
     title: { zh: "强光应激：艾琳娜怒斥（口型）", en: "Strobe Flinch Snap (Lip-Sync)", ja: "閃光反応・怒声（口型同期）" },
     framing: "50mm Tight Reaction",
     cameraMove: { zh: "频闪白光掠过镜片，艾琳娜抬手遮眼后压低声音逼近玻璃回应", en: "Strobe pulse flashes across wire glasses as she shields eyes and snaps back", ja: "ストロボ閃光に眉を顰めガラス越しに怒鳴り返す" },
@@ -591,6 +917,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/reactions/elena_flinch.jpg",
     videoSrc: "./videos/story/n1_elena_react_strobe.mp4",
     fallbackVideoSrc: "./videos/elena/flinch.mp4",
+    boundAssetTags: ["@set_vestibule", "@elena", "@op09", "@intercom"],
+    motionPreset: "handheld",
     blocking: {
       zone: "vestibule",
       alertLight: "red",
@@ -608,6 +936,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" },
         { id: "v01", label: "艾琳娜 (V-01)", pos: [0.0, 0, -0.72], rotY: 0, color: "#e04634", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -631,6 +962,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/reactions/chamber_admit.jpg",
     videoSrc: "./videos/story/n1_elena_outcome_admit.mp4",
     fallbackVideoSrc: "./videos/chamber/admit.mp4",
+    boundAssetTags: ["@set_corridor", "@elena", "@purge_valve"],
+    motionPreset: "pan",
     blocking: {
       zone: "inner_corridor",
       alertLight: "cyan",
@@ -647,6 +980,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v01", label: "艾琳娜 (V-01)", pos: [6.6, 0, -0.75], rotY: -Math.PI / 2, color: "#5bbad5", speaking: true }
+      ],
+      props: [
+        { id: "p_valve", assetTag: "@purge_valve", label: "高温净化阀组", primitive: "box", pos: [7.0, 0.85, -0.25], rotY: -Math.PI / 2, color: "#e04634" }
       ]
     }
   },
@@ -664,6 +1000,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/reactions/chamber_purge.jpg",
     videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
     fallbackVideoSrc: "./videos/chamber/purge.mp4",
+    boundAssetTags: ["@set_vestibule", "@set_booth", "@op09", "@purge_valve", "@intercom"],
+    motionPreset: "static",
     blocking: {
       zone: "vestibule",
       alertLight: "red",
@@ -680,6 +1018,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" }
+      ],
+      props: [
+        { id: "p_valve", assetTag: "@purge_valve", label: "高温净化阀组", primitive: "box", pos: [0.75, 0.82, 1.4], color: "#e04634" },
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -697,6 +1039,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
     videoSrc: "./videos/story/n1_corridor_aftermath.mp4",
     fallbackVideoSrc: "./videos/chamber/admit.mp4",
+    boundAssetTags: ["@set_corridor", "@purge_valve"],
+    motionPreset: "pan",
     blocking: {
       zone: "inner_corridor",
       alertLight: "cyan",
@@ -713,6 +1057,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "door", label: "B区医疗气闸门", pos: [6.8, 0, -0.8], rotY: -Math.PI / 2, color: "#5bbad5" }
+      ],
+      props: [
+        { id: "p_valve", assetTag: "@purge_valve", label: "走廊净化截止阀", primitive: "box", pos: [6.95, 0.85, -0.15], rotY: -Math.PI / 2, color: "#e04634" }
       ]
     }
   },
@@ -730,6 +1077,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/reactions/leo_flinch.jpg",
     videoSrc: "./videos/story/fb_leo_powerbay.mp4",
     fallbackVideoSrc: "./videos/leo/flinch.mp4",
+    boundAssetTags: ["@set_icecore", "@leo", "@tool_chest"],
+    motionPreset: "handheld",
     blocking: {
       zone: "outer_blizzard",
       alertLight: "amber",
@@ -746,6 +1095,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v02", label: "佐藤里奥 (V-02)", pos: [0.3, 0, -2.4], rotY: 0, color: "#eba834" }
+      ],
+      props: [
+        { id: "p_tool", assetTag: "@tool_chest", label: "耐寒金属工具箱", primitive: "briefcase", pos: [0.65, 0, -2.2], rotY: 0.3, color: "#eba834" }
       ]
     }
   },
@@ -769,6 +1121,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/n1_leo_arrival.jpg",
     videoSrc: "./videos/story/n1_leo_arrival.mp4",
     fallbackVideoSrc: "./videos/leo/idle.mp4",
+    boundAssetTags: ["@set_vestibule", "@set_icecore", "@leo", "@op09", "@tool_chest", "@intercom"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "outer_blizzard",
       alertLight: "amber",
@@ -786,6 +1140,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" },
         { id: "v02", label: "佐藤里奥 (V-02)", pos: [0.2, 0, -1.9], rotY: 0, color: "#eba834", speaking: true }
+      ],
+      props: [
+        { id: "p_tool", assetTag: "@tool_chest", label: "耐寒金属工具箱", primitive: "briefcase", pos: [0.55, 0, -1.75], rotY: 0.2, color: "#eba834" },
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -809,6 +1167,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/reactions/leo_lean_in.jpg",
     videoSrc: "./videos/story/n1_leo_react_intercom.mp4",
     fallbackVideoSrc: "./videos/leo/lean_in.mp4",
+    boundAssetTags: ["@set_vestibule", "@leo", "@op09", "@intercom", "@tool_chest"],
+    motionPreset: "static",
     blocking: {
       zone: "vestibule",
       alertLight: "amber",
@@ -826,6 +1186,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09", label: "OP-09", pos: [0.0, 0, 2.25], rotY: Math.PI, color: "#eba834" },
         { id: "v02", label: "佐藤里奥 (V-02)", pos: [0.0, 0, -0.78], rotY: 0, color: "#eba834", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
+        { id: "p_tool", assetTag: "@tool_chest", label: "耐寒金属工具箱", primitive: "briefcase", pos: [0.35, 0, -0.82], rotY: -0.3, color: "#eba834" }
       ]
     }
   },
@@ -849,6 +1213,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/leo.jpg",
     videoSrc: "./videos/story/n1_leo_outcome_admit.mp4",
     fallbackVideoSrc: "./videos/leo/idle.mp4",
+    boundAssetTags: ["@set_corridor", "@leo", "@tool_chest"],
+    motionPreset: "pan",
     blocking: {
       zone: "inner_corridor",
       alertLight: "amber",
@@ -865,6 +1231,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v02", label: "佐藤里奥 (V-02)", pos: [6.3, 0, -0.65], rotY: -Math.PI / 2, color: "#eba834", speaking: true }
+      ],
+      props: [
+        { id: "p_tool", assetTag: "@tool_chest", label: "耐寒金属工具箱", primitive: "briefcase", pos: [6.15, 0, -0.35], rotY: 0.4, color: "#eba834" }
       ]
     }
   },
@@ -882,6 +1251,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
     videoSrc: "./videos/story/n1_cliffhanger_shadow.mp4",
     fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+    boundAssetTags: ["@set_corridor", "@purge_valve"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "inner_corridor",
       alertLight: "red",
@@ -898,6 +1269,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "shadow", label: "未知黑影", pos: [6.8, 0, -2.1], rotY: 0, color: "#e04634" }
+      ],
+      props: [
+        { id: "p_valve", assetTag: "@purge_valve", label: "走廊净化阀箱", primitive: "box", pos: [7.0, 0.85, -0.35], rotY: -Math.PI / 2, color: "#e04634" }
       ]
     }
   },
@@ -916,6 +1290,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/arthur.jpg",
     videoSrc: "./videos/arthur/lean_in.mp4",
     fallbackVideoSrc: "./videos/arthur/lean_in.mp4",
+    boundAssetTags: ["@set_vestibule", "@arthur", "@intercom", "@ledger"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "vestibule",
       alertLight: "amber",
@@ -932,6 +1308,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v03", label: "亚瑟站长 (V-03)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
+        { id: "p_ledger", assetTag: "@ledger", label: "站区命令记录板", primitive: "ledger", pos: [0.15, 0.82, 1.42], color: "#d08770" }
       ]
     }
   },
@@ -949,6 +1329,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/marcus.jpg",
     videoSrc: "./videos/marcus/idle.mp4",
     fallbackVideoSrc: "./videos/marcus/idle.mp4",
+    boundAssetTags: ["@set_vestibule", "@marcus", "@intercom", "@purge_valve"],
+    motionPreset: "handheld",
     blocking: {
       zone: "vestibule",
       alertLight: "red",
@@ -965,6 +1347,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v04", label: "马库斯 (V-04)", pos: [-1.2, 0, 0.05], rotY: Math.PI / 2, color: "#eba834", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
+        { id: "p_valve", assetTag: "@purge_valve", label: "高温净化阀组", primitive: "box", pos: [0.75, 0.82, 1.4], color: "#e04634" }
       ]
     }
   },
@@ -982,6 +1368,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/ingrid.jpg",
     videoSrc: "./videos/ingrid/lean_in.mp4",
     fallbackVideoSrc: "./videos/ingrid/lean_in.mp4",
+    boundAssetTags: ["@set_vestibule", "@ingrid", "@cryo_canister", "@intercom"],
+    motionPreset: "handheld",
     blocking: {
       zone: "vestibule",
       alertLight: "cyan",
@@ -998,6 +1386,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v06", label: "英格丽德 (V-06)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
+      ],
+      props: [
+        { id: "p_canister", assetTag: "@cryo_canister", label: "渗血低温样本罐", primitive: "cylinder", pos: [-0.95, 1.05, 0.05], color: "#5bbad5" },
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -1015,6 +1407,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/ana.jpg",
     videoSrc: "./videos/ana/flinch.mp4",
     fallbackVideoSrc: "./videos/ana/flinch.mp4",
+    boundAssetTags: ["@set_vestibule", "@ana", "@intercom"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "vestibule",
       alertLight: "red",
@@ -1031,6 +1425,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v05", label: "安娜 (V-05)", pos: [-1.05, 0, 0.0], rotY: Math.PI / 2, color: "#e04634", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -1048,6 +1445,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/linmei.jpg",
     videoSrc: "./videos/linmei/lean_in.mp4",
     fallbackVideoSrc: "./videos/linmei/lean_in.mp4",
+    boundAssetTags: ["@set_vestibule", "@linmei", "@intercom", "@ledger"],
+    motionPreset: "static",
     blocking: {
       zone: "vestibule",
       alertLight: "amber",
@@ -1064,6 +1463,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v07", label: "林梅 (V-07)", pos: [-1.1, 0, 0.0], rotY: Math.PI / 2, color: "#eba834", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
+        { id: "p_ledger", assetTag: "@ledger", label: "撤离密约台账", primitive: "ledger", pos: [0.18, 0.82, 1.44], color: "#d08770" }
       ]
     }
   },
@@ -1081,6 +1484,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/hannah.jpg",
     videoSrc: "./videos/hannah/flinch.mp4",
     fallbackVideoSrc: "./videos/hannah/flinch.mp4",
+    boundAssetTags: ["@set_vestibule", "@hannah", "@blackbox", "@intercom"],
+    motionPreset: "handheld",
     blocking: {
       zone: "vestibule",
       alertLight: "red",
@@ -1097,6 +1502,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "v08", label: "汉娜 (V-08)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#49b882", speaking: true }
+      ],
+      props: [
+        { id: "p_blackbox", assetTag: "@blackbox", label: "#08 黑匣子磁带机", primitive: "tape", pos: [-0.95, 1.18, 0.06], rotY: 0.4, color: "#49b882" },
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
   },
@@ -1114,6 +1523,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/operator09.jpg",
     videoSrc: "./videos/operator09/idle.mp4",
     fallbackVideoSrc: "./videos/operator09/idle.mp4",
+    boundAssetTags: ["@set_vestibule", "@set_booth", "@op09", "@intercom", "@ledger"],
+    motionPreset: "dolly_in",
     blocking: {
       zone: "vestibule",
       alertLight: "red",
@@ -1131,6 +1542,10 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       actors: [
         { id: "op09_double", label: "另一个你 (#09 镜像)", pos: [-1.1, 0, 0.0], rotY: Math.PI / 2, color: "#e04634", speaking: true },
         { id: "op09", label: "值班员 #09 (玩家)", pos: [1.3, 0, 0.1], rotY: -Math.PI / 2, color: "#49b882" }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
+        { id: "p_ledger", assetTag: "@ledger", label: "记录板与密钥", primitive: "ledger", pos: [0.15, 0.82, 1.45], color: "#d08770" }
       ]
     }
   },
@@ -1148,6 +1563,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     posterSrc: "./portraits/lobby_bg.jpg",
     videoSrc: "./videos/chamber/admit.mp4",
     fallbackVideoSrc: "./videos/chamber/admit.mp4",
+    boundAssetTags: ["@set_icecore", "@op09"],
+    motionPreset: "pull_back",
     blocking: {
       zone: "vestibule",
       alertLight: "amber",
@@ -1164,11 +1581,123 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       },
       actors: [
         { id: "sub", label: "破冰救援潜艇", pos: [-2.0, 0.2, 0.0], rotY: 0.4, color: "#49b882" }
-      ]
+      ],
+      props: []
     }
   }
 ];
 
 export function getStoryboardShot(id: string): StoryboardShot | undefined {
   return STUDIO_STORYBOARD_SHOTS.find((s) => s.id === id);
+}
+
+export function resolveAssetByTag(
+  tag: string
+): { kind: AssetKind; tag: string; name: LocalizedText; promptAnchor: string } | undefined {
+  const trimmed = tag.trim().toLowerCase();
+  if (!trimmed) return undefined;
+  const canonical = trimmed.startsWith("@") ? trimmed : `@${trimmed}`;
+
+  for (const cast of CAST_VISUAL_ASSETS) {
+    if (cast.assetTag.toLowerCase() === canonical) {
+      return {
+        kind: "cast",
+        tag: cast.assetTag,
+        name: cast.name,
+        promptAnchor: cast.promptAnchor
+      };
+    }
+  }
+
+  for (const prop of PROP_VISUAL_ASSETS) {
+    if (prop.assetTag.toLowerCase() === canonical) {
+      return {
+        kind: "prop",
+        tag: prop.assetTag,
+        name: prop.name,
+        promptAnchor: prop.promptAnchor
+      };
+    }
+  }
+
+  for (const setAsset of SET_VISUAL_ASSETS) {
+    if (setAsset.assetTag.toLowerCase() === canonical) {
+      return {
+        kind: "set",
+        tag: setAsset.assetTag,
+        name: setAsset.name,
+        promptAnchor: setAsset.promptAnchor
+      };
+    }
+  }
+
+  return undefined;
+}
+
+export function buildShotExportPackage(
+  shot: StoryboardShot,
+  lang: Locale,
+  cameraOverride?: Partial<CameraBlocking3D>
+): ShotExportPackage {
+  const effectivePos = cameraOverride?.pos ?? shot.blocking.camera.pos;
+  const effectiveTarget = cameraOverride?.target ?? shot.blocking.camera.target;
+  const cameraPos: [number, number, number] = [effectivePos[0], effectivePos[1], effectivePos[2]];
+  const cameraTarget: [number, number, number] = [
+    effectiveTarget[0],
+    effectiveTarget[1],
+    effectiveTarget[2]
+  ];
+  const fov = cameraOverride?.fov ?? shot.blocking.camera.fov;
+  const lens = cameraOverride?.lensLabel ?? shot.blocking.camera.lensLabel;
+  const title = tl(shot.title, lang);
+
+  const boundAssets: Array<{ tag: string; name: string; promptAnchor: string }> = [];
+  for (const rawTag of shot.boundAssetTags) {
+    const resolved = resolveAssetByTag(rawTag);
+    if (resolved) {
+      boundAssets.push({
+        tag: resolved.tag,
+        name: tl(resolved.name, lang),
+        promptAnchor: resolved.promptAnchor
+      });
+    }
+  }
+
+  const lipSyncLine = shot.lipSyncLine ? tl(shot.lipSyncLine, lang) : undefined;
+  const assetLines = boundAssets.map((a) => `${a.tag} (${a.name}): ${a.promptAnchor}`).join("\n");
+  const posStr = `[${cameraPos.map((n) => n.toFixed(2)).join(", ")}]`;
+  const tgtStr = `[${cameraTarget.map((n) => n.toFixed(2)).join(", ")}]`;
+
+  const promptSections = [
+    `[${shot.shotCode} // ${title}] 16:9 Anamorphic Live-Action Cinema (${shot.durationSec.toFixed(2)}s / ${shot.frames}f @ 24fps)`,
+    `Camera & Lens: ${lens}, FOV ${fov}deg, Motion=${shot.motionPreset}, Pos=${posStr} -> Aim=${tgtStr}`,
+    `Action & Movement: ${tl(shot.cameraMove, lang)}`,
+    `Axis & Lighting (${shot.blocking.zone}, alert=${shot.blocking.alertLight}): ${tl(shot.blocking.camera.axisNote, lang)}`,
+    `Bound Assets:\n${assetLines}`,
+    lipSyncLine
+      ? `Dialogue (Lip-Sync${shot.speakerName ? ` - ${tl(shot.speakerName, lang)}` : ""}): ${lipSyncLine}`
+      : `Audio: Ambient Svalbard -46C polar storm & mechanical hum (no dialogue)`,
+    `Look-Dev Standard: 35mm anamorphic film grain, matte sub-zero skin texture, polar cyan (#5bbad5) vs sodium amber (#eba834) contrast.`
+  ];
+  const promptText = promptSections.join("\n");
+
+  const jsonPayload: Omit<ShotExportPackage, "jsonString"> = {
+    shotCode: shot.shotCode,
+    shotId: shot.id,
+    title,
+    aspectRatio: "16:9",
+    lens,
+    fov,
+    motionPreset: shot.motionPreset,
+    cameraPos,
+    cameraTarget,
+    boundAssets,
+    ...(lipSyncLine ? { lipSyncLine } : {}),
+    promptText
+  };
+
+  return {
+    ...jsonPayload,
+    jsonString: JSON.stringify(jsonPayload, null, 2)
+  };
 }
