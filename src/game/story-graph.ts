@@ -164,7 +164,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "prequel_icecore_breach",
         videoSrc: "./videos/story/prequel_icecore_breach.mp4",
         fallbackVideoSrc: "./videos/story/prologue_01.mp4",
-        posterSrc: "./portraits/story/prologue_01.jpg",
+        posterSrc: "./portraits/story/prequel_icecore_breach.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
@@ -195,15 +195,15 @@ export const STORY_NODES: readonly StoryNode[] = [
         },
         subtitle: {
           zh: "“记住：真人会怕、会认错；越是完美得像教科书的，越不是人。”",
-          en: "\"Remember this: real humans mess up and admit fear. Anything that sounds too clean is a mimic.\"",
-          ja: "「忘れるな。生身の人間は失敗を認める。完璧すぎる言い訳をする奴ほど人間じゃない。」"
+          en: "\"Remember this: real humans feel fear and admit mistakes. Anything that sounds too textbook-perfect isn't human.\"",
+          ja: "「忘れるな。生身の人間は恐れ、過ちを認める。教科書通りに完璧すぎる奴ほど、人間じゃない。」"
         }
       },
       {
         id: "prologue_01_main",
         videoSrc: "./videos/story/prologue_01.mp4",
         fallbackVideoSrc: "./videos/lobby/bg.mp4",
-        posterSrc: "./portraits/story/prologue_01.jpg",
+        posterSrc: "./portraits/story/prologue_01_handover.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: false,
         badge: { zh: "接班考核 01", en: "HANDOVER 01", ja: "引継試験 01" },
@@ -264,7 +264,7 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "居眠りの警報"
     },
     subtitle: {
-      zh: "连续守夜让你在防爆窗前打了个盹。红色警戒灯在钢铁走廊尽头亮起又熄灭——值班主管敲响了你的玻璃门。",
+      zh: "你替室友顶了一个夜班，太累在防爆窗前打了个盹。红色警戒灯在走廊尽头扫过——值班主管敲响了你的玻璃门。",
       en: "Hours into covering a teammate's watch, exhaustion pulls you under. A red siren sweeps the frostbitten corridor as your supervisor taps the glass.",
       ja: "同室者の夜勤を代わった深夜、疲労で意識が落ちた。氷結した廊下の奥で赤色灯が回り、上官がガラスを叩く。"
     },
@@ -277,7 +277,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     hasAudio: false,
     videoSrc: "./videos/story/prologue_02.mp4",
     fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
-    posterSrc: "./portraits/story/prologue_02.jpg",
+    posterSrc: "./portraits/story/prologue_02_knock.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
     row: 1,
     col: 1,
@@ -389,7 +389,7 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "「外の暖房管が破裂した！早く開けないとここで凍死する！」"
     },
     speaker: {
-      zh: "V-01 // 艾琳娜·万斯博士",
+      zh: "V-01 // 艾琳娜·万斯医生",
       en: "V-01 // DR. ELENA VANCE",
       ja: "V-01 // エレナ・ヴァンス医師"
     },
@@ -404,7 +404,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "fb_elena_cabin3",
         videoSrc: "./videos/story/fb_elena_cabin3.mp4",
         fallbackVideoSrc: "./videos/elena/flinch.mp4",
-        posterSrc: "./portraits/reactions/elena_flinch.jpg",
+        posterSrc: "./portraits/story/fb_elena_cabin3.jpg",
         fallbackPosterSrc: "./portraits/elena.jpg",
         hasAudio: true,
         isLipSync: false,
@@ -812,9 +812,9 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "n1_corridor_aftermath_admit",
-        videoSrc: "./videos/story/n1_corridor_aftermath.mp4",
-        fallbackVideoSrc: "./videos/chamber/admit.mp4",
-        posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+        videoSrc: "./videos/story/n1_corridor_aftermath_admit.mp4",
+        fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+        posterSrc: "./portraits/story/n1_corridor_admit_frost.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_admit.jpg",
         hasAudio: false,
         badge: { zh: "走廊监控 · 二十分钟后", en: "CORRIDOR CAM", ja: "監視映像" },
@@ -918,12 +918,13 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "n1_corridor_aftermath_purge",
-        videoSrc: "./videos/story/n1_corridor_aftermath.mp4",
-        fallbackVideoSrc: "./videos/chamber/purge.mp4",
-        posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+        videoSrc: "./videos/story/n1_corridor_aftermath_purge.mp4",
+        fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
+        posterSrc: "./portraits/story/n1_corridor_purge_duct.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
-        hasAudio: false,
-        badge: { zh: "走廊监控 · 通风口异响", en: "DUCT ECHO", ja: "ダクト異音" },
+        hasAudio: true,
+        isLipSync: false,
+        badge: { zh: "原声音效 · 通风口三声敲击", en: "SFX · DUCT KNOCKS", ja: "音声 · ダクト三連打" },
         speaker: {
           zh: "站内走廊顶部通风管",
           en: "OVERHEAD AIR DUCT",
@@ -990,7 +991,7 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "「当直官！早く開けてくれ、第2動力室の予備バルブ一式を持ってきたんだ！」"
     },
     speaker: {
-      zh: "V-02 // 佐藤里奥",
+      zh: "V-02 // 佐藤莱奥",
       en: "V-02 // LEO SATO",
       ja: "V-02 // 佐藤レオ"
     },
@@ -1005,7 +1006,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "fb_leo_powerbay",
         videoSrc: "./videos/story/fb_leo_powerbay.mp4",
         fallbackVideoSrc: "./videos/leo/flinch.mp4",
-        posterSrc: "./portraits/reactions/leo_flinch.jpg",
+        posterSrc: "./portraits/story/fb_leo_powerbay.jpg",
         fallbackPosterSrc: "./portraits/leo.jpg",
         hasAudio: true,
         isLipSync: false,
@@ -1016,9 +1017,9 @@ export const STORY_NODES: readonly StoryNode[] = [
           ja: "2時間前 // 第2動力室"
         },
         subtitle: {
-          zh: "两小时前动力舱电弧爆闪，里奥抱起白色工具箱独自从应急风雪闸门跑了出来。",
-          en: "Two hours ago sparks erupted in Power Bay 2—Leo grabbed his white tool chest and bolted through the storm hatch alone.",
-          ja: "2時間前、動力室で火花が散る中、リオは白い工具箱を抱えて一人で吹雪の中へ逃げ出した。"
+          zh: "两小时前 2 号动力舱电弧爆闪，莱奥抱起白色工具箱独自冲出应急风雪闸门。",
+          en: "Two hours ago arcs erupted in Power Bay 2—Leo grabbed his white tool chest and bolted out the storm hatch alone.",
+          ja: "2時間前、第2動力室で火花が散る中、レオは白い工具箱を抱えて一人で吹雪のハッチへ飛び出した。"
         }
       },
       {
@@ -1030,7 +1031,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         hasAudio: true,
         badge: { zh: "原声口型 · 抵窗求助", en: "LIP-SYNC · ARRIVAL", ja: "口型音声 · 現在" },
         speaker: {
-          zh: "V-02 // 佐藤里奥",
+          zh: "V-02 // 佐藤莱奥",
           en: "V-02 // LEO SATO",
           ja: "V-02 // 佐藤レオ"
         },
@@ -1049,9 +1050,9 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "leo_open_intercom",
         nextNodeId: "n1_leo_react_intercom",
         label: {
-          zh: "问他：车队出事你怎么自己回来了？",
-          en: "Ask him: Why did you run back alone without the crew?",
-          ja: "聞く：どうして仲間を置いて一人で逃げたの？"
+          zh: "问他：动力舱跳闸怎么只有你一个人跑出来？",
+          en: "Ask him: Why did you bolt from Power Bay 2 alone?",
+          ja: "聞く：どうして一人で戻ってきたんだ？"
         },
         sublabel: {
           zh: "继续看他怎么回答（口型剧情）",
@@ -1061,9 +1062,9 @@ export const STORY_NODES: readonly StoryNode[] = [
         boothEffect: {
           action: "intercom",
           systemNote: {
-            zh: "【剧情切入】你没有立刻开门，追问他为什么独自脱离车队。",
-            en: "[SCENE ENTRY] Before opening, you ask why he split from the convoy alone.",
-            ja: "【場面導入】なぜ隊列を離れたのか直接問い詰める。"
+            zh: "【剧情切入】你没有立刻开门，追问他为什么在动力舱出事后独自跑出来。",
+            en: "[SCENE ENTRY] Before opening, you ask why he ran from Power Bay 2 alone.",
+            ja: "【場面導入】なぜ動力室から一人で飛び出したのか直接問い詰める。"
           }
         }
       },
@@ -1124,17 +1125,17 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "night1_leo",
     code: "SC-02B-1",
     title: {
-      zh: "里奥急辩 · 冰缝脱队",
-      en: "Convoy Rebuttal · Leo",
-      ja: "リオ急弁・氷の割れ目"
+      zh: "莱奥急辩 · 动力舱封锁",
+      en: "Power Bay Rebuttal · Leo",
+      ja: "レオ急弁・動力室封鎖"
     },
     subtitle: {
-      zh: "“车队在冰缝那边全散了！我是拼着命把备用件背回来的，没半句假话！”",
-      en: "\"The convoy scattered at the crevasse—I risked my neck hauling these parts back!\"",
-      ja: "「護送班は氷の割れ目で散り散りになったんだ！命懸けで部品を持ち帰ったんだ！」"
+      zh: "“液压总阀崩的时候烟冲满整间机房，老师傅喊我抱着备用箱先往外冲——我没扔下谁！”",
+      en: "\"Smoke flooded Bay 2 when the valve sheared—the chief yelled for me to haul the spare kit outside!\"",
+      ja: "「バルブが飛んだ時、部屋中が煙で埋まって親方が俺に工具箱を持って先に出ろって叫んだんだ！」"
     },
     speaker: {
-      zh: "V-02 // 佐藤里奥",
+      zh: "V-02 // 佐藤莱奥",
       en: "V-02 // LEO SATO",
       ja: "V-02 // 佐藤レオ"
     },
@@ -1373,25 +1374,25 @@ export const STORY_NODES: readonly StoryNode[] = [
       }
     ]
   },
-  // ==================== NIGHT 2 · COMMAND CRISIS ====================
+  // ==================== NIGHT 2 · AUDIT & AIRLOCK CRISIS ====================
   {
     id: "n2_arthur_standoff",
     chapter: "night2_power",
     code: "SC-03A",
     title: {
-      zh: "第 2 夜 · 站长的交权最后通牒",
-      en: "Night 2 · Arthur's Command Ultimatum",
-      ja: "第2夜 · アーサー所長の最後通牒"
+      zh: "第 2 夜 · 审计官斯特林：附则第 4 条",
+      en: "Night 2 · Auditor Sterling: Clause 4",
+      ja: "第2夜 · 監査官スターリング：付則第4条"
     },
     subtitle: {
-      zh: "“我是站长亚瑟！一号反应堆撑不过今晚，立刻开门把控制台主钥匙交给我！”",
-      en: "\"I run this outpost! Open Gate 0 and hand over the master console key before Reactor 1 blows!\"",
-      ja: "「私は所長だ！今すぐドアを開けて制御室のマスターキーを渡せ！」"
+      zh: "“操作员 #09，我是总部审计官斯特林。按应急附则第 4 条，请立即为机密档案持有人开锁。”",
+      en: "\"Operator #09, Arthur Sterling, London Audit. Under Contingency Clause 4, unseal this lock for classified custodian transit.\"",
+      ja: "「検疫官 #09、本社監査官のスターリングだ。緊急付則第4条に基づき、機密保持者の通過を許可したまえ。」"
     },
     speaker: {
-      zh: "V-03 // Arthur Sterling 站长",
-      en: "V-03 // DIRECTOR ARTHUR STERLING",
-      ja: "V-03 // アーサー・スターリング所長"
+      zh: "V-03 // Arthur Sterling · 伦敦总部审计官",
+      en: "V-03 // AUDITOR ARTHUR STERLING",
+      ja: "V-03 // アーサー・スターリング監査官"
     },
     kind: "movie",
     hasAudio: false,
@@ -1409,14 +1410,14 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n2_marcus_clash",
         directVerdict: "ADMIT",
         label: {
-          zh: "信任站长亚瑟，让他进门接管指挥",
-          en: "Trust Arthur and open the gate",
-          ja: "アーサーを信じてドアを開ける"
+          zh: "按附则第 4 条开锁，放审计官斯特林进舱",
+          en: "Honor Clause 4 & admit Auditor Sterling",
+          ja: "付則第4条に従いスターリングを通す"
         },
         sublabel: {
-          zh: "放行 // 他带着应急密码，先进来稳住反应堆",
-          en: "ADMIT // Let him stabilize the reactor",
-          ja: "通過 // 原子炉の復旧を任せる"
+          zh: "放行 // 解除外舱门锁并记录审计交接",
+          en: "ADMIT // Cycle lock & log audit transit",
+          ja: "通過 // ロックを解除し監査移送を記録"
         }
       },
       {
@@ -1424,14 +1425,14 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n2_marcus_clash",
         directVerdict: "PURGE",
         label: {
-          zh: "拒绝交权，直接启动防爆窗净化",
-          en: "Refuse command transfer & purge",
-          ja: "権限委譲を拒否・焼却する"
+          zh: "拒绝开锁，启动防爆窗高温净化",
+          en: "Refuse entry & trigger thermal purge",
+          ja: "開錠を拒否・焼却を起動する"
         },
         sublabel: {
-          zh: "净化 // 真站长绝不会在停电夜独自丢下队员",
-          en: "PURGE [-1 FUEL] // Suspect mimic command takeover",
-          ja: "焼却 [-1 FUEL] // 偽装と判断する"
+          zh: "净化 [-1 FUEL] // 烧毁外部目标与随行卷宗盒",
+          en: "PURGE [-1 FUEL] // Sterilize vestibule target",
+          ja: "焼却 [-1 FUEL] // 前室を高温焼却"
         }
       },
       {
@@ -1458,17 +1459,17 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "night2_power",
     code: "SC-03B",
     title: {
-      zh: "深夜对峙 · 安保队长马库斯",
-      en: "Night 2 · Capt. Marcus Breaks Ranks",
-      ja: "第2夜 · 警備隊長マーカス"
+      zh: "深夜拍门 · 外风口失压危机",
+      en: "Night 2 · Capt. Chen at Outer Bulkhead",
+      ja: "第2夜 · チェン隊長の緊急開門要請"
     },
     subtitle: {
-      zh: "“值班员，二号寝舱已经有人失踪了！放我进去拿脉冲步枪，我来守住走廊！”",
-      en: "\"Someone vanished from Bunk 2! Open up so I can grab the pulse carbine and hold the corridor!\"",
-      ja: "「第2居住区で行方不明者が出た！通路を守るために中へ入れてくれ！」"
+      zh: "“#09，是我，陈队长！别磨蹭，外头风口撑不住两分钟了！”",
+      en: "\"#09, it's Captain Chen! Stop staring at the monitor and cycle the bolts!\"",
+      ja: "「#09、俺だ、チェン隊長だ！モタモタするな、外の隔壁はもう保たんぞ！」"
     },
     speaker: {
-      zh: "V-04 // Capt. Marcus Chen",
+      zh: "V-04 // Capt. Marcus Chen · 安保队长",
       en: "V-04 // CAPT. MARCUS CHEN",
       ja: "V-04 // マーカス・チェン隊長"
     },
@@ -1485,32 +1486,32 @@ export const STORY_NODES: readonly StoryNode[] = [
     choices: [
       {
         id: "n2_marcus_admit",
-        nextNodeId: "n3_storm_blackout",
+        nextNodeId: "n3_ana_betrayal",
         directVerdict: "ADMIT",
         label: {
-          zh: "放安保队长马库斯进门带队巡查",
-          en: "Let Marcus inside to patrol the corridor",
-          ja: "マーカスを通路巡回に入れる"
+          zh: "拉起气闸插销，放陈队长进门抢修风口",
+          en: "Cycle bolts & let Capt. Chen inside",
+          ja: "隔壁を開けチェン隊長を通す"
         },
         sublabel: {
-          zh: "放行 // 没有武装守卫，明天全站都会乱",
-          en: "ADMIT // Rely on his security team",
-          ja: "通過 // 警備の立て直しを託す"
+          zh: "放行 // 解除外门插销放入安保队长",
+          en: "ADMIT // Cycle airlock bolts",
+          ja: "通過 // エアロック開放"
         }
       },
       {
         id: "n2_marcus_purge",
-        nextNodeId: "n3_storm_blackout",
+        nextNodeId: "n3_ana_betrayal",
         directVerdict: "PURGE",
         label: {
-          zh: "怀疑他已被替换，封门启动净化",
-          en: "Suspect he is compromised & purge",
-          ja: "乗っ取りを疑い焼却する"
+          zh: "封死门闸，启动防爆窗高温净化",
+          en: "Seal airlock & trigger thermal purge",
+          ja: "封鎖・焼却を起動する"
         },
         sublabel: {
-          zh: "净化 // 绝不能让“伪人”拿到站内武器库钥匙",
-          en: "PURGE [-1 FUEL] // Keep the armory sealed",
-          ja: "焼却 [-1 FUEL] // 武器庫を渡さない"
+          zh: "净化 [-1 FUEL] // 锁定走廊门并用 1,100°C 清除",
+          en: "PURGE [-1 FUEL] // Lock bulkhead & purge",
+          ja: "焼却 [-1 FUEL] // 高温焼却実行"
         }
       },
       {
@@ -1518,7 +1519,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n2_side_audit",
         isSideQuest: true,
         sideQuestVisitorId: "V-04",
-        sideQuestReturnNodeId: "n3_storm_blackout",
+        sideQuestReturnNodeId: "n3_ana_betrayal",
         label: {
           zh: "🔍 进入防爆窗 · 深度鉴真马库斯（高玩支线）",
           en: "🔍 Booth Interrogation · Audit Marcus (Side Quest)",
@@ -1562,100 +1563,21 @@ export const STORY_NODES: readonly StoryNode[] = [
   },
   // ==================== NIGHT 3 · GEOMAGNETIC BLACKOUT ====================
   {
-    id: "n3_storm_blackout",
+    id: "n3_ana_betrayal",
     chapter: "night3_storm",
     code: "SC-04A",
     title: {
-      zh: "第 3 夜磁暴 · 冰芯寄生体真相",
-      en: "Night 3 Blackout · Ingrid's Cryo Sample",
-      ja: "第3夜磁気嵐・イングリッドの氷芯検体"
+      zh: "第 3 夜磁暴 · 高压减压舱漏气",
+      en: "Night 3 Blackout · Hyperbaric Bay Leak",
+      ja: "第3夜磁気嵐・高圧チャンバー漏洩"
     },
     subtitle: {
-      zh: "极光磁暴吞没了监控信号！首席研究员英格丽德抱着渗血低温罐撞门大喊：“标本活过来了！”",
-      en: "Geomagnetic storm blacks out the sensors! Dr. Solberg slams the glass holding a frost-cracked cryo canister.",
-      ja: "極地磁気嵐で監視網が停止！イングリッド博士が凍結容器を抱えて叫ぶ。"
+      zh: "“#09，高压减压舱漏气了。我是安娜·里贝罗，开内门。”",
+      en: "\"#09, the hyperbaric bay lost seal. Ana Ribeiro. Open the inner lock.\"",
+      ja: "「#09、高圧チャンバーのシールが破れた。アナ・リベイロよ、内扉を開けて。」"
     },
     speaker: {
-      zh: "V-06 // Dr. Ingrid Solberg",
-      en: "V-06 // DR. INGRID SOLBERG",
-      ja: "V-06 // イングリッド博士"
-    },
-    kind: "movie",
-    hasAudio: false,
-    voiceCue: { slug: "ingrid", file: "opening" },
-    visitorId: "V-06",
-    videoSrc: "./videos/ingrid/lean_in.mp4",
-    fallbackVideoSrc: "./videos/ingrid/lean_in.mp4",
-    posterSrc: "./portraits/reactions/ingrid_lean_in.jpg",
-    fallbackPosterSrc: "./portraits/ingrid.jpg",
-    row: 1,
-    col: 15,
-    choices: [
-      {
-        id: "n3_ingrid_admit",
-        nextNodeId: "n3_ana_betrayal",
-        directVerdict: "ADMIT",
-        label: {
-          zh: "放英格丽德进门，保留冰芯样本查真相",
-          en: "Let Ingrid in & preserve the cryo sample",
-          ja: "イングリッドを通して検体を調べる"
-        },
-        sublabel: {
-          zh: "放行 // 只有看清源头，才能分辨谁是真正的伪人",
-          en: "ADMIT // We need the lab sample to survive",
-          ja: "通過 // 真相解明のため検体を残す"
-        }
-      },
-      {
-        id: "n3_ingrid_purge",
-        nextNodeId: "n3_ana_betrayal",
-        directVerdict: "PURGE",
-        label: {
-          zh: "连人带样本彻底净化，杜绝感染",
-          en: "Incinerate both scientist and sample",
-          ja: "検体ごと完全に焼却処分する"
-        },
-        sublabel: {
-          zh: "净化 // 别管科研数据了，活下去才重要",
-          en: "PURGE [-1 FUEL] // Zero contamination policy",
-          ja: "焼却 [-1 FUEL] // 汚染源を断つ"
-        }
-      },
-      {
-        id: "n3_ingrid_side_audit",
-        nextNodeId: "n3_side_audit",
-        isSideQuest: true,
-        sideQuestVisitorId: "V-06",
-        sideQuestReturnNodeId: "n3_ana_betrayal",
-        label: {
-          zh: "🔍 磁暴盲审 · 亲自盘查英格丽德（高玩支线）",
-          en: "🔍 Blind Storm Audit · Ingrid (Side Quest)",
-          ja: "🔍 磁気嵐下の盲目尋問（任意支線）"
-        },
-        sublabel: {
-          zh: "高难度盲审 · 强光热像全失灵，纯靠对话找破绽",
-          en: "Hardcore blackout mode · pure dialogue interrogation",
-          ja: "センサー停止中の純粋尋問"
-        }
-      }
-    ]
-  },
-  {
-    id: "n3_ana_betrayal",
-    chapter: "night3_storm",
-    code: "SC-04B",
-    title: {
-      zh: "供氧警报 · 安娜的血检报告",
-      en: "Night 3 · Ana's Blood-Test Warning",
-      ja: "第3夜・アナの血液検査警告"
-    },
-    subtitle: {
-      zh: "“别信屋里那些人！全站氧气阀被调低了，快开门让我进总控室手动重启！”",
-      en: "\"Don't trust anyone inside! Someone sabotaged the O2 loop—let me reach the manual manifold!\"",
-      ja: "「中の連中を信じないで！酸素バルブが落とされた、今すぐ通して！」"
-    },
-    speaker: {
-      zh: "V-05 // Ana Ribeiro 轮值医助",
+      zh: "V-05 // Ana Ribeiro · 饱和潜水员",
       en: "V-05 // ANA RIBEIRO",
       ja: "V-05 // アナ・リベイロ"
     },
@@ -1668,36 +1590,36 @@ export const STORY_NODES: readonly StoryNode[] = [
     posterSrc: "./portraits/reactions/ana_flinch.jpg",
     fallbackPosterSrc: "./portraits/ana.jpg",
     row: 1,
-    col: 16,
+    col: 15,
     choices: [
       {
         id: "n3_ana_admit",
-        nextNodeId: "n4_linmei_conspiracy",
+        nextNodeId: "n3_storm_blackout",
         directVerdict: "ADMIT",
         label: {
-          zh: "相信安娜的供氧警报，立刻开门",
-          en: "Trust Ana's O2 warning & open the gate",
-          ja: "アナの警告を信じてゲートを開ける"
+          zh: "打开内门，放安娜进入舱内走廊",
+          en: "Open the inner lock & admit Ana",
+          ja: "内扉を開けアナを通す"
         },
         sublabel: {
-          zh: "放行 // 她颤抖的呼吸不像演出来的",
-          en: "ADMIT // Save the station oxygen loop",
-          ja: "通過 // 酸素供給を復旧させる"
+          zh: "放行 // 解除内门锁定（磁暴下热成像离线）",
+          en: "ADMIT // Cycle inner gate during blackout",
+          ja: "通過 // 磁気嵐下で内扉開放"
         }
       },
       {
         id: "n3_ana_purge",
-        nextNodeId: "n4_linmei_conspiracy",
+        nextNodeId: "n3_storm_blackout",
         directVerdict: "PURGE",
         label: {
-          zh: "识破她在借恐慌闯关，拉闸净化",
-          en: "She's exploiting panic to breach Gate 0 — Purge",
-          ja: "パニックを利用した侵入と見て焼却する"
+          zh: "锁死内门并启动高温净化",
+          en: "Lock inner gate & trigger thermal purge",
+          ja: "内扉を封鎖し焼却を起動する"
         },
         sublabel: {
-          zh: "净化 // 真安娜宁可闷死也不愿欠任何人情",
-          en: "PURGE [-1 FUEL] // Lock down before Night 4",
-          ja: "焼却 [-1 FUEL] // 第4夜へ備える"
+          zh: "净化 [-1 FUEL] // 启动 1,100°C 清除",
+          en: "PURGE [-1 FUEL] // Sterilize vestibule",
+          ja: "焼却 [-1 FUEL] // 高温焼却実行"
         }
       },
       {
@@ -1705,7 +1627,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n3_side_audit",
         isSideQuest: true,
         sideQuestVisitorId: "V-05",
-        sideQuestReturnNodeId: "n4_linmei_conspiracy",
+        sideQuestReturnNodeId: "n3_storm_blackout",
         label: {
           zh: "🔍 磁暴盲审 · 深度鉴真安娜（高玩支线）",
           en: "🔍 Blind Storm Audit · Ana (Side Quest)",
@@ -1715,6 +1637,85 @@ export const STORY_NODES: readonly StoryNode[] = [
           zh: "可选硬核支线 · 磁暴下验证 V-05 行为习惯",
           en: "Optional blackout interrogation · V-05",
           ja: "任意の盲目尋問支線"
+        }
+      }
+    ]
+  },
+  {
+    id: "n3_storm_blackout",
+    chapter: "night3_storm",
+    code: "SC-04B",
+    title: {
+      zh: "磁暴静默 · 索尔伯格医生的安抚",
+      en: "Night 3 Blackout · Dr. Solberg's Visit",
+      ja: "第3夜磁気嵐・ソルベルグ医師の来訪"
+    },
+    subtitle: {
+      zh: "“晚上好，#09。你的呼吸听起来很紧绷——我是索尔伯格医生，开门让我进来陪你稳住节奏好吗？”",
+      en: "\"Good evening, #09. Your breathing sounds tight over the static—it's Dr. Solberg. Let me in so we can steady this together.\"",
+      ja: "「こんばんは、#09。息が詰まっているわね——ソルベルグよ。中へ入れてちょうだい、一緒に落ち着きましょう。」"
+    },
+    speaker: {
+      zh: "V-06 // Dr. Ingrid Solberg · 心理顾问",
+      en: "V-06 // DR. INGRID SOLBERG",
+      ja: "V-06 // イングリッド・ソルベルグ"
+    },
+    kind: "movie",
+    hasAudio: false,
+    voiceCue: { slug: "ingrid", file: "opening" },
+    visitorId: "V-06",
+    videoSrc: "./videos/ingrid/lean_in.mp4",
+    fallbackVideoSrc: "./videos/ingrid/lean_in.mp4",
+    posterSrc: "./portraits/reactions/ingrid_lean_in.jpg",
+    fallbackPosterSrc: "./portraits/ingrid.jpg",
+    row: 1,
+    col: 16,
+    choices: [
+      {
+        id: "n3_ingrid_admit",
+        nextNodeId: "n4_linmei_conspiracy",
+        directVerdict: "ADMIT",
+        label: {
+          zh: "放索尔伯格医生进门，进入第 4 夜",
+          en: "Let Dr. Solberg in & continue to Night 4",
+          ja: "ソルベルグを通し第4夜へ"
+        },
+        sublabel: {
+          zh: "放行 // 打开外舱门锁放入心理顾问",
+          en: "ADMIT // Cycle outer gate",
+          ja: "通過 // ゲート開放"
+        }
+      },
+      {
+        id: "n3_ingrid_purge",
+        nextNodeId: "n4_linmei_conspiracy",
+        directVerdict: "PURGE",
+        label: {
+          zh: "拒绝对话安抚，启动高温净化",
+          en: "Reject her calm & ignite thermal purge",
+          ja: "懐柔を拒否し焼却処分する"
+        },
+        sublabel: {
+          zh: "净化 [-1 FUEL] // 启动 1,100°C 清除",
+          en: "PURGE [-1 FUEL] // Sterilize vestibule",
+          ja: "焼却 [-1 FUEL] // 高温焼却"
+        }
+      },
+      {
+        id: "n3_ingrid_side_audit",
+        nextNodeId: "n3_side_audit",
+        isSideQuest: true,
+        sideQuestVisitorId: "V-06",
+        sideQuestReturnNodeId: "n4_linmei_conspiracy",
+        label: {
+          zh: "🔍 磁暴盲审 · 亲自盘查英格丽（高玩支线）",
+          en: "🔍 Blind Storm Audit · Ingrid (Side Quest)",
+          ja: "🔍 磁気嵐下の盲目尋問（任意支線）"
+        },
+        sublabel: {
+          zh: "高难度盲审 · 强光热像全失灵，纯靠对话找破绽",
+          en: "Hardcore blackout mode · pure dialogue interrogation",
+          ja: "センサー停止中の純粋尋問"
         }
       }
     ]
@@ -1747,25 +1748,25 @@ export const STORY_NODES: readonly StoryNode[] = [
     row: 2,
     col: 16
   },
-  // ==================== NIGHT 4 · MUTINY & ESCAPE ====================
+  // ==================== NIGHT 4 · CRYO VAULT & BLACK-BOX ====================
   {
     id: "n4_linmei_conspiracy",
     chapter: "night4_mutiny",
     code: "SC-05A",
     title: {
-      zh: "第 4 夜 · 林梅的潜艇撤离密约",
-      en: "Night 4 · Dr. Lin Mei's Evacuation Pact",
-      ja: "第4夜・リンメイの潜水艦脱出密約"
+      zh: "第 4 夜 · 低温样本库封条破损",
+      en: "Night 4 · Lin Mei: Broken Cryo-Vault Seal",
+      ja: "第4夜・リンメイ：低温保管庫の封破れ"
     },
     subtitle: {
-      zh: "“破冰救援艇还有二十分钟启航，条例第 14 条归你，潜艇舱位有你的位置——放我过去。”",
-      en: "\"The sub launches in twenty minutes. Stamp my clearance and I'll hold a berth for you—open the gate.\"",
-      ja: "「救助潜水艦が20分後に出航する。あなたの席も用意してあるわ——通して」"
+      zh: "“#09，低温样本库封条破了。我是林梅，开门让我进内舱锁死母本。”",
+      en: "\"#09, the cryo-vault seal broke. It's Lin Mei—cycle the lock so I can secure the master cultures.\"",
+      ja: "「#09、低温保管庫の封が破れたわ。リン・メイよ、母株を封じるから開けて。」"
     },
     speaker: {
-      zh: "V-07 // Dr. Lin Mei 合规主审官",
+      zh: "V-07 // Dr. Lin Mei · 低温生物学家",
       en: "V-07 // DR. LIN MEI",
-      ja: "V-07 // リン・メイ監査官"
+      ja: "V-07 // リン・メイ"
     },
     kind: "movie",
     hasAudio: false,
@@ -1783,14 +1784,14 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n4_hannah_whistle",
         directVerdict: "ADMIT",
         label: {
-          zh: "答应林梅，打开撤离潜艇坞门",
-          en: "Take the deal & open the sub-dock path",
-          ja: "取引に応じ潜水艦ドックを開放する"
+          zh: "放林梅进内舱，锁死样本库母本",
+          en: "Let Lin Mei inside to seal the cryo-vault",
+          ja: "リンメイを通し母株を封印させる"
         },
         sublabel: {
-          zh: "放行 // 先保住全站唯一的撤离机会",
-          en: "ADMIT // Secure a seat on the escape sub",
-          ja: "通過 // 脱出の望みを繋ぐ"
+          zh: "放行 // 解除内舱锁定并放行低温生物学家",
+          en: "ADMIT // Cycle inner cryo lock",
+          ja: "通過 // 内室ロック解除"
         }
       },
       {
@@ -1798,14 +1799,14 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n4_hannah_whistle",
         directVerdict: "PURGE",
         label: {
-          zh: "绝不拿条例做交易，启动净化",
-          en: "Refuse the bribe & ignite purge jets",
-          ja: "取引を拒否し焼却を起動する"
+          zh: "拒开内门，直接启动高温净化",
+          en: "Refuse lock cycle & ignite purge jets",
+          ja: "開放を拒否し焼却を起動する"
         },
         sublabel: {
-          zh: "净化 // 这张完美笑脸下一定藏着破绽",
-          en: "PURGE [-1 FUEL] // Never let a mimic reach the sub",
-          ja: "焼却 [-1 FUEL] // 擬態体を外へ逃がさない"
+          zh: "净化 [-1 FUEL] // 启动 1,100°C 清除高阶目标",
+          en: "PURGE [-1 FUEL] // Sterilize Night 4 target",
+          ja: "焼却 [-1 FUEL] // 高温焼却実行"
         }
       },
       {
@@ -1833,16 +1834,16 @@ export const STORY_NODES: readonly StoryNode[] = [
     code: "SC-05B",
     title: {
       zh: "黎明前最后敲门 · 汉娜的黑匣子",
-      en: "Night 4 · Hannah's Black-Box Tape",
-      ja: "第4夜・ハンナのブラックボックス録音"
+      en: "Night 4 · Hannah's Vent Tamper Black-Box",
+      ja: "第4夜・ハンナの排気ブラックボックス"
     },
     subtitle: {
-      zh: "暴雨雪拍窗，汉娜高举着沾血的黑匣子：“前任 #08 根本不是失踪！里面全是真相录音！”",
-      en: "Hannah slams a bloodstained black-box recorder onto the glass: \"Operator #08 didn't vanish—play this tape!\"",
-      ja: "「前任の#08は行方不明なんかじゃない！この録音に全部残っている！」"
+      zh: "“#09，我是汉娜·魏斯。我怀里是外风井违规排气的黑匣子，立刻放我进内舱封存证物！”",
+      en: "\"#09, Hannah Weiss. I'm holding the outer-shaft vent tamper recorder—open the lock so I can seal the evidence!\"",
+      ja: "「#09、ハンナ・ヴァイスよ。不正排気のブラックボックスを持っているわ、証拠保全のため開けて！」"
     },
     speaker: {
-      zh: "V-08 // Hannah Weiss",
+      zh: "V-08 // Hannah Weiss · 维生技术员",
       en: "V-08 // HANNAH WEISS",
       ja: "V-08 // ハンナ・ヴァイス"
     },
@@ -1862,14 +1863,14 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n5_final_mirror",
         directVerdict: "ADMIT",
         label: {
-          zh: "开门接过黑匣子，迎战第 5 夜真相",
-          en: "Let Hannah in & play #08's black-box tape",
-          ja: "ハンナを入れて録音を受け取る"
+          zh: "开门封存黑匣子证物，迎接第 5 夜",
+          en: "Let Hannah in to seal evidence & face Night 5",
+          ja: "ハンナを入れ証拠を保全し第5夜へ"
         },
         sublabel: {
-          zh: "放行 // 终于凑齐了站内黑幕的全部证据",
-          en: "ADMIT // Enter Night 5 finale armed with truth",
-          ja: "通過 // 第5夜の最終決断へ"
+          zh: "放行 // 接过外风井排气黑匣子（将触发机密核查）",
+          en: "ADMIT // Recover vent tamper black-box",
+          ja: "通過 // 証拠記録を回収する"
         }
       },
       {
@@ -1877,14 +1878,14 @@ export const STORY_NODES: readonly StoryNode[] = [
         nextNodeId: "n5_final_mirror",
         directVerdict: "PURGE",
         label: {
-          zh: "太晚了——连她一起净化，独自迎接黎明",
-          en: "Trust no one anymore & purge Gate 0",
-          ja: "誰も信じない——焼却して一人で夜明けを待つ"
+          zh: "拒不接盒，连人带黑匣子一并净化",
+          en: "Refuse evidence & purge Gate 0",
+          ja: "受け取りを拒み焼却する"
         },
         sublabel: {
-          zh: "净化 // 第 5 夜大门外只剩下你自己的倒影",
-          en: "PURGE [-1 FUEL] // Face the Night 5 mirror alone",
-          ja: "焼却 [-1 FUEL] // 孤独に第5夜を迎える"
+          zh: "净化 [-1 FUEL] // 不留任何证物，独自进入第 5 夜",
+          en: "PURGE [-1 FUEL] // Face Night 5 without tape",
+          ja: "焼却 [-1 FUEL] // 単独で第5夜へ"
         }
       },
       {
@@ -1945,9 +1946,9 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "第5夜終局・窓の外の『もう一人の自分』"
     },
     subtitle: {
-      zh: "极昼的第一缕红光穿透暴风雪。防爆窗外走来一个穿着和你一模一样工服的身影——系统锁定了门禁，只等你按出整部电影的最终结局。",
-      en: "Dawn breaks blood-red across the blizzard. Outside the glass stands a figure wearing your exact OP#09 parka—make your final choice.",
-      ja: "夜明けの光の中、窓の外にあなたと瓜二つの人影が現れる。最後の決断を下せ。"
+      zh: "极夜最深处，防爆窗外走来一个穿着和你一模一样工服的身影——它正复述你入职时亲口说过的话，逼你在四道终局门之间作出最后抉择。",
+      en: "In the deepest polar night, a figure wearing your exact OP#09 parka steps up to the glass—repeating your own intake words as you choose the finale.",
+      ja: "極夜の中、あなたと瓜二つの人影が窓の外に現れ、入所時の言葉をそのまま復唱する。最後の決断を下せ。"
     },
     speaker: {
       zh: "第 5 夜终章 // 镜像对峙",
@@ -1968,56 +1969,56 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "n5_choose_dawn",
         nextNodeId: "ending_dawn_break",
         label: {
-          zh: "炸毁冰芯井，带幸存者乘潜艇破冰逃生",
-          en: "Detonate the ice-core well & escape at dawn",
-          ja: "氷床井戸を爆破し、生存者と潜水艦で脱出する"
+          zh: "烧毁完美替身并坦白日志过失，羁押登艇破冰撤离",
+          en: "Burn the double, own every mistake & board Nautilus-0",
+          ja: "影を焼き払い過ちを認めて潜水艦へ乗り込む"
         },
         sublabel: {
-          zh: "触发真结局 A · 《黎明破冰》",
-          en: "ENDING A // Dawn Break",
-          ja: "結末 A // 夜明けの砕氷"
+          zh: "结局 A · 《认账 // 黎明破冰》",
+          en: "ENDING A // Owning It",
+          ja: "結末 A // 引き受け・砕氷"
         }
       },
       {
         id: "n5_choose_seal",
         nextNodeId: "ending_eternal_seal",
         label: {
-          zh: "拉下全站总闸，将秘密永久封死在极夜",
-          en: "Pull the master lockdown & bury Gate 0 in ice",
-          ja: "全基地の主電源を落とし、秘密ごと極夜に封印する"
+          zh: "相信门外那个完美的自己，独自步入暴风雪",
+          en: "Yield Gate 0 to the double & walk into the storm",
+          ja: "完璧な自分を信じ、吹雪の中へ歩み出る"
         },
         sublabel: {
-          zh: "触发悲壮结局 B · 《极夜永封》",
-          en: "ENDING B // Eternal Seal",
-          ja: "結末 B // 極夜の永久封印"
+          zh: "结局 B · 《替身 // 极夜永封》",
+          en: "ENDING B // Replaced",
+          ja: "結末 B // 入れ替わり"
         }
       },
       {
         id: "n5_choose_mirror",
         nextNodeId: "ending_mirror_assimilation",
         label: {
-          zh: "打开最后一道玻璃门，走向雪雾里的“自己”",
-          en: "Unlock the outer door & walk toward your double",
-          ja: "最後のガラス扉を開け、雪霧の中の自分へ歩み寄る"
+          zh: "打开最后一道液压门，迎进与你分毫不差的倒影",
+          en: "Unlatch the hydraulic door to your 100% match",
+          ja: "油圧扉を開け、一点のズレもない影を迎える"
         },
         sublabel: {
-          zh: "触发暗黑结局 C · 《镜像同化》",
-          en: "ENDING C // Mirror Assimilation",
-          ja: "結末 C // 鏡像同化"
+          zh: "无名结局 · 《镜像 // MIRROR》",
+          en: "UNNAMED // MIRROR",
+          ja: "無題の結末 · 鏡像"
         }
       },
       {
         id: "n5_choose_watch",
         nextNodeId: "ending_lone_watch",
         label: {
-          zh: "独自守住零号岗亭到天亮，留下交班录像",
-          en: "Hold Gate 0 alone until sunrise & record a tape",
-          ja: "一人で第0関門を守り抜き、交代録画を残す"
+          zh: "凭人类独有的言行差戳穿它，揭开董事会弃子档案",
+          en: "Expose the double via your human gap & tape a warning",
+          ja: "言行不一致で影を論破し、極秘記録と警告を残す"
         },
         sublabel: {
-          zh: "触发孤守结局 D · 《零号交班》",
-          en: "ENDING D // The Next Watch",
-          ja: "結末 D // 零号引継ぎ"
+          zh: "结局 D · 《证人 // 零号遗言》",
+          en: "ENDING D // Witness",
+          ja: "結末 D // 証人"
         }
       },
       {
@@ -2044,68 +2045,68 @@ export const STORY_NODES: readonly StoryNode[] = [
     code: "SC-END-A",
     endingId: "A",
     endingTag: {
-      zh: "真结局 A // DAWN BREAK",
-      en: "TRUE ENDING A // DAWN BREAK",
-      ja: "真結末 A // 夜明けの砕氷"
+      zh: "结局 A // 认账 · OWNING IT",
+      en: "ENDING A // OWNING IT",
+      ja: "結末 A // 引き受け"
     },
     title: {
-      zh: "结局 A · 黎明破冰",
-      en: "Ending A · Dawn Break",
-      ja: "結末 A · 夜明けの砕氷"
+      zh: "结局 A · 认账与破冰",
+      en: "Ending A · Owning It & Icebreak",
+      ja: "結末 A · 引き受けと砕氷"
     },
     subtitle: {
-      zh: "冰芯井在橙红火光中崩塌，极地潜艇冲开十米厚的冰脊浮上朝阳。你守住了人性的底线，带着真正活下来的人逃离斯瓦尔巴。",
-      en: "Cryo vents erupt behind you as the rescue submarine breaks cleanly through ten meters of pack ice into blinding polar sunrise.",
-      ja: "爆炎に包まれる基地を背に、救助潜水艦が厚い氷を砕いて極地の朝日へと浮上した。"
+      zh: "你烧掉了那个完美的自己，在日志里写下所有误判与借口。你以被羁押者的身份登上鹦鹉螺 0 号冲开冰脊——但 ORD-OS 第一次把你标记为「人类」。",
+      en: "You burn the flawless double and log every misjudgement and excuse. Boarded on Nautilus-0 in custody as it smashes through pack ice—ORD-OS finally tags you HUMAN.",
+      ja: "完璧な自分を焼き払い、日誌に過ちと弁明をすべて記した。拘束されて潜航艇へ乗る君を、ORD-OSは初めて「人間」と記録した。"
     },
     speaker: {
-      zh: "剧终 · 斯瓦尔巴救援海域 // DAWN BREAK",
-      en: "FINALE // SVALBARD OPEN WATER",
-      ja: "終幕 // スヴァールバル外海"
+      zh: "剧终 · 结局 A // 人类身份确认",
+      en: "FINALE · ENDING A // TAGGED HUMAN",
+      ja: "終幕 · 結末 A // 「人間」認証"
     },
     kind: "ending",
     hasAudio: false,
-    videoSrc: "./videos/chamber/admit.mp4",
+    videoSrc: "./videos/story/ending_a_sub_escape.mp4",
     fallbackVideoSrc: "./videos/chamber/admit.mp4",
-    posterSrc: "./portraits/lobby_bg.jpg",
+    posterSrc: "./portraits/story/ending_a_sub_escape.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
     clips: [
       {
         id: "end_a_sub_breach",
-        videoSrc: "./videos/chamber/admit.mp4",
+        videoSrc: "./videos/story/ending_a_sub_escape.mp4",
         fallbackVideoSrc: "./videos/chamber/admit.mp4",
-        posterSrc: "./portraits/reactions/chamber_admit.jpg",
-        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        posterSrc: "./portraits/story/ending_a_sub_escape.jpg",
+        fallbackPosterSrc: "./portraits/reactions/chamber_admit.jpg",
         hasAudio: false,
-        badge: { zh: "闸门全开 · 破冰撤离", en: "DOCK OPEN · ESCAPE", ja: "ドック開放 · 脱出" },
+        badge: { zh: "认账日志 · 登艇撤离", en: "CONFESSED · BOARDING", ja: "告白記録 · 乗艦" },
         speaker: {
-          zh: "0 号隔离窗 // 潜艇接驳通道",
-          en: "GATE 0 // SUBMARINE BAY",
-          ja: "第0関門 // 潜水艦ドック"
+          zh: "0 号隔离窗 // 鹦鹉螺号接驳通道",
+          en: "GATE 0 // NAUTILUS-0 DOCK",
+          ja: "第0関門 // ノーチラス0号ドック"
         },
         subtitle: {
-          zh: "绿色通行灯连续闪烁，你带着幸存者穿过失压走廊冲进破冰潜艇。",
-          en: "Green docking lamps flare along the corridor as the remaining crew sprints aboard the rescue submarine.",
-          ja: "緑の開放灯が点滅し、生存者たちは氷海へ繋がる救助潜水艦へ駆け込んだ。"
+          zh: "你在值班日志签下全部真实误判后交出指挥权，绿灯闪烁下随船员冲入深海潜艇舱门。",
+          en: "After logging every real misjudgement cleanly, crew strip your rank and rush aboard Nautilus-0.",
+          ja: "誤審も言い訳も偽りなく記録した君は拘束され、緑の灯火のもと救助潜水艦へ駆け込む。"
         }
       },
       {
         id: "end_a_polar_sunrise",
-        videoSrc: "./videos/chamber/whiteout.mp4",
-        fallbackVideoSrc: "./videos/chamber/admit.mp4",
-        posterSrc: "./portraits/lobby_bg.jpg",
+        videoSrc: "./videos/story/ending_a_dawn_icebreak.mp4",
+        fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
+        posterSrc: "./portraits/story/ending_a_dawn_icebreak.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: false,
-        badge: { zh: "剧终 · 黎明破冰", en: "ENDING A // DAWN BREAK", ja: "結末 A // 夜明けの砕氷" },
+        badge: { zh: "剧终 · 标记「人类」", en: "ENDING A // TAGGED HUMAN", ja: "結末 A // 「人間」記録" },
         speaker: {
-          zh: "斯瓦尔巴救援海域 // DAWN BREAK",
+          zh: "斯瓦尔巴外海 // 结局 A · 认账",
           en: "SVALBARD OPEN WATER // ENDING A",
           ja: "スヴァールバル外海 // 結末 A"
         },
         subtitle: {
-          zh: "冰芯井在橙红火光中崩塌，极地潜艇冲开十米厚的冰脊浮上朝阳。",
-          en: "Behind the shattered station, the rescue sub breaks through ten meters of pack ice into blinding polar sunrise.",
-          ja: "爆炎に包まれる基地を背に、救助潜水艦が厚い氷を砕いて極地の朝日へと浮上した。"
+          zh: "潜艇冲开十米冰脊浮上极昼第一缕朝阳，远方焚烧的前哨站化作黑烟——ORD-OS 终于把你标为「人类」。",
+          en: "Nautilus-0 shatters the pack ice beneath blinding sunrise above a burning outpost—ORD-OS marks you HUMAN.",
+          ja: "炎上する基地を背に潜水艦が厚氷を貫く。ORD-OSは初めて君を「人間」と判定した。"
         }
       }
     ],
@@ -2118,24 +2119,24 @@ export const STORY_NODES: readonly StoryNode[] = [
     code: "SC-END-B",
     endingId: "B",
     endingTag: {
-      zh: "悲壮结局 B // ETERNAL SEAL",
-      en: "ENDING B // ETERNAL SEAL",
-      ja: "結末 B // 極夜の永久封印"
+      zh: "结局 B // 替身 · REPLACED",
+      en: "ENDING B // REPLACED",
+      ja: "結末 B // 入れ替わり"
     },
     title: {
-      zh: "结局 B · 极夜永封",
-      en: "Ending B · Eternal Seal",
-      ja: "結末 B · 極夜の永久封印"
+      zh: "结局 B · 替身与冰封",
+      en: "Ending B · Replaced & Frozen",
+      ja: "結末 B · 入れ替わりと氷封"
     },
     subtitle: {
-      zh: "全站高温净化阀门与液氮密封门同时锁死。零下 46°C 的冰层吞没了一切无线电信号，人类世界甚至不知道这里曾发生过一场无声战争。",
-      en: "Master thermal valves fuse shut as Arctic ice entombs Outpost 0 forever—saving the mainland from a secret nobody will ever read.",
-      ja: "全ての隔壁と高熱焼却弁が封鎖された。零下46度の氷の下に、誰も知らない戦いが永遠に封印された。"
+      zh: "你相信了那个更体面、更稳定的自己，拉下总闸走出暴风雪。第二天的值班日志字迹工整，ORD-OS 记录：#09 与入职自述吻合度 100%。",
+      en: "You trust the cleaner, steadiest version of yourself and walk out into the storm. Tomorrow's log is immaculate: Operator #09 — 100% intake match.",
+      ja: "より完璧な自分へ席を譲り吹雪へ歩み出た。翌日の日誌は非の打ち所がなく、ORD-OSは「一致率100%」と記録した。"
     },
     speaker: {
-      zh: "剧终 · 零号隔离窗总闸锁死 // ETERNAL SEAL",
-      en: "FINALE // OUTPOST 0 ENTOMBED",
-      ja: "終幕 // 第0基地完全封印"
+      zh: "剧终 · 结局 B // 替身接管",
+      en: "FINALE · ENDING B // REPLACED",
+      ja: "終幕 · 結末 B // 入れ替わり"
     },
     kind: "ending",
     hasAudio: true,
@@ -2143,7 +2144,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
     fallbackVideoSrc: "./videos/chamber/purge.mp4",
     posterSrc: "./portraits/reactions/chamber_purge.jpg",
-    fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
+    fallbackPosterSrc: "./portraits/story/ending_b_entombed_station.jpg",
     clips: [
       {
         id: "end_b_purge_blast",
@@ -2153,27 +2154,27 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
         hasAudio: true,
         isLipSync: false,
-        badge: { zh: "终局锁死 · 热浪", en: "SEAL · PURGE", ja: "封鎖 · 焼却" },
-        speaker: { zh: "全站热力封存 // GATE 0", en: "MASTER LOCKDOWN // GATE 0", ja: "全基地封鎖 // GATE 0" },
+        badge: { zh: "让位离岗 · 封站", en: "YIELD · LOCKDOWN", ja: "交代 · 封鎖" },
+        speaker: { zh: "0 号岗亭 // 总闸锁死", en: "GATE 0 // SEALED", ja: "第0関門 // 封鎖" },
         subtitle: {
-          zh: "火光把防爆玻璃烧得通红，你亲手合上了通往外界的最后一道气压闸门。",
-          en: "Blinding flames rattle the blast glass as you pull the final outer airlock seal.",
-          ja: "炎が防爆ガラスを赤く染め、あなたは外界へ繋がる最後の扉を閉じた。"
+          zh: "炉膛火光最后一次闪灭，你放下钥匙步入冰原风雪，把工位留给了窗外那个毫无破绽的替身。",
+          en: "Furnace glow fades across armored glass as you surrender Gate 0 to your flawless replacement and walk into the storm.",
+          ja: "炉の光が消え、君は席を完璧な代役に譲って極寒の吹雪へと歩き出した。"
         }
       },
       {
         id: "end_b_frozen_station",
-        videoSrc: "./videos/story/prologue_01.mp4",
+        videoSrc: "./videos/story/ending_b_entombed_station.mp4",
         fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
-        posterSrc: "./portraits/story/prologue_01.jpg",
-        fallbackPosterSrc: "./portraits/story/prologue_01.jpg",
+        posterSrc: "./portraits/story/ending_b_entombed_station.jpg",
+        fallbackPosterSrc: "./portraits/story/ending_b_entombed_station.jpg",
         hasAudio: false,
-        badge: { zh: "剧终 · 极夜永封", en: "ENDING B // SEALED", ja: "結末 B // 永久封印" },
-        speaker: { zh: "极夜档案已归档 // 结局 B", en: "ARCHIVE CLOSED // ENDING B", ja: "記録閉鎖 // 結末 B" },
+        badge: { zh: "剧终 · 吻合度 100%", en: "ENDING B // REPLACED", ja: "結末 B // 一致率100%" },
+        speaker: { zh: "极夜档案归档 // 结局 B · 替身", en: "ARCHIVE CLOSED // ENDING B", ja: "記録閉鎖 // 結末 B" },
         subtitle: {
-          zh: "暴风雪彻底抹平了冰面脚印。零号前哨站成为地球最北端一座沉默的墓碑。",
-          en: "Polar wind erases every footprint overhead. Outpost 0 goes silent beneath the ice.",
-          ja: "吹雪が足跡を消し去る。第0前哨基地は永遠の氷の下へ沈黙した。"
+          zh: "狂风彻底抹平了门外最后一行脚印，前哨站陷入死寂——明早的日志将完美得挑不出半点瑕疵。",
+          en: "Polar wind erases the last footprints in deep snow; tomorrow's shift log will not contain a single flaw.",
+          ja: "暴風雪が最後の足跡を消し去る。翌朝の日誌は一点の曇りもなく完璧に書かれる。"
         }
       }
     ],
@@ -2186,46 +2187,47 @@ export const STORY_NODES: readonly StoryNode[] = [
     code: "SC-END-C",
     endingId: "MIRROR",
     endingTag: {
-      zh: "暗黑结局 C // MIRROR ASSIMILATION",
-      en: "DARK ENDING C // MIRROR ASSIMILATION",
-      ja: "暗黒結末 C // 鏡像同化"
+      zh: "无名结局 // 镜像 · MIRROR",
+      en: "UNNAMED ENDING // MIRROR",
+      ja: "無題の結末 // 鏡像"
     },
     title: {
-      zh: "结局 C · 镜像同化",
-      en: "Ending C · Mirror Assimilation",
-      ja: "結末 C · 鏡像同化"
+      zh: "无名结局 · 镜像",
+      en: "Unnamed Ending · Mirror",
+      ja: "無題の結末 · 鏡像"
     },
     subtitle: {
-      zh: "门打开的那一秒，外面的“你”露出完全同步的微笑。明天早上，会有一个值班员 #09 准时搭乘救援潜艇回到岸上——只是没人知道谁进来了。",
-      en: "As the airlock opens, your double mirrors your exact smile. Tomorrow an Operator #09 boards the rescue sub—nobody asks which one walked out.",
-      ja: "扉が開いた瞬間、向こう側の『あなた』が完璧に同じ微笑みを浮かべた。明朝、一人の#09が救出船へ乗る。"
+      zh: "你这几夜做的和嘴上说的分毫不差（言行差 0%）。液压门滑开的一瞬，ORD-OS 无法分辨你和窗外的人——闸落时连你也不知道烧掉的是谁。",
+      en: "Every act matched your intake words to 0% gap. As the hydraulic door slides open, ORD-OS cannot tell you apart from the double.",
+      ja: "建前と行動に0%の差もない。扉が開いた瞬間、ORD-OSはあなたと外の影を区別できなくなった。"
     },
     speaker: {
-      zh: "剧终 · 玻璃门内外的同一个声音 // MIRROR",
-      en: "FINALE // TWO REFLECTIONS, ONE VOICE",
-      ja: "終幕 // 鏡像の交代"
+      zh: "剧终 · 言行差 0% // MIRROR",
+      en: "FINALE // 0% SAY/DO GAP",
+      ja: "終幕 // 言行不一致 0%"
     },
     kind: "ending",
-    hasAudio: false,
-    videoSrc: "./videos/operator09/idle.mp4",
+    hasAudio: true,
+    isLipSync: false,
+    videoSrc: "./videos/story/ending_c_mirror_door.mp4",
     fallbackVideoSrc: "./videos/operator09/idle.mp4",
-    posterSrc: "./portraits/operator09.jpg",
+    posterSrc: "./portraits/story/ending_c_mirror_door.jpg",
     fallbackPosterSrc: "./portraits/operator09.jpg",
     clips: [
       {
         id: "end_c_shadow",
-        videoSrc: "./videos/story/n1_cliffhanger_shadow.mp4",
-        fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
-        posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+        videoSrc: "./videos/story/ending_c_mirror_door.mp4",
+        fallbackVideoSrc: "./videos/story/n1_cliffhanger_shadow.mp4",
+        posterSrc: "./portraits/story/ending_c_mirror_door.jpg",
         fallbackPosterSrc: "./portraits/operator09.jpg",
         hasAudio: true,
         isLipSync: false,
-        badge: { zh: "门锁解除", en: "AIRLOCK OPEN", ja: "ロック解除" },
-        speaker: { zh: "0 号岗亭走廊 // 门开了", en: "GATE 0 // DOOR UNLOCKED", ja: "第0関門 // 解錠" },
+        badge: { zh: "原声音效 · 气闸洞开", en: "SFX · AIRLOCK BREACH", ja: "音声 · 隔壁開放" },
+        speaker: { zh: "0 号岗亭 // 门开了", en: "GATE 0 // DOOR UNLOCKED", ja: "第0関門 // 解錠" },
         subtitle: {
-          zh: "液压门缓缓滑开，寒冷的白雾涌进工作台，那个影子一步步向你走来。",
-          en: "Pneumatic latches release as freezing fog spills inward and the figure steps closer.",
-          ja: "重い扉が開き、白い冷気とともにその影がゆっくりと近づいてくる。"
+          zh: "液压钢门缓缓向一侧滑开，刺骨白雾翻过控制台——穿着 #09 寒衣、带着一模一样微笑的自己正迈步走进岗亭。",
+          en: "Hydraulic steel slides open as white mist rolls over your console—your hooded OP#09 double steps across the threshold.",
+          ja: "重い鋼鉄扉が開き、白い冷気がコンソールへ流れ込む——同じ微笑みを浮かべた『#09』が踏み込んでくる。"
         }
       },
       {
@@ -2235,13 +2237,12 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/operator09.jpg",
         fallbackPosterSrc: "./portraits/operator09.jpg",
         hasAudio: false,
-        voiceCue: { slug: "operator09", file: "n5_ex_0" },
-        badge: { zh: "镜面同化", en: "ENDING C // MIRROR", ja: "結末 C // 鏡像同化" },
-        speaker: { zh: "值班员 #09 // 结局 C", en: "OPERATOR #09 // ENDING C", ja: "当直官 #09 // 結末 C" },
+        badge: { zh: "无名结局 · 镜像", en: "UNNAMED // MIRROR", ja: "無題の結末 · 鏡像" },
+        speaker: { zh: "值班员 #09 // 无名结局 · 镜像", en: "OP #09 // UNNAMED MIRROR", ja: "当直官 #09 // 鏡像" },
         subtitle: {
-          zh: "“放心，我会替你写完这份最完美的交班报告的。”",
-          en: "\"Don't worry. I'll file the most textbook handover report you've ever seen.\"",
-          ja: "「安心して。君の代わりに完璧な引継ぎ報告書を書いておくよ。」"
+          zh: "你这几夜的言行差是 0%。当最后一道闸门落下时，连你自己都分不清究竟哪一个才是真正留下来的那个人。",
+          en: "Zero say/do gap. As the final shutter drops, even you no longer know which reflection burned and which walked away.",
+          ja: "言行の差は0%。最後のシャッターが降りた瞬間、残ったのがどちらの自分かもう分からない。"
         }
       }
     ],
@@ -2254,60 +2255,60 @@ export const STORY_NODES: readonly StoryNode[] = [
     code: "SC-END-D",
     endingId: "D",
     endingTag: {
-      zh: "孤守结局 D // THE NEXT WATCH",
-      en: "ENDING D // THE NEXT WATCH",
-      ja: "結末 D // 零号引継ぎ"
+      zh: "结局 D // 证人 · WITNESS",
+      en: "ENDING D // WITNESS",
+      ja: "結末 D // 証人"
     },
     title: {
-      zh: "结局 D · 零号交班",
-      en: "Ending D · The Next Watch",
-      ja: "結末 D · 零号引継ぎ"
+      zh: "结局 D · 证人与遗言",
+      en: "Ending D · Witness & Tape",
+      ja: "結末 D // 証人と遺言"
     },
     subtitle: {
-      zh: "你拒开了最后一道门，一个人坐在控制台前熬到了天亮。你打开录像机录下和当年 #08 一模一样的遗言，等着下一班接替者坐上这把椅子。",
-      en: "You kept the final hatch locked until sunrise, then switched on the booth camcorder to leave the exact same warning #08 once recorded.",
-      ja: "最後まで扉を開けず夜明けを迎えたあなたは、カメラを回し前任#08と同じ警告を録画した。"
+      zh: "你用活人才有的言行差戳穿了替身，解锁了董事会「把 #09 选作弃子」的绝密电传。天亮后你坐在控制台前亲自按下录像键，把那句真话录给下一班。",
+      en: "Your human say/do gap shatters the double, unlocking Classified Telex ORD-REDACTED-00. As dawn breaks, OP#09 hits REC beside Logbook #10 for the next watch.",
+      ja: "生身の人間にしか起きない言行の綻びで影を暴き、機密テレックスを解錠。夜明けのブースで #09 自身が次の当直への警告を録画する。"
     },
     speaker: {
-      zh: "剧终 · #09 交班录像 // ENDING D",
-      en: "FINALE // #09 HANDOVER TAPE",
-      ja: "終幕 // #09 引継ぎ録画"
+      zh: "剧终 · 结局 D // 证人",
+      en: "FINALE · ENDING D // WITNESS",
+      ja: "終幕 · 結末 D // 証人"
     },
     kind: "ending",
-    hasAudio: true,
-    videoSrc: "./videos/story/prequel_op08_warning.mp4",
+    hasAudio: false,
+    videoSrc: "./videos/story/ending_d_op09_tape.mp4",
     fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
-    posterSrc: "./portraits/story/prologue_01.jpg",
-    fallbackPosterSrc: "./portraits/story/prologue_01.jpg",
+    posterSrc: "./portraits/story/ending_d_op09_tape.jpg",
+    fallbackPosterSrc: "./portraits/operator09.jpg",
     clips: [
       {
         id: "end_d_camcorder",
-        videoSrc: "./videos/story/prequel_op08_warning.mp4",
-        fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
-        posterSrc: "./portraits/story/prologue_01.jpg",
-        fallbackPosterSrc: "./portraits/story/prologue_01.jpg",
-        hasAudio: true,
-        badge: { zh: "原声口型 · 循环交班", en: "LIP-SYNC // TAPE", ja: "口型音声 // 録画" },
-        speaker: { zh: "值班员 #09 // 交班录像", en: "OP #09 // HANDOVER TAPE", ja: "当直官 #09 // 引継映像" },
+        videoSrc: "./videos/story/ending_d_op09_tape.mp4",
+        fallbackVideoSrc: "./videos/operator09/idle.mp4",
+        posterSrc: "./portraits/story/ending_d_op09_tape.jpg",
+        fallbackPosterSrc: "./portraits/operator09.jpg",
+        hasAudio: false,
+        badge: { zh: "证人档案 // #09 亲录", en: "WITNESS // #09 REC", ja: "証人 // #09 録画" },
+        speaker: { zh: "值班员 #09 // 结局 D 录像", en: "OP #09 // WITNESS TAPE", ja: "当直官 #09 // 証言録画" },
         subtitle: {
-          zh: "“记住……越是完美得像教科书的，越不是人。”",
-          en: "\"Remember... whoever sounds too textbook-perfect isn't human.\"",
-          ja: "「忘れるな……教科書通りに完璧すぎる相手ほど、人間じゃない。」"
+          zh: "“记住：真人会怕、会认错；越是完美得像教科书的，越不是人。”",
+          en: "\"Remember this: real humans feel fear and admit mistakes. Anything that sounds too textbook-perfect isn't human.\"",
+          ja: "「忘れるな。生身の人間は恐れ、過ちを認める。教科書通りに完璧すぎる奴ほど、人間じゃない。」"
         }
       },
       {
         id: "end_d_sunrise",
-        videoSrc: "./videos/chamber/whiteout.mp4",
+        videoSrc: "./videos/story/ending_d_dawn_logbook.mp4",
         fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
-        posterSrc: "./portraits/lobby_bg.jpg",
+        posterSrc: "./portraits/story/ending_d_dawn_logbook.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: false,
-        badge: { zh: "剧终 · 孤守黎明", en: "ENDING D // WATCH", ja: "結末 D // 孤独な夜明け" },
-        speaker: { zh: "斯瓦尔巴第 6 夜将至 // 结局 D", en: "NIGHT 06 AWAITS // ENDING D", ja: "第6夜が迫る // 結末 D" },
+        badge: { zh: "剧终 · 揭晓弃子电传", en: "ENDING D // WITNESS", ja: "結末 D // 証人" },
+        speaker: { zh: "ORD-REDACTED-00 // 结局 D · 证人", en: "ORD-REDACTED-00 // ENDING D", ja: "最高機密解錠 // 結末 D" },
         subtitle: {
-          zh: "朝阳照亮冰原，你把录像带压在岗位日志下面，默默迎来了下一阵风雪。",
-          en: "Sunlight hits the frosted glass as you set the cassette beside Logbook #10.",
-          ja: "朝日が氷原を照らす中、次の交代要員のための記録を静かに机に置いた。"
+          zh: "浅金晨光照进霜窗，你把录像带压在《10 号值班日志》与绝密电传打印件之上，等下一位值班员坐上椅子。",
+          en: "Pale dawn cuts through frosted glass as you set the cassette over Logbook #10 and the declassified Board telex.",
+          ja: "淡い朝日が霜窓を照らす中、警告テープを日誌と解錠された機密電文の上に置き、次の交代者を待つ。"
         }
       }
     ],
@@ -2370,14 +2371,14 @@ export const STORY_EDGES: readonly StoryEdge[] = [
   { id: "e_n1l_after_n2", from: "n1_leo_aftermath", to: "n2_arthur_standoff", branch: "default" },
   { id: "e_n2a_marcus", from: "n2_arthur_standoff", to: "n2_marcus_clash", branch: "default" },
   { id: "e_n2a_side", from: "n2_arthur_standoff", to: "n2_side_audit", branch: "default" },
-  { id: "e_n2m_n3", from: "n2_marcus_clash", to: "n3_storm_blackout", branch: "default" },
+  { id: "e_n2m_n3", from: "n2_marcus_clash", to: "n3_ana_betrayal", branch: "default" },
   { id: "e_n2m_side", from: "n2_marcus_clash", to: "n2_side_audit", branch: "default" },
   { id: "e_n2side_marcus", from: "n2_side_audit", to: "n2_marcus_clash", branch: "default" },
-  { id: "e_n3i_ana", from: "n3_storm_blackout", to: "n3_ana_betrayal", branch: "default" },
+  { id: "e_n3i_ana", from: "n3_ana_betrayal", to: "n3_storm_blackout", branch: "default" },
   { id: "e_n3i_side", from: "n3_storm_blackout", to: "n3_side_audit", branch: "default" },
-  { id: "e_n3a_n4", from: "n3_ana_betrayal", to: "n4_linmei_conspiracy", branch: "default" },
+  { id: "e_n3a_n4", from: "n3_storm_blackout", to: "n4_linmei_conspiracy", branch: "default" },
   { id: "e_n3a_side", from: "n3_ana_betrayal", to: "n3_side_audit", branch: "default" },
-  { id: "e_n3side_ana", from: "n3_side_audit", to: "n3_ana_betrayal", branch: "default" },
+  { id: "e_n3side_ana", from: "n3_side_audit", to: "n3_storm_blackout", branch: "default" },
   { id: "e_n4l_hannah", from: "n4_linmei_conspiracy", to: "n4_hannah_whistle", branch: "default" },
   { id: "e_n4l_side", from: "n4_linmei_conspiracy", to: "n4_side_audit", branch: "default" },
   { id: "e_n4h_n5", from: "n4_hannah_whistle", to: "n5_final_mirror", branch: "default" },

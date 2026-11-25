@@ -221,9 +221,9 @@ const CAST_LOOKDEV_META: Record<
     slug: "arthur",
     assetTag: "@arthur",
     wardrobe: {
-      zh: "金丝背头、考究深驼色羊毛大衣翻领（刻意维持陆上高管体面）",
-      en: "Slicked hair, tailored charcoal-camel wool overcoat preserving corporate composure",
-      ja: "整えた髪、高級ウールコート"
+      zh: "银灰整洁分头、细框眼镜、深色羊毛大衣与磨旧金属机密卷宗盒",
+      en: "Neat silver hair, fine spectacles, tailored dark charcoal wool overcoat holding armored ledger",
+      ja: "銀髪に細縁眼鏡、濃紺ウールコート、防爆機密ファイル"
     },
     lightingKey: {
       zh: "高反差冷青主光 + 硬朗下颌阴影",
@@ -232,16 +232,16 @@ const CAST_LOOKDEV_META: Record<
     },
     lens: "50mm Anamorphic f/2.8",
     promptAnchor:
-      "Director Arthur Pendelton, man in his 50s, neat slicked-back graying hair, tailored charcoal-camel wool overcoat collar over dark turtleneck, crisp authoritative jawline shadow, matte cinematic skin",
+      "Auditor Arthur Sterling, man in his 50s, neat graying hair, thin eyeglasses, tailored dark wool overcoat holding brushed metal ledger case, crisp authoritative jawline shadow, cold breath vapor",
     colorTag: "#9ec6d4"
   },
   "V-04": {
     slug: "marcus",
     assetTag: "@marcus",
     wardrobe: {
-      zh: "重型舰长级高领拉绒夹克、肩部反光条与磨损舰队徽章",
-      en: "Heavy polar commander fleece jacket with weathered submarine insignia",
-      ja: "極地司令官用フリースジャケット"
+      zh: "深色重型防风指挥夹克、肩部反光条",
+      en: "Heavy dark navy polar commander jacket with reflective shoulder trim",
+      ja: "濃紺極地警備ジャケット"
     },
     lightingKey: {
       zh: "低压顶光 + 红色告警脉冲辅光",
@@ -250,16 +250,16 @@ const CAST_LOOKDEV_META: Record<
     },
     lens: "35mm Anamorphic f/2.0",
     promptAnchor:
-      "Capt. Marcus Thorne, rugged man in his 40s, heavy navy polar commander fleece jacket with weathered submarine fleet patch and reflective shoulder trim, tense furrowed brow under red alarm edge light",
+      "Capt. Marcus Chen, rugged East Asian man in his 40s, close-cropped dark hair, heavy dark navy polar jacket with reflective shoulder trim, tense furrowed brow under red alarm edge light",
     colorTag: "#e04634"
   },
   "V-05": {
     slug: "ana",
     assetTag: "@ana",
     wardrobe: {
-      zh: "深海减压服内胆、氯丁橡胶颈封与极寒防水连帽风衣",
-      en: "Deep-sea neoprene neck seal under waterproof polar shell",
-      ja: "深海潜水インナー＋耐寒シェル"
+      zh: "深海减压潜水内胆、芥末黄高可见极地耐寒冲锋外壳",
+      en: "Deep-sea diver inner collar under high-visibility mustard waterproof polar shell",
+      ja: "潜水インナー＋高視認性耐寒シェル"
     },
     lightingKey: {
       zh: "纯净双色分裂光（右冷青左暖琥珀）",
@@ -268,52 +268,52 @@ const CAST_LOOKDEV_META: Record<
     },
     lens: "50mm Anamorphic f/2.0",
     promptAnchor:
-      "Anais Moreau, woman in her 30s, wet dark hair tucked into black neoprene drysuit neck seal under waterproof polar shell, terrified hyper-focused eyes, split cyan-amber lighting, frosted breath vapor",
+      "Ana Ribeiro, woman in her 30s, damp short dark hair, mustard-yellow waterproof polar shell over dark dive collar, composed fierce eyes, split cyan-amber lighting, frosted breath vapor",
     colorTag: "#49b882"
   },
   "V-06": {
     slug: "ingrid",
     assetTag: "@ingrid",
     wardrobe: {
-      zh: "白色极地科研防风袄、冰核取样挂牌与结霜针织围巾",
-      en: "White polar glaciology parka with frosted knit neck gaiter",
-      ja: "白の極地研究パーカー"
+      zh: "白色绞花针织高领毛衣外罩黑色极地防风大衣",
+      en: "White cable-knit turtleneck sweater under black polar parka",
+      ja: "白のケーブルニット＋黒の極地パーカー"
     },
     lightingKey: {
       zh: "强电磁风暴漫射冷光（生理仪器全黑背景）",
-      en: "Diffused geomagnetic storm cyan glow over matte white parka",
+      en: "Diffused geomagnetic storm cyan glow over gentle clinical expression",
       ja: "磁気嵐の拡散冷色光"
     },
     lens: "50mm Anamorphic f/2.0",
     promptAnchor:
-      "Dr. Ingrid Solberg, Scandinavian woman in her 30s, ice crystals in eyelashes, white polar glaciology parka with frosted knit neck gaiter and lab ID lanyard, diffused geomagnetic storm cyan lighting",
+      "Dr. Ingrid Solberg, Scandinavian psychological counselor in her 30s, blonde hair, white cable-knit sweater under dark winter coat, eerie gentle composed expression behind frosted glass",
     colorTag: "#7dc7ff"
   },
   "V-07": {
     slug: "linmei",
     assetTag: "@linmei",
     wardrobe: {
-      zh: "深蓝站区指挥值班大衣、严谨扣紧的双层风纪领口",
-      en: "Navy discipline officer coat buttoned tightly to the throat",
-      ja: "紺色の規律官コート"
+      zh: "整洁白衬衫、灰蓝实验主管大衣与红色肩章",
+      en: "Crisp white collared shirt under slate-blue cryo-lab coat with crimson shoulder tabs",
+      ja: "白シャツ＋灰青色の低温実験室コート"
     },
     lightingKey: {
-      zh: "对称顶灯裁切光（强化冷峻审视感）",
+      zh: "对称顶灯裁切光（强化冷峻自持感）",
       en: "Symmetrical top-cut interrogation beam",
       ja: "対称トップカット照明"
     },
     lens: "65mm Close-Up f/2.0",
     promptAnchor:
-      "Commissioner Lin Mei, East Asian woman in her 40s, severe neat bun, navy discipline officer coat buttoned tightly to the throat, eerily composed expression, symmetrical overhead interrogation key light",
+      "Dr. Lin Mei, East Asian cryo-biologist in her late 30s, sleek shoulder-length black hair, white shirt beneath slate-blue lab coat with red shoulder tabs, calm anxious restraint",
     colorTag: "#b48ead"
   },
   "V-08": {
     slug: "hannah",
     assetTag: "@hannah",
     wardrobe: {
-      zh: "厚重极地机修连体服外罩深绿羽绒防寒坎肩",
-      en: "Heavy polar mechanic coveralls layered under quilted insulated vest",
-      ja: "極地整備士カバーオール"
+      zh: "黑色针织帽、深黑极地羽绒服、怀抱橙色外风井黑匣子记录仪",
+      en: "Black knit beanie, heavy black down parka clutching orange black-box flight recorder case",
+      ja: "黒ニット帽＋濃黒ダウン＋オレンジ色のブラックボックス記録計"
     },
     lightingKey: {
       zh: "琥珀控制台主光 + 窗角冰晶高光",
@@ -322,7 +322,7 @@ const CAST_LOOKDEV_META: Record<
     },
     lens: "50mm Anamorphic f/2.0",
     promptAnchor:
-      "Hannah Lindqvist, woman in her late 20s, windburned cheeks, heavy grease-stained polar mechanic coveralls under dark green quilted insulated vest, urgent desperate expression through frosted glass",
+      "Hannah Weiss, woman in her late 20s, black knit beanie, dark winter parka gripping rugged orange environmental black-box recorder case, urgent whistleblower intensity",
     colorTag: "#d08770"
   }
 };
@@ -620,8 +620,8 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     speakerName: { zh: "前任值班员 #08", en: "Watchstander #08", ja: "前任当直官 #08" },
     lipSyncLine: {
       zh: "「记住：真人会怕、会认错；越是完美得像教科书的，越不是人。」",
-      en: "\"Remember: real humans fear and admit fault. Too clean means mimic.\"",
-      ja: "「忘れるな、完璧すぎる言い訳をする奴ほど人間じゃない。」"
+      en: "\"Remember this: real humans feel fear and admit mistakes. Anything that sounds too textbook-perfect isn't human.\"",
+      ja: "「忘れるな。生身の人間は恐れ、過ちを認める。教科書通りに完璧すぎる奴ほど、人間じゃない。」"
     },
     posterSrc: "./portraits/operator09.jpg",
     videoSrc: "./videos/story/prequel_op08_warning.mp4",
@@ -1280,13 +1280,18 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     id: "shot_n2_arthur_command",
     storyNodeId: "n2_arthur_standoff",
     shotCode: "SC-03A",
-    chapter: { zh: "第 2 夜 · 夺权危机", en: "NIGHT 02 · COMMAND", ja: "第2夜 · 指揮権争い" },
-    title: { zh: "站长亚瑟最后的交权通牒", en: "Arthur's Command Ultimatum", ja: "アーサー所長の最後通牒" },
+    chapter: { zh: "第 2 夜 · 审计追责", en: "NIGHT 02 · AUDIT", ja: "第2夜 · 監査追及" },
+    title: { zh: "审计官亚瑟：应急附则第 4 条", en: "Auditor Sterling: Clause 4", ja: "監査官スターリング：緊急付則第4条" },
     framing: "50mm Close-Up · Keyframe",
     cameraMove: { zh: "强压威严的贴窗近景，呼吸白雾随台词扑向玻璃", en: "Tight authoritarian close-up through frosted Gate 0 blast window", ja: "威圧的な防爆窓越しのクロースアップ" },
     durationSec: 5.17,
     frames: 124,
     hasNativeAudio: false,
+    lipSyncLine: {
+      zh: "「操作员 #09，我是总部审计官斯特林。按应急附则第4条，请立即为机密档案持有人开锁。」",
+      en: "\"Operator #09, Arthur Sterling, London Audit. Under Contingency Clause 4, unseal this lock for classified custodian transit.\"",
+      ja: "「検疫官 #09、本社監査官のスターリングだ。緊急付則第4条に基づき、機密保持者の通過を許可したまえ。」"
+    },
     posterSrc: "./portraits/arthur.jpg",
     videoSrc: "./videos/arthur/lean_in.mp4",
     fallbackVideoSrc: "./videos/arthur/lean_in.mp4",
@@ -1301,13 +1306,13 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
         fov: 38,
         lensLabel: "50mm Anamorphic f/2.0",
         axisNote: {
-          zh: "窗外低角度仰拍站长亚瑟，强调等级压迫感。",
-          en: "Low-angle glass POV highlighting command authority.",
-          ja: "少し煽りの構図で所長の威圧感を強調。"
+          zh: "窗外低角度仰拍总部审计官亚瑟，强调档案审查压迫感。",
+          en: "Low-angle glass POV highlighting headquarters audit authority.",
+          ja: "少し煽りの構図で監査官の威圧感を強調。"
         }
       },
       actors: [
-        { id: "v03", label: "亚瑟站长 (V-03)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
+        { id: "v03", label: "审计官亚瑟 (V-03)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
       ],
       props: [
         { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
@@ -1319,13 +1324,18 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     id: "shot_n2_marcus_warning",
     storyNodeId: "n2_marcus_clash",
     shotCode: "SC-03B",
-    chapter: { zh: "第 2 夜 · 夺权危机", en: "NIGHT 02 · COMMAND", ja: "第2夜 · 指揮権争い" },
-    title: { zh: "安保队长马库斯焦急叩门", en: "Capt. Marcus Urgent Plea", ja: "マーカス隊長の緊急要請" },
+    chapter: { zh: "第 2 夜 · 外风口危机", en: "NIGHT 02 · AIRLOCK", ja: "第2夜 · 隔壁危機" },
+    title: { zh: "陈马库斯队长急促拍门", en: "Capt. Chen Demands Airlock Cycle", ja: "チェン隊長の緊急開門要請" },
     framing: "50mm Handheld",
-    cameraMove: { zh: "应急红灯扫过头盔反光面罩，手持紧迫推近", en: "Handheld push-in lit by crimson corridor alarm strobes", ja: "非常赤い光が照らす手持ちクローズアップ" },
+    cameraMove: { zh: "应急红灯扫过头盔与肩膀反光条，手持紧迫推近", en: "Handheld push-in lit by crimson corridor alarm strobes", ja: "非常赤い光が照らす手持ちクローズアップ" },
     durationSec: 5.17,
     frames: 124,
     hasNativeAudio: false,
+    lipSyncLine: {
+      zh: "「#09，是我，陈队长！别磨蹭，外头风口撑不住两分钟了！」",
+      en: "\"#09, it's Captain Chen! Stop staring at the monitor and cycle the bolts!\"",
+      ja: "「#09、俺だ、チェン隊長だ！モタモタするな、外の隔壁はもう保たんぞ！」"
+    },
     posterSrc: "./portraits/marcus.jpg",
     videoSrc: "./videos/marcus/idle.mp4",
     fallbackVideoSrc: "./videos/marcus/idle.mp4",
@@ -1340,13 +1350,13 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
         fov: 40,
         lensLabel: "50mm Anamorphic",
         axisNote: {
-          zh: "红警灯光斜照马库斯侧脸，营造有人失踪后的紧张氛围。",
-          en: "Red beacon shadows capture post-disappearance paranoia.",
-          ja: "赤色警光が行方不明発生後の緊張を映す。"
+          zh: "红警灯光斜照马库斯侧脸，营造外风口失压危机。",
+          en: "Red beacon shadows capture outer bulkhead failure urgency.",
+          ja: "赤色警光が外気隔壁の危機を映す。"
         }
       },
       actors: [
-        { id: "v04", label: "马库斯 (V-04)", pos: [-1.2, 0, 0.05], rotY: Math.PI / 2, color: "#eba834", speaking: true }
+        { id: "v04", label: "陈队长 (V-04)", pos: [-1.2, 0, 0.05], rotY: Math.PI / 2, color: "#eba834", speaking: true }
       ],
       props: [
         { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
@@ -1355,55 +1365,21 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     }
   },
   {
-    id: "shot_n3_ingrid_sample",
-    storyNodeId: "n3_storm_blackout",
-    shotCode: "SC-04A",
-    chapter: { zh: "第 3 夜 · 磁暴断电", en: "NIGHT 03 · BLACKOUT", ja: "第3夜 · 磁気嵐停電" },
-    title: { zh: "英格丽德怀抱渗血低温样本罐", en: "Ingrid With Bleeding Cryo Canister", ja: "血塗れの凍結検体容器を持つイングリッド" },
-    framing: "50mm Cold Cyan",
-    cameraMove: { zh: "手电散光穿透磁暴暗影，在样本罐与脸部之间微摇聚焦", en: "Flashlight beam cuts through storm blackout between cryo tube and eyes", ja: "停電下、懐中電灯が検体と顔を照らす" },
-    durationSec: 5.17,
-    frames: 124,
-    hasNativeAudio: false,
-    posterSrc: "./portraits/ingrid.jpg",
-    videoSrc: "./videos/ingrid/lean_in.mp4",
-    fallbackVideoSrc: "./videos/ingrid/lean_in.mp4",
-    boundAssetTags: ["@set_vestibule", "@ingrid", "@cryo_canister", "@intercom"],
-    motionPreset: "handheld",
-    blocking: {
-      zone: "vestibule",
-      alertLight: "cyan",
-      camera: {
-        pos: [0.2, 1.44, 1.45],
-        target: [-1.15, 1.38, 0.0],
-        fov: 38,
-        lensLabel: "50mm Blackout Thriller",
-        axisNote: {
-          zh: "磁暴全黑环境下仅凭手持应急光源切出临床冷峻感。",
-          en: "Handheld flashlight key-light under total Night 3 sensor blackout.",
-          ja: "全センサー停止中の手持ち光による緊張構図。"
-        }
-      },
-      actors: [
-        { id: "v06", label: "英格丽德 (V-06)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
-      ],
-      props: [
-        { id: "p_canister", assetTag: "@cryo_canister", label: "渗血低温样本罐", primitive: "cylinder", pos: [-0.95, 1.05, 0.05], color: "#5bbad5" },
-        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
-      ]
-    }
-  },
-  {
     id: "shot_n3_ana_truth",
     storyNodeId: "n3_ana_betrayal",
-    shotCode: "SC-04B",
+    shotCode: "SC-04A",
     chapter: { zh: "第 3 夜 · 磁暴断电", en: "NIGHT 03 · BLACKOUT", ja: "第3夜 · 磁気嵐停電" },
-    title: { zh: "安娜急促喘息揭发供氧阴谋", en: "Ana O2 Sabotage Warning", ja: "アナの酸素妨害警告" },
+    title: { zh: "安娜急报：高压减压舱漏气", en: "Ana: Hyperbaric Bay Seal Loss", ja: "アナ：高圧チャンバー漏洩" },
     framing: "65mm Tight Portrait",
-    cameraMove: { zh: "喘息雾气打在玻璃上，紧盯眼底恐惧的 65mm 超近景", en: "Breath fogs the frost glass as 65mm lens locks on terrified eyes", ja: "息で曇る窓越しの65mmクローズアップ" },
+    cameraMove: { zh: "冷静紧盯防爆窗的 65mm 近景，要求立即开启内门", en: "Steady 65mm lens through fogged glass as Ana demands inner seal cycle", ja: "65mmクローズアップで内扉開放を求める" },
     durationSec: 5.17,
     frames: 124,
     hasNativeAudio: false,
+    lipSyncLine: {
+      zh: "「#09，高压减压舱漏气了。我是安娜·里贝罗，开内门。」",
+      en: "\"#09, the hyperbaric bay lost seal. Ana Ribeiro. Open the inner lock.\"",
+      ja: "「#09、高圧チャンバーのシールが破れた。アナ・リベイロよ、内扉を開けて。」"
+    },
     posterSrc: "./portraits/ana.jpg",
     videoSrc: "./videos/ana/flinch.mp4",
     fallbackVideoSrc: "./videos/ana/flinch.mp4",
@@ -1418,9 +1394,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
         fov: 32,
         lensLabel: "65mm Close-Up",
         axisNote: {
-          zh: "贴窗雾气与微红供氧警报交错，突显时间所剩无几。",
-          en: "Steam mist and red O2 alarm beacon build claustrophobia.",
-          ja: "霧と酸素警報灯が切迫感を高める。"
+          zh: "磁暴盲区下极度冷静的反差表情，不找任何废话借口。",
+          en: "Composed urgency in magnetic blackout without excuses.",
+          ja: "磁気嵐下での端的な要請。"
         }
       },
       actors: [
@@ -1432,16 +1408,64 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     }
   },
   {
-    id: "shot_n4_linmei_plea",
-    storyNodeId: "n4_linmei_conspiracy",
-    shotCode: "SC-05A",
-    chapter: { zh: "第 4 夜 · 逃生叛变", en: "NIGHT 04 · MUTINY", ja: "第4夜 · 脱出反乱" },
-    title: { zh: "林梅的潜艇撤离密约", en: "Lin Mei's Escape Sub Deal", ja: "リンメイの潜水艦密約" },
-    framing: "50mm Calm Persuasion",
-    cameraMove: { zh: "极稳冷光中景，用镇定到诡异的笑意抛出潜艇诱饵", en: "Steadicam close medium spotlighting eerily calm persuasion", ja: "不気味なほど落ち着いた説得を捉える中景" },
+    id: "shot_n3_ingrid_sample",
+    storyNodeId: "n3_storm_blackout",
+    shotCode: "SC-04B",
+    chapter: { zh: "第 3 夜 · 磁暴断电", en: "NIGHT 03 · BLACKOUT", ja: "第3夜 · 磁気嵐停電" },
+    title: { zh: "心理顾问索尔伯格：温和控场", en: "Dr. Solberg: Calm Stress Probe", ja: "心理顧問ソルベルグ：穏やかな懐柔" },
+    framing: "50mm Cold Cyan",
+    cameraMove: { zh: "极光青光中她微笑轻按对讲键，反客为主对 #09 做心理安抚", en: "Soft clinical gaze beneath cyan aurora blackout glow", ja: "オーロラ冷光下で穏やかに問いかける" },
     durationSec: 5.17,
     frames: 124,
     hasNativeAudio: false,
+    lipSyncLine: {
+      zh: "「晚上好，#09。你的呼吸听起来很紧绷——我是索尔伯格医生，开门让我进来陪你稳住节奏好吗？」",
+      en: "\"Good evening, #09. Your breathing sounds tight over the static—it's Dr. Solberg. Let me in so we can steady this together.\"",
+      ja: "「こんばんは、#09。息が詰まっているわね——ソルベルグよ。中へ入れてちょうだい、一緒に落ち着きましょう。」"
+    },
+    posterSrc: "./portraits/ingrid.jpg",
+    videoSrc: "./videos/ingrid/lean_in.mp4",
+    fallbackVideoSrc: "./videos/ingrid/lean_in.mp4",
+    boundAssetTags: ["@set_vestibule", "@ingrid", "@intercom"],
+    motionPreset: "handheld",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "cyan",
+      camera: {
+        pos: [0.2, 1.44, 1.45],
+        target: [-1.15, 1.38, 0.0],
+        fov: 38,
+        lensLabel: "50mm Blackout Thriller",
+        axisNote: {
+          zh: "全传感器断电下的温和心理攻势，制造温柔里的冷汗感。",
+          en: "Gentle psychological persuasion under sensor blackout.",
+          ja: "センサー停止下での柔和な心理誘導。"
+        }
+      },
+      actors: [
+        { id: "v06", label: "索尔伯格医生 (V-06)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#4aa3c8", speaking: true }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
+      ]
+    }
+  },
+  {
+    id: "shot_n4_linmei_plea",
+    storyNodeId: "n4_linmei_conspiracy",
+    shotCode: "SC-05A",
+    chapter: { zh: "第 4 夜 · 样本危机", en: "NIGHT 04 · BIO-VAULT", ja: "第4夜 · 検体危機" },
+    title: { zh: "林梅请求进内舱锁死低温母本", en: "Lin Mei: Seal Cryo Master Cultures", ja: "リンメイ：低温母株の緊急封印" },
+    framing: "50mm Calm Persuasion",
+    cameraMove: { zh: "极稳冷光中景，神情忧虑克制地请求开启内舱锁", en: "Steadicam medium spotlighting tense cryo-biologist urgency", ja: "抑制された緊迫感を捉える中景" },
+    durationSec: 5.17,
+    frames: 124,
+    hasNativeAudio: false,
+    lipSyncLine: {
+      zh: "「#09，低温样本库封条破了。我是林梅，开门让我进内舱锁死母本。」",
+      en: "\"#09, the cryo-vault seal broke. It's Lin Mei—cycle the lock so I can secure the master cultures.\"",
+      ja: "「#09、低温保管庫の封が破れたわ。リン・メイよ、母株を封じるから開けて。」"
+    },
     posterSrc: "./portraits/linmei.jpg",
     videoSrc: "./videos/linmei/lean_in.mp4",
     fallbackVideoSrc: "./videos/linmei/lean_in.mp4",
@@ -1456,9 +1480,9 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
         fov: 38,
         lensLabel: "50mm Anamorphic",
         axisNote: {
-          zh: "与前夜恐慌访客相反，用过度理性的冷静制造“高阶伪人”不安感。",
-          en: "Uncanny composure contrasts with prior panicked arrivals.",
-          ja: "異常な冷静さがかえって不気味さを際立たせる。"
+          zh: "第 4 夜高阶仿生压迫感：精确、克制、句句落点清晰。",
+          en: "High-tier Night 4 restraint masking hidden loyalty calculations.",
+          ja: "第4夜高階擬態体の静かな緊迫感。"
         }
       },
       actors: [
@@ -1466,7 +1490,7 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       ],
       props: [
         { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
-        { id: "p_ledger", assetTag: "@ledger", label: "撤离密约台账", primitive: "ledger", pos: [0.18, 0.82, 1.44], color: "#d08770" }
+        { id: "p_ledger", assetTag: "@ledger", label: "低温温控曲线单", primitive: "ledger", pos: [0.18, 0.82, 1.44], color: "#d08770" }
       ]
     }
   },
@@ -1474,13 +1498,18 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     id: "shot_n4_hannah_tape",
     storyNodeId: "n4_hannah_whistle",
     shotCode: "SC-05B",
-    chapter: { zh: "第 4 夜 · 逃生叛变", en: "NIGHT 04 · MUTINY", ja: "第4夜 · 脱出反乱" },
-    title: { zh: "汉娜举起前任 #08 黑匣子", en: "Hannah Holds Up #08's Black Box", ja: "ハンナの#08ブラックボックス" },
+    chapter: { zh: "第 4 夜 · 黑匣铁证", en: "NIGHT 04 · BLACK-BOX", ja: "第4夜 · 告発証拠" },
+    title: { zh: "汉娜怀抱橙色黑匣子请求封存证物", en: "Hannah Clutches Vent Tamper Black-Box", ja: "ハンナの排気改ざんブラックボックス" },
     framing: "40mm Storm Handheld",
-    cameraMove: { zh: "镜头从沾血黑匣子快甩回汉娜撕裂般呐喊的面部", en: "Rack focus from battered recorder to Hannah screaming through sleet", ja: "傷だらけの録音機から叫ぶハンナへフォーカス移動" },
+    cameraMove: { zh: "从橙色密封记录仪推回汉娜锐利急切的双眼", en: "Rack focus from battered orange recorder case to Hannah's sharp gaze", ja: "オレンジの記録装置から鋭い目つきへ寄る" },
     durationSec: 5.17,
     frames: 124,
     hasNativeAudio: false,
+    lipSyncLine: {
+      zh: "「#09，我是汉娜·魏斯。我怀里是外风井违规排气的黑匣子，立刻放我进内舱封存证物！」",
+      en: "\"#09, Hannah Weiss. I'm holding the outer-shaft vent tamper recorder—open the lock so I can seal the evidence!\"",
+      ja: "「#09、ハンナ・ヴァイスよ。不正排気のブラックボックスを持っているわ、証拠保全のため開けて！」"
+    },
     posterSrc: "./portraits/hannah.jpg",
     videoSrc: "./videos/hannah/flinch.mp4",
     fallbackVideoSrc: "./videos/hannah/flinch.mp4",
@@ -1495,16 +1524,16 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
         fov: 42,
         lensLabel: "40mm Storm Chaos",
         axisNote: {
-          zh: "黎明前最高烈度的外部冲击镜头，将黑匣子悬念推向顶峰。",
-          en: "Peak pre-dawn chaos elevating #08's secret into Night 5.",
-          ja: "夜明け前最大のクライマックス演出。"
+          zh: "暴风雪中紧抱橙色铁证匣的黎明前最后一敲。",
+          en: "Final pre-dawn knock with physical evidence of station cover-up.",
+          ja: "暴風雪の中で不正証拠を抱えた最後のノック。"
         }
       },
       actors: [
         { id: "v08", label: "汉娜 (V-08)", pos: [-1.15, 0, 0.0], rotY: Math.PI / 2, color: "#49b882", speaking: true }
       ],
       props: [
-        { id: "p_blackbox", assetTag: "@blackbox", label: "#08 黑匣子磁带机", primitive: "tape", pos: [-0.95, 1.18, 0.06], rotY: 0.4, color: "#49b882" },
+        { id: "p_blackbox", assetTag: "@blackbox", label: "橙色排气黑匣子", primitive: "tape", pos: [-0.95, 1.18, 0.06], rotY: 0.4, color: "#d08770" },
         { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" }
       ]
     }
@@ -1516,7 +1545,7 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     chapter: { zh: "第 5 夜 · 终局结局", en: "NIGHT 05 · FINALES", ja: "第5夜 · 終局結末" },
     title: { zh: "第 5 夜镜面对峙：窗外另一个“你”", en: "Night 5 Mirror: Your Double Outside", ja: "第5夜鏡像対峙：外のもう一人の自分" },
     framing: "50mm Hitchcock Double",
-    cameraMove: { zh: "极昼绯红天光与青蓝站内光交汇，门外自己的替身缓缓抬头开口", en: "Blood-red polar dawn meets booth cyan as OP#09's double locks eyes", ja: "極地の朝焼けと室内の冷光が交差する鏡像対決" },
+    cameraMove: { zh: "极昼绯红天光与青蓝站内光交汇，门外自己的替身缓缓抬头复述你入职时的借口", en: "Cyan booth meets outside double repeating your intake words", ja: "入所時の言葉を復唱する外の自分" },
     durationSec: 5.17,
     frames: 124,
     hasNativeAudio: false,
@@ -1554,15 +1583,15 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
     storyNodeId: "ending_dawn_break",
     shotCode: "SC-END-A",
     chapter: { zh: "第 5 夜 · 终局结局", en: "NIGHT 05 · FINALES", ja: "第5夜 · 終局結末" },
-    title: { zh: "真结局 A：破冰救援潜艇冲出极昼", en: "Ending A: Submarine Breaks The Pack Ice", ja: "真結末A：氷を砕く救助潜水艦" },
+    title: { zh: "结局 A：认账与破冰逃生", en: "Ending A: Owning It & Icebreak", ja: "結末A：引き受けと砕氷脱出" },
     framing: "24mm Epilogue Helicopter Wide",
-    cameraMove: { zh: "航拍式大远景拉升：黑钢救援潜艇撞碎十米冰脊浮出斯瓦尔巴红日海面", en: "Sweeping aerial pull-back as rescue sub breaches sunlit Svalbard ice", ja: "朝日を受ける砕氷潜水艦の壮大な空撮フィナーレ" },
-    durationSec: 5.17,
-    frames: 124,
+    cameraMove: { zh: "黑钢救援潜艇撞碎十米冰脊浮出斯瓦尔巴红日海面", en: "Sweeping aerial pull-back as rescue sub breaches sunlit Svalbard ice", ja: "朝日を受ける砕氷潜水艦の壮大なフィナーレ" },
+    durationSec: 5.5,
+    frames: 132,
     hasNativeAudio: false,
-    posterSrc: "./portraits/lobby_bg.jpg",
-    videoSrc: "./videos/chamber/admit.mp4",
-    fallbackVideoSrc: "./videos/chamber/admit.mp4",
+    posterSrc: "./portraits/story/ending_a_dawn_icebreak.jpg",
+    videoSrc: "./videos/story/ending_a_dawn_icebreak.mp4",
+    fallbackVideoSrc: "./videos/story/ending_a_sub_escape.mp4",
     boundAssetTags: ["@set_icecore", "@op09"],
     motionPreset: "pull_back",
     blocking: {
@@ -1580,7 +1609,7 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
         }
       },
       actors: [
-        { id: "sub", label: "破冰救援潜艇", pos: [-2.0, 0.2, 0.0], rotY: 0.4, color: "#49b882" }
+        { id: "sub", label: "鹦鹉螺0号救援潜艇", pos: [-2.0, 0.2, 0.0], rotY: 0.4, color: "#49b882" }
       ],
       props: []
     }

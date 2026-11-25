@@ -279,7 +279,7 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       });
     };
 
-    // Pure movie path across Nights 1 -> 5 without ever playing booth minigame
+    // Pure movie path across Nights 1 -> 5 without ever playing booth minigame (V-05 before V-06)
     await clickChoice("elena_open_intercom");
     await clickChoice("elena_react_admit");
     await clickChoice("corridor_lock_medbay");
@@ -288,11 +288,30 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     await clickChoice("n1_aftermath_continue");
     await clickChoice("n2_arthur_trust");
     await clickChoice("n2_marcus_purge");
-    await clickChoice("n3_ingrid_admit");
     await clickChoice("n3_ana_admit");
+    await clickChoice("n3_ingrid_admit");
     await clickChoice("n4_linmei_purge");
     await clickChoice("n4_hannah_admit");
     await clickChoice("n5_choose_dawn");
+
+    // Verify new bespoke reshoot assets and corrected Night 3-5 / Ending D invariants
+    const allAssetsJson = JSON.stringify(STORY_NODES);
+    for (const expectedVideo of [
+      "./videos/story/ending_a_sub_escape.mp4",
+      "./videos/story/ending_a_dawn_icebreak.mp4",
+      "./videos/story/ending_b_entombed_station.mp4",
+      "./videos/story/ending_c_mirror_door.mp4",
+      "./videos/story/ending_d_op09_tape.mp4",
+      "./videos/story/ending_d_dawn_logbook.mp4",
+      "./videos/story/n1_corridor_aftermath_admit.mp4",
+      "./videos/story/n1_corridor_aftermath_purge.mp4"
+    ]) {
+      expect(allAssetsJson).toContain(expectedVideo);
+    }
+    expect(getStoryNode("ending_lone_watch")!.videoSrc).not.toContain("prequel_op08_warning");
+    expect(getStoryNode("n2_arthur_standoff")!.subtitle.zh).toContain("应急附则第 4 条");
+    expect(getStoryNode("n3_ana_betrayal")!.subtitle.zh).toContain("高压减压舱");
+    expect(getStoryNode("n3_storm_blackout")!.subtitle.zh).toContain("索尔伯格医生");
 
     expect(
       document.querySelector("#fmv-booth-overlay [data-story-node='ending_dawn_break']")

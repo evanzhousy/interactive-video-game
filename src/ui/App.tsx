@@ -38,10 +38,13 @@ import { streamInterrogateTurn } from "../game/interrogate-client.js";
 import { DEFAULT_INTERROGATE_MODEL } from "../game/interrogate-prompt.js";
 import type { ClipState, VoiceLineVariant } from "../game/media.js";
 import {
+  NIGHT5_KNOCK_SUFFIX,
   SHIFT_EXCUSES,
+  resolveNight5KnockLine,
   type IntakeOption,
   type PlayerCompactProfile
 } from "../game/night5.js";
+import type { StoryClipSegment } from "../game/story-graph.js";
 import {
   DEFAULT_FLASH_CONFIG,
   requestFlashRephrase
@@ -268,6 +271,7 @@ export function App() {
   const [activeStoryNodeId, setActiveStoryNodeId] = useState<string | null>(null);
   const [sideQuestReturnNodeId, setSideQuestReturnNodeId] = useState<string | null>(null);
   const [sideQuestClues, setSideQuestClues] = useState<string[]>([]);
+  const [storyFlags, setStoryFlags] = useState<{ medbayLocked?: boolean; ventSealed?: boolean }>({});
   const [prologueInitialStep, setPrologueInitialStep] = useState(0);
   const returnStageRef = useRef<Exclude<Stage, "studio">>("lobby");
 
@@ -785,6 +789,7 @@ export function App() {
       setBoggartUsedIds([]);
       setSideQuestReturnNodeId(null);
       setSideQuestClues([]);
+      setStoryFlags({});
       setStage("booth");
       resetVisitorState(0, roster, roster[0]?.id !== "V-01", initFuel, false, freshRunSeed);
       if (roster[0]?.id === "V-01") {
@@ -829,6 +834,7 @@ export function App() {
       setBoggartUsedIds([]);
       setSideQuestReturnNodeId(null);
       setSideQuestClues([]);
+      setStoryFlags({});
       setActiveStoryNodeId(null);
       setStage("booth");
       resetVisitorState(0, roster, true, initFuel, false, freshRunSeed);
@@ -846,6 +852,7 @@ export function App() {
       setFuelLeft(getInitialFuel(campaignMode));
       setEmergencyOverdraftUsed(false);
       setBoggartUsedIds([]);
+      setStoryFlags({});
       setActiveStoryNodeId(null);
       setPrologueInitialStep(0);
       setStage("intake");
@@ -1509,6 +1516,16 @@ export function App() {
     const extraNodes: string[] = [choice.nextNodeId];
     const extraEdges: string[] = edge ? [edge.id] : [];
 
+    if (choice.id === "corridor_lock_medbay") {
+      setStoryFlags((f) => ({ ...f, medbayLocked: true }));
+    } else if (choice.id === "corridor_keep_watch") {
+      setStoryFlags((f) => ({ ...f, medbayLocked: false }));
+    } else if (choice.id === "corridor_seal_vent") {
+      setStoryFlags((f) => ({ ...f, ventSealed: true }));
+    } else if (choice.id === "corridor_brace_booth") {
+      setStoryFlags((f) => ({ ...f, ventSealed: false }));
+    }
+
     if (choice.sideQuestVisitorId) {
       const targetIdx = Math.max(
         0,
@@ -1556,21 +1573,18 @@ export function App() {
       }
       const curNode = curId ? getStoryNode(curId) : undefined;
       const decisionVisitorId = curNode?.visitorId ?? visitor.id;
-      const existingDecision = history.some((h) => h.visitorId === decisionVisitorId);
-      if (!existingDecision) {
-        const entryRoll =
-          rolls.find((r) => r.visitorId === decisionVisitorId) ?? currentRoll;
-        updatedHistory = [
-          ...history,
-          {
-            visitorId: decisionVisitorId,
-            decision: choice.directVerdict!,
-            wasMimic: entryRoll.isMimic,
-            excuse: SHIFT_EXCUSES[0]!
-          }
-        ];
-        setHistory(updatedHistory);
-      }
+      const entryRoll =
+        rolls.find((r) => r.visitorId === decisionVisitorId) ?? currentRoll;
+      updatedHistory = [
+        ...history.filter((h) => h.visitorId !== decisionVisitorId),
+        {
+          visitorId: decisionVisitorId,
+          decision: choice.directVerdict!,
+          wasMimic: entryRoll.isMimic,
+          excuse: isPurge ? SHIFT_EXCUSES[0]! : SHIFT_EXCUSES[2]!
+        }
+      ];
+      setHistory(updatedHistory);
 
       if (decisionVisitorId === "V-01") {
         extraNodes.push(isPurge ? "n1_elena_purge" : "n1_elena_admit");
@@ -2331,35 +2345,185 @@ export function App() {
                     lang={lang}
                     motionPaused={motionPaused}
                     voiceEnabled={voice}
-                    clipsOverride={
-                      activeStoryNodeId === "n1_leo_aftermath" &&
-                      (verdictState === "PURGE" ||
-                        history.find((h) => h.visitorId === "V-02")?.decision === "PURGE")
-                        ? [
-                            {
-                              id: "n1_leo_outcome_purge",
-                              videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
-                              fallbackVideoSrc: "./videos/chamber/purge.mp4",
-                              posterSrc: "./portraits/reactions/chamber_purge.jpg",
-                              fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
-                              hasAudio: true,
-                              isLipSync: false,
-                              badge: { zh: "净化实况 · 1,100°C", en: "THERMAL PURGE", ja: "高温焼却" },
-                              speaker: {
-                                zh: "0 号隔离窗 // 里奥已净化",
-                                en: "GATE 0 // LEO PURGED",
-                                ja: "第0関門 // リオ焼却"
-                              },
-                              subtitle: {
-                                zh: "热浪吞没了过渡舱，那只白色工具箱也在烈焰中化为灰烬。",
-                                en: "1,100°C flames consume both figure and tool chest inside the vestibule.",
-                                ja: "高温の炎が前室ごと工具箱を焼き尽くした。"
-                              }
+                    clipsOverride={(() => {
+                      const curNode = activeStoryNodeId ? getStoryNode(activeStoryNodeId) : undefined;
+                      if (!curNode) return undefined;
+
+                      if (
+                        activeStoryNodeId === "n1_leo_aftermath" &&
+                        (verdictState === "PURGE" ||
+                          history.find((h) => h.visitorId === "V-02")?.decision === "PURGE")
+                      ) {
+                        return [
+                          {
+                            id: "n1_leo_outcome_purge",
+                            videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
+                            fallbackVideoSrc: "./videos/chamber/purge.mp4",
+                            posterSrc: "./portraits/reactions/chamber_purge.jpg",
+                            fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
+                            hasAudio: true,
+                            isLipSync: false,
+                            badge: { zh: "净化实况 · 1,100°C", en: "THERMAL PURGE", ja: "高温焼却" },
+                            speaker: {
+                              zh: "0 号隔离窗 // 莱奥已净化",
+                              en: "GATE 0 // LEO PURGED",
+                              ja: "第0関門 // レオ焼却"
                             },
-                            getStoryNode("n1_leo_aftermath")!.clips![1]!
-                          ]
-                        : undefined
-                    }
+                            subtitle: {
+                              zh: "热浪吞没了过渡舱，那只白色工具箱也在烈焰中化为灰烬。",
+                              en: "1,100°C flames consume both figure and tool chest inside the vestibule.",
+                              ja: "高温の炎が前室ごと工具箱を焼き尽くした。"
+                            }
+                          },
+                          curNode.clips![1]!
+                        ] satisfies readonly StoryClipSegment[];
+                      }
+
+                      const reactivePrevMap: Record<string, { prevId: string; purgePrefix: { zh: string; en: string; ja: string }; admitPrefix: { zh: string; en: string; ja: string } }> = {
+                        n2_marcus_clash: {
+                          prevId: "V-03",
+                          purgePrefix: {
+                            zh: "【前闸余温 · 审计官已净化】玻璃还留着热浪焦痕——",
+                            en: "[AFTERMATH · STERLING PURGED] Blast glass still scorched—",
+                            ja: "【余波 · スターリング焼却済】防爆ガラスが焦げたまま——"
+                          },
+                          admitPrefix: {
+                            zh: "【前闸放行 · 审计官已入内廊】斯特林刚挟卷宗离开——",
+                            en: "[AFTERMATH · STERLING ADMITTED] Sterling just cleared the corridor—",
+                            ja: "【余波 · スターリング通過済】監査官が内廊下へ入った直後——"
+                          }
+                        },
+                        n3_ana_betrayal: {
+                          prevId: "V-04",
+                          purgePrefix: {
+                            zh: "【外风口失守 · 陈队长已净化】暴雪呼啸灌进警铃区——",
+                            en: "[AFTERMATH · CHEN PURGED] Outer bulkhead unpatched—",
+                            ja: "【余波 · チェン焼却済】外隔壁が修繕されぬまま——"
+                          },
+                          admitPrefix: {
+                            zh: "【外风口抢修中 · 陈队长入舱】舱压刚刚稳住——",
+                            en: "[AFTERMATH · CHEN ADMITTED] Pressure holds as Chen heads down—",
+                            ja: "【余波 · チェン通過済】隊長が隔壁へ向かった直後——"
+                          }
+                        },
+                        n3_storm_blackout: {
+                          prevId: "V-05",
+                          purgePrefix: {
+                            zh: "【减压舱封死 · 安娜已净化】极光磁暴吞没了热像信号——",
+                            en: "[AFTERMATH · ANA PURGED] Hyperbaric bay sealed shut—",
+                            ja: "【余波 · アナ焼却済】高圧チャンバー封鎖の中——"
+                          },
+                          admitPrefix: {
+                            zh: "【减压舱开启 · 安娜在内舱】磁暴令热像全屏白噪——",
+                            en: "[AFTERMATH · ANA ADMITTED] Ana hurried toward the manifold—",
+                            ja: "【余波 · アナ通過済】アナが中へ急いだ直後——"
+                          }
+                        },
+                        n4_linmei_conspiracy: {
+                          prevId: "V-06",
+                          purgePrefix: {
+                            zh: "【夜深 · 索尔伯格已净化】全站仅剩最后几格备用燃料——",
+                            en: "[AFTERMATH · SOLBERG PURGED] Station pressure drops lower—",
+                            ja: "【余波 · ソルベルグ焼却済】基地の静寂が深まる——"
+                          },
+                          admitPrefix: {
+                            zh: "【索尔伯格进入内舱】她消失在主走廊阴影里——",
+                            en: "[AFTERMATH · SOLBERG ADMITTED] Solberg stepped into the inner hall—",
+                            ja: "【余波 · ソルベルグ通過済】彼女が内廊下へ消えた直後——"
+                          }
+                        },
+                        n4_hannah_whistle: {
+                          prevId: "V-07",
+                          purgePrefix: {
+                            zh: "【样本库警报 · 林梅已净化】寒雾顺着未锁的冷库门渗出——",
+                            en: "[AFTERMATH · LIN MEI PURGED] Cryo frost creeps down the hall—",
+                            ja: "【余波 · リンメイ焼却済】低温庫の冷気が廊下に漏れる——"
+                          },
+                          admitPrefix: {
+                            zh: "【样本库封锁中 · 林梅已入舱】冷库内门刚传出落锁声——",
+                            en: "[AFTERMATH · LIN MEI ADMITTED] Vault locks click deep inside—",
+                            ja: "【余波 · リンメイ通過済】保管庫の内錠が閉じた直後——"
+                          }
+                        }
+                      };
+
+                      const reactiveCfg = activeStoryNodeId ? reactivePrevMap[activeStoryNodeId] : undefined;
+                      if (reactiveCfg) {
+                        const prevEntry = history.find((h) => h.visitorId === reactiveCfg.prevId);
+                        const extraVentZh =
+                          activeStoryNodeId === "n2_marcus_clash" && storyFlags.ventSealed === false
+                            ? "（头顶未封的通风口又滑过一声擦响）"
+                            : "";
+                        const extraVentEn =
+                          activeStoryNodeId === "n2_marcus_clash" && storyFlags.ventSealed === false
+                            ? " (An unsealed vent clatters overhead.)"
+                            : "";
+                        const extraVentJa =
+                          activeStoryNodeId === "n2_marcus_clash" && storyFlags.ventSealed === false
+                            ? "（未封鎖のダクトから微かな物音。）"
+                            : "";
+                        if (prevEntry || extraVentZh) {
+                          const prefix = prevEntry
+                            ? prevEntry.decision === "PURGE"
+                              ? reactiveCfg.purgePrefix
+                              : reactiveCfg.admitPrefix
+                            : { zh: "", en: "", ja: "" };
+                          return [
+                            {
+                              id: curNode.id,
+                              videoSrc: curNode.videoSrc,
+                              fallbackVideoSrc: curNode.fallbackVideoSrc,
+                              posterSrc: curNode.posterSrc,
+                              fallbackPosterSrc: curNode.fallbackPosterSrc,
+                              hasAudio: curNode.hasAudio,
+                              isLipSync: curNode.isLipSync,
+                              voiceCue: curNode.voiceCue,
+                              speaker: curNode.speaker,
+                              subtitle: {
+                                zh: `${prefix.zh}${extraVentZh} ${curNode.subtitle.zh}`.trim(),
+                                en: `${prefix.en}${extraVentEn} ${curNode.subtitle.en}`.trim(),
+                                ja: `${prefix.ja}${extraVentJa} ${curNode.subtitle.ja}`.trim()
+                              }
+                            }
+                          ] satisfies readonly StoryClipSegment[];
+                        }
+                      }
+
+                      if (activeStoryNodeId === "n5_final_mirror") {
+                        const knockZh = resolveNight5KnockLine(baseline, intakeAnswers, "zh");
+                        const knockEn = resolveNight5KnockLine(baseline, intakeAnswers, "en");
+                        const knockJa = resolveNight5KnockLine(baseline, intakeAnswers, "ja");
+                        const hannahAdmitted = history.find((h) => h.visitorId === "V-08")?.decision === "ADMIT";
+                        const mimicAdmittedCount = history.filter((h) => h.wasMimic && h.decision === "ADMIT").length;
+                        const activeKnock = lang === "en" ? knockEn : lang === "ja" ? knockJa : knockZh;
+                        const boxTagZh = hannahAdmitted ? "你手边的汉娜黑匣子正在嗡鸣闪烁。" : "暴风雪外再无任何旁证。";
+                        const boxTagEn = hannahAdmitted ? "Hannah's orange black-box hums beside you." : "Outside, only blizzard static answers.";
+                        const boxTagJa = hannahAdmitted ? "手元のハンナのブラックボックスが低く唸っている。" : "外には吹雪以外の証人はない。";
+                        const mimicHintZh = mimicAdmittedCount > 0 ? `（内舱记录有 ${mimicAdmittedCount} 例疑患未除）` : "";
+                        const mimicHintEn = mimicAdmittedCount > 0 ? ` (${mimicAdmittedCount} unpurged breach logged)` : "";
+                        const mimicHintJa = mimicAdmittedCount > 0 ? `（内部侵入リスク ${mimicAdmittedCount}件）` : "";
+                        return [
+                          {
+                            id: curNode.id,
+                            videoSrc: curNode.videoSrc,
+                            fallbackVideoSrc: curNode.fallbackVideoSrc,
+                            posterSrc: curNode.posterSrc,
+                            fallbackPosterSrc: curNode.fallbackPosterSrc,
+                            hasAudio: curNode.hasAudio,
+                            isLipSync: curNode.isLipSync,
+                            voiceCue: { slug: "operator09", file: activeKnock.voiceLineId },
+                            speaker: curNode.speaker,
+                            subtitle: {
+                              zh: `窗外的「你」一字不差地敲窗复述：“${knockZh.quote}” ${NIGHT5_KNOCK_SUFFIX.zh} ${boxTagZh}${mimicHintZh}`,
+                              en: `Your double at the glass repeats verbatim: "${knockEn.quote}" ${NIGHT5_KNOCK_SUFFIX.en} ${boxTagEn}${mimicHintEn}`,
+                              ja: `窓の外の自分が復唱する：「${knockJa.quote}」${NIGHT5_KNOCK_SUFFIX.ja} ${boxTagJa}${mimicHintJa}`
+                            }
+                          }
+                        ] satisfies readonly StoryClipSegment[];
+                      }
+
+                      return undefined;
+                    })()}
                     operatorBadge={
                       operatorName.trim() ? `#09 · ${operatorName.trim()}` : "#09"
                     }
