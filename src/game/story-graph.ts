@@ -22,6 +22,11 @@ export interface StoryBoothEffect {
   systemNote: LocalizedText;
 }
 
+export interface StoryVoiceCue {
+  slug: string;
+  file: string;
+}
+
 export interface StoryClipSegment {
   id: string;
   videoSrc: string;
@@ -29,6 +34,8 @@ export interface StoryClipSegment {
   posterSrc: string;
   fallbackPosterSrc: string;
   hasAudio?: boolean;
+  isLipSync?: boolean;
+  voiceCue?: StoryVoiceCue;
   speaker: LocalizedText;
   subtitle: LocalizedText;
   badge?: LocalizedText;
@@ -57,6 +64,8 @@ export interface StoryNode {
   speaker: LocalizedText;
   kind: StoryNodeKind;
   hasAudio?: boolean;
+  isLipSync?: boolean;
+  voiceCue?: StoryVoiceCue;
   videoSrc: string;
   fallbackVideoSrc: string;
   posterSrc: string;
@@ -157,7 +166,8 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackVideoSrc: "./videos/story/prologue_01.mp4",
         posterSrc: "./portraits/story/prologue_01.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
         badge: { zh: "前传监控 01", en: "PREQUEL 01", ja: "前日譚 01" },
         speaker: {
           zh: "斯瓦尔巴深冰钻井台 // 02:14",
@@ -396,7 +406,8 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackVideoSrc: "./videos/elena/flinch.mp4",
         posterSrc: "./portraits/reactions/elena_flinch.jpg",
         fallbackPosterSrc: "./portraits/elena.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
         badge: { zh: "背景故事 · 3号舱回放", en: "FLASHBACK · CABIN 3", ja: "過去映像 · 第3区画" },
         speaker: {
           zh: "一周前 · 3号舱监控录像",
@@ -878,7 +889,8 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "焼却炉と廊下監視"
     },
     kind: "movie",
-    hasAudio: false,
+    hasAudio: true,
+    isLipSync: false,
     videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
     fallbackVideoSrc: "./videos/chamber/purge.mp4",
     posterSrc: "./portraits/reactions/chamber_purge.jpg",
@@ -890,7 +902,8 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackVideoSrc: "./videos/chamber/purge.mp4",
         posterSrc: "./portraits/reactions/chamber_purge.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
         badge: { zh: "净化实况 · 1,100°C", en: "THERMAL PURGE", ja: "高温焼却" },
         speaker: {
           zh: "0 号隔离窗 // 高温净化炉",
@@ -994,7 +1007,8 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackVideoSrc: "./videos/leo/flinch.mp4",
         posterSrc: "./portraits/reactions/leo_flinch.jpg",
         fallbackPosterSrc: "./portraits/leo.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
         badge: { zh: "背景故事 · 动力舱暴走", en: "FLASHBACK · POWER BAY", ja: "過去映像 · 動力室" },
         speaker: {
           zh: "两小时前 · 2号动力舱监控",
@@ -1329,7 +1343,8 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
         posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
         badge: { zh: "片尾悬念 · 走廊黑影", en: "CLIFFHANGER · SHADOW", ja: "次回予告 · 廊下の影" },
         speaker: {
           zh: "03:00 // 内舱长廊 7 号监控",
@@ -1380,6 +1395,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: false,
+    voiceCue: { slug: "arthur", file: "opening" },
     visitorId: "V-03",
     videoSrc: "./videos/arthur/lean_in.mp4",
     fallbackVideoSrc: "./videos/arthur/lean_in.mp4",
@@ -1458,6 +1474,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: false,
+    voiceCue: { slug: "marcus", file: "opening" },
     visitorId: "V-04",
     videoSrc: "./videos/marcus/idle.mp4",
     fallbackVideoSrc: "./videos/marcus/idle.mp4",
@@ -1565,6 +1582,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: false,
+    voiceCue: { slug: "ingrid", file: "opening" },
     visitorId: "V-06",
     videoSrc: "./videos/ingrid/lean_in.mp4",
     fallbackVideoSrc: "./videos/ingrid/lean_in.mp4",
@@ -1643,6 +1661,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: false,
+    voiceCue: { slug: "ana", file: "opening" },
     visitorId: "V-05",
     videoSrc: "./videos/ana/flinch.mp4",
     fallbackVideoSrc: "./videos/ana/flinch.mp4",
@@ -1750,6 +1769,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: false,
+    voiceCue: { slug: "linmei", file: "opening" },
     visitorId: "V-07",
     videoSrc: "./videos/linmei/lean_in.mp4",
     fallbackVideoSrc: "./videos/linmei/lean_in.mp4",
@@ -1828,6 +1848,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: false,
+    voiceCue: { slug: "hannah", file: "opening" },
     visitorId: "V-08",
     videoSrc: "./videos/hannah/flinch.mp4",
     fallbackVideoSrc: "./videos/hannah/flinch.mp4",
@@ -1935,6 +1956,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: false,
+    voiceCue: { slug: "operator09", file: "n5_ex_0" },
     videoSrc: "./videos/operator09/idle.mp4",
     fallbackVideoSrc: "./videos/operator09/idle.mp4",
     posterSrc: "./portraits/operator09.jpg",
@@ -2047,6 +2069,46 @@ export const STORY_NODES: readonly StoryNode[] = [
     fallbackVideoSrc: "./videos/chamber/admit.mp4",
     posterSrc: "./portraits/lobby_bg.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+    clips: [
+      {
+        id: "end_a_sub_breach",
+        videoSrc: "./videos/chamber/admit.mp4",
+        fallbackVideoSrc: "./videos/chamber/admit.mp4",
+        posterSrc: "./portraits/reactions/chamber_admit.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "闸门全开 · 破冰撤离", en: "DOCK OPEN · ESCAPE", ja: "ドック開放 · 脱出" },
+        speaker: {
+          zh: "0 号隔离窗 // 潜艇接驳通道",
+          en: "GATE 0 // SUBMARINE BAY",
+          ja: "第0関門 // 潜水艦ドック"
+        },
+        subtitle: {
+          zh: "绿色通行灯连续闪烁，你带着幸存者穿过失压走廊冲进破冰潜艇。",
+          en: "Green docking lamps flare along the corridor as the remaining crew sprints aboard the rescue submarine.",
+          ja: "緑の開放灯が点滅し、生存者たちは氷海へ繋がる救助潜水艦へ駆け込んだ。"
+        }
+      },
+      {
+        id: "end_a_polar_sunrise",
+        videoSrc: "./videos/chamber/whiteout.mp4",
+        fallbackVideoSrc: "./videos/chamber/admit.mp4",
+        posterSrc: "./portraits/lobby_bg.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "剧终 · 黎明破冰", en: "ENDING A // DAWN BREAK", ja: "結末 A // 夜明けの砕氷" },
+        speaker: {
+          zh: "斯瓦尔巴救援海域 // DAWN BREAK",
+          en: "SVALBARD OPEN WATER // ENDING A",
+          ja: "スヴァールバル外海 // 結末 A"
+        },
+        subtitle: {
+          zh: "冰芯井在橙红火光中崩塌，极地潜艇冲开十米厚的冰脊浮上朝阳。",
+          en: "Behind the shattered station, the rescue sub breaks through ten meters of pack ice into blinding polar sunrise.",
+          ja: "爆炎に包まれる基地を背に、救助潜水艦が厚い氷を砕いて極地の朝日へと浮上した。"
+        }
+      }
+    ],
     row: 0,
     col: 20
   },
@@ -2076,7 +2138,8 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "終幕 // 第0基地完全封印"
     },
     kind: "ending",
-    hasAudio: false,
+    hasAudio: true,
+    isLipSync: false,
     videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
     fallbackVideoSrc: "./videos/chamber/purge.mp4",
     posterSrc: "./portraits/reactions/chamber_purge.jpg",
@@ -2088,7 +2151,8 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackVideoSrc: "./videos/chamber/purge.mp4",
         posterSrc: "./portraits/reactions/chamber_purge.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
         badge: { zh: "终局锁死 · 热浪", en: "SEAL · PURGE", ja: "封鎖 · 焼却" },
         speaker: { zh: "全站热力封存 // GATE 0", en: "MASTER LOCKDOWN // GATE 0", ja: "全基地封鎖 // GATE 0" },
         subtitle: {
@@ -2154,7 +2218,8 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
         posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
         fallbackPosterSrc: "./portraits/operator09.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
         badge: { zh: "门锁解除", en: "AIRLOCK OPEN", ja: "ロック解除" },
         speaker: { zh: "0 号岗亭走廊 // 门开了", en: "GATE 0 // DOOR UNLOCKED", ja: "第0関門 // 解錠" },
         subtitle: {
@@ -2170,6 +2235,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/operator09.jpg",
         fallbackPosterSrc: "./portraits/operator09.jpg",
         hasAudio: false,
+        voiceCue: { slug: "operator09", file: "n5_ex_0" },
         badge: { zh: "镜面同化", en: "ENDING C // MIRROR", ja: "結末 C // 鏡像同化" },
         speaker: { zh: "值班员 #09 // 结局 C", en: "OPERATOR #09 // ENDING C", ja: "当直官 #09 // 結末 C" },
         subtitle: {

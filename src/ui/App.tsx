@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipShortcut, TooltipTrigger } from "@ui-sd
 import { useCallback, useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import {
+  ensureAudioUnlocked,
   playBoothSfx,
   setBoothAmbience,
   speakIntercomLine,
@@ -578,17 +579,33 @@ export function App() {
     visitor.id
   ]);
 
-  // Continuous Arctic -46°C blizzard + metallic hull stress + Night 3 geomagnetic storm ambience
+  // Continuous Arctic -46°C blizzard + dark synth film score across ALL stages including Prologue
   useEffect(() => {
+    const nightMood =
+      activeStoryNodeId === "ending_dawn_break"
+        ? 6
+        : stage === "night5" ||
+            activeStoryNodeId?.startsWith("n5_") ||
+            activeStoryNodeId?.startsWith("ending_")
+          ? 5
+          : activeStoryNodeId?.startsWith("n3_")
+            ? 3
+            : stage === "lobby" || stage === "intake"
+              ? 1
+              : visitor.night;
     setBoothAmbience(
       ambience &&
-        sfx &&
-        (stage === "lobby" || stage === "booth" || stage === "crisis" || stage === "night5"),
-      stage === "night5" ? 5 : stage === "lobby" ? 1 : visitor.night
+        (stage === "lobby" ||
+          stage === "intake" ||
+          stage === "booth" ||
+          stage === "crisis" ||
+          stage === "night5"),
+      nightMood
     );
-  }, [ambience, sfx, stage, visitor.night]);
+  }, [activeStoryNodeId, ambience, stage, visitor.night]);
 
   useEffect(() => {
+    ensureAudioUnlocked();
     return () => {
       stopAllBoothAudio();
     };
@@ -769,7 +786,7 @@ export function App() {
       setSideQuestReturnNodeId(null);
       setSideQuestClues([]);
       setStage("booth");
-      resetVisitorState(0, roster, true, initFuel, false, freshRunSeed);
+      resetVisitorState(0, roster, roster[0]?.id !== "V-01", initFuel, false, freshRunSeed);
       if (roster[0]?.id === "V-01") {
         setActiveStoryNodeId("n1_elena_arrival");
         unlockStoryNodes(
@@ -1806,6 +1823,26 @@ export function App() {
           </Button>
 
           <Button
+            id="btn-cinema-ambience"
+            className={`ctrl-btn ${ambience ? "amber" : ""}`}
+            aria-label={tl(
+              { zh: "开关电影配乐与环境音", en: "Toggle Score & Ambience", ja: "BGM・環境音切替" },
+              lang
+            )}
+            onClick={() => {
+              ensureAudioUnlocked();
+              setAmbience((a) => !a);
+            }}
+          >
+            <SnowHazardIcon />
+            <span>
+              {ambience
+                ? tl({ zh: "配乐: 开", en: "SCORE: ON", ja: "BGM: ON" }, lang)
+                : tl({ zh: "配乐: 关", en: "SCORE: OFF", ja: "BGM: OFF" }, lang)}
+            </span>
+          </Button>
+
+          <Button
             id="btn-storymap"
             className={`ctrl-btn ${storyMapOpen ? "amber" : ""}`}
             onClick={() => setStoryMapOpen((o) => !o)}
@@ -2305,7 +2342,8 @@ export function App() {
                               fallbackVideoSrc: "./videos/chamber/purge.mp4",
                               posterSrc: "./portraits/reactions/chamber_purge.jpg",
                               fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
-                              hasAudio: false,
+                              hasAudio: true,
+                              isLipSync: false,
                               badge: { zh: "净化实况 · 1,100°C", en: "THERMAL PURGE", ja: "高温焼却" },
                               speaker: {
                                 zh: "0 号隔离窗 // 里奥已净化",

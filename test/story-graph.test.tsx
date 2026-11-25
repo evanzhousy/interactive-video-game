@@ -59,6 +59,36 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(getStoryNode("prologue_01")!.clips?.length).toBe(3);
     expect(getStoryNode("n1_elena_arrival")!.clips?.length).toBe(2);
     expect(getStoryNode("n1_leo_aftermath")!.clips?.length).toBe(2);
+    expect(getStoryNode("ending_dawn_break")!.clips?.length).toBe(2);
+
+    // Every native-SFX Hollywood clip must be unmuted with isLipSync: false
+    const nativeSfxClipIds = [
+      ["prologue_01", "prequel_icecore_breach"],
+      ["n1_elena_arrival", "fb_elena_cabin3"],
+      ["n1_corridor_purge", "n1_elena_outcome_purge"],
+      ["n1_leo_arrival", "fb_leo_powerbay"],
+      ["n1_leo_aftermath", "n1_cliffhanger_shadow"],
+      ["ending_eternal_seal", "end_b_purge_blast"],
+      ["ending_mirror_assimilation", "end_c_shadow"]
+    ] as const;
+    for (const [nodeId, clipId] of nativeSfxClipIds) {
+      const seg = getStoryNode(nodeId)?.clips?.find((c) => c.id === clipId);
+      expect(seg?.hasAudio).toBe(true);
+      expect(seg?.isLipSync).toBe(false);
+    }
+
+    // All 7 Nights 2-5 speaking scenes wire studio voiceCue files
+    for (const spokenId of [
+      "n2_arthur_standoff",
+      "n2_marcus_clash",
+      "n3_storm_blackout",
+      "n3_ana_betrayal",
+      "n4_linmei_conspiracy",
+      "n4_hannah_whistle",
+      "n5_final_mirror"
+    ]) {
+      expect(getStoryNode(spokenId)?.voiceCue).toBeDefined();
+    }
     expect(PROLOGUE_NODE_IDS.length).toBe(INTAKE_QUESTIONS.length);
     PROLOGUE_NODE_IDS.forEach((nodeId, idx) => {
       const node = getStoryNode(nodeId);

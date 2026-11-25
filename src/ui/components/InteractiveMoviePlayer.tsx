@@ -1,6 +1,12 @@
 import { Button } from "@ui-sdk/react/button";
 import { Progress, ProgressIndicator, ProgressTrack } from "@ui-sdk/react/progress";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import {
+  ensureAudioUnlocked,
+  playStoryVoiceAudio,
+  setAmbienceDucking,
+  stopIntercomVoice
+} from "../../game/audio.js";
 import { tl } from "../../game/i18n.js";
 import {
   STORY_CHAPTER_META,
@@ -66,6 +72,8 @@ export function InteractiveMoviePlayer({
               posterSrc: node.posterSrc,
               fallbackPosterSrc: node.fallbackPosterSrc,
               hasAudio: node.hasAudio,
+              isLipSync: node.isLipSync,
+              voiceCue: node.voiceCue,
               speaker: node.speaker,
               subtitle: node.subtitle
             }
@@ -123,14 +131,18 @@ export function InteractiveMoviePlayer({
     ])
   ).filter((u) => u && u !== activeVideoSrc);
   const segmentHasAudio = Boolean(activeSegment.hasAudio);
-  const shouldPlaySound = segmentHasAudio && voiceEnabled && !userMuted;
+  const segmentIsLipSync = segmentHasAudio && activeSegment.isLipSync !== false;
+  const segmentVoiceCue = !segmentHasAudio ? activeSegment.voiceCue : undefined;
+  const hasAnyClipAudio = segmentHasAudio || Boolean(segmentVoiceCue);
+  const shouldPlayNativeSound = segmentHasAudio && voiceEnabled && !userMuted;
+  const shouldPlayVoiceCue = Boolean(segmentVoiceCue) && voiceEnabled && !userMuted && !motionPaused;
 
-  // Sync play/pause and unmuted lip-sync playback with WCAG 2.2.2 motionPaused
+  // Sync play/pause and unmuted lip-sync / native SFX playback with WCAG 2.2.2 motionPaused
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
     try {
-      vid.muted = !shouldPlaySound;
+      vid.muted = !shouldPlayNativeSound;
       if (motionPaused) {
         vid.pause?.();
         return;
@@ -139,7 +151,7 @@ export function InteractiveMoviePlayer({
       if (playPromise && typeof playPromise.catch === "function") {
         void playPromise.catch(() => {
           // If browser blocks unmuted autoplay on cold entry, fall back gracefully to muted and offer 1-click unmute
-          if (shouldPlaySound && vid) {
+          if (shouldPlayNativeSound && vid) {
             vid.muted = true;
             setAutoplayBlocked(true);
             void vid.play?.().catch?.(() => {});
@@ -149,7 +161,31 @@ export function InteractiveMoviePlayer({
     } catch {
       // ignore headless DOM
     }
-  }, [activeVideoSrc, motionPaused, shouldPlaySound]);
+  }, [activeVideoSrc, motionPaused, shouldPlayNativeSound]);
+
+  // Duck background synth score & blizzard while native video sound plays
+  useEffect(() => {
+    if (shouldPlayNativeSound && !autoplayBlocked && !motionPaused) {
+      setAmbienceDucking(true);
+      return () => setAmbienceDucking(false);
+    }
+    if (!segmentVoiceCue) {
+      setAmbienceDucking(false);
+    }
+    return undefined;
+  }, [shouldPlayNativeSound, autoplayBlocked, motionPaused, segmentVoiceCue]);
+
+  // Play recorded character dialogue for Nights 2–5 scenes that lack baked-in MP4 audio
+  useEffect(() => {
+    if (!segmentVoiceCue || !shouldPlayVoiceCue) {
+      return undefined;
+    }
+    const audioUrl = `./audio/${lang}/${segmentVoiceCue.slug}/${segmentVoiceCue.file}.mp3`;
+    playStoryVoiceAudio(audioUrl, true);
+    return () => {
+      stopIntercomVoice();
+    };
+  }, [activeSegment.id, lang, segmentVoiceCue, shouldPlayVoiceCue]);
 
   // Timed QTE choice countdown — runs ONLY on the final clip in a montage so earlier story shots finish playing
   useEffect(() => {
@@ -183,12 +219,16 @@ export function InteractiveMoviePlayer({
   const timerSecText = (remainingMs / 1000).toFixed(1);
 
   const handleReplayClip = () => {
+    ensureAudioUnlocked();
     setClipIndex(0);
+    if (segmentVoiceCue && shouldPlayVoiceCue) {
+      playStoryVoiceAudio(`./audio/${lang}/${segmentVoiceCue.slug}/${segmentVoiceCue.file}.mp3`, true);
+    }
     const vid = videoRef.current;
     if (!vid) return;
     try {
       vid.currentTime = 0;
-      vid.muted = !shouldPlaySound;
+      vid.muted = !shouldPlayNativeSound;
       setAutoplayBlocked(false);
       void vid.play?.().catch?.(() => {});
     } catch {
@@ -230,7 +270,7 @@ export function InteractiveMoviePlayer({
           poster={activePosterSrc}
           autoPlay={!motionPaused}
           loop={isLastClip}
-          muted={!shouldPlaySound}
+          muted={!shouldPlayNativeSound}
           playsInline
           onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
@@ -284,9 +324,17 @@ export function InteractiveMoviePlayer({
                 )}
               </span>
             ) : null}
-            {segmentHasAudio ? (
+            {segmentIsLipSync ? (
               <span className="fmv-audio-pill">
                 {tl({ zh: "原声口型", en: "LIP-SYNC", ja: "口型音声" }, lang)}
+              </span>
+            ) : segmentHasAudio ? (
+              <span className="fmv-audio-pill">
+                {tl({ zh: "原声音效", en: "NATIVE SFX", ja: "環境音声" }, lang)}
+              </span>
+            ) : segmentVoiceCue ? (
+              <span className="fmv-audio-pill">
+                {tl({ zh: "角色配音", en: "VOICEOVER", ja: "ボイス" }, lang)}
               </span>
             ) : null}
             {operatorBadge ? <span className="tech-stamp">{operatorBadge}</span> : null}
@@ -315,17 +363,22 @@ export function InteractiveMoviePlayer({
               type="button"
               id="btn-fmv-next-clip"
               className="ctrl-btn amber"
-              onClick={() => setClipIndex((i) => Math.min(segments.length - 1, i + 1))}
+              onClick={() => {
+                ensureAudioUnlocked();
+                setClipIndex((i) => Math.min(segments.length - 1, i + 1));
+              }}
             >
               {tl({ zh: "下一镜头 ›", en: "NEXT SHOT ›", ja: "次へ ›" }, lang)}
             </Button>
           ) : null}
 
-          {segmentHasAudio ? (
+          {hasAnyClipAudio ? (
             <Button
               type="button"
-              className={`ctrl-btn ${shouldPlaySound && !autoplayBlocked ? "amber" : ""}`}
+              id="btn-fmv-audio-toggle"
+              className={`ctrl-btn ${voiceEnabled && !userMuted && !autoplayBlocked ? "amber" : ""}`}
               onClick={() => {
+                ensureAudioUnlocked();
                 if (autoplayBlocked && videoRef.current) {
                   setAutoplayBlocked(false);
                   setUserMuted(false);
@@ -337,8 +390,8 @@ export function InteractiveMoviePlayer({
               }}
             >
               {autoplayBlocked
-                ? tl({ zh: "开启原声口型", en: "UNMUTE AUDIO", ja: "音声ON" }, lang)
-                : shouldPlaySound
+                ? tl({ zh: "开启原声", en: "UNMUTE AUDIO", ja: "音声ON" }, lang)
+                : voiceEnabled && !userMuted
                   ? tl({ zh: "原声: 开", en: "AUDIO: ON", ja: "音声: ON" }, lang)
                   : tl({ zh: "原声: 关", en: "AUDIO: OFF", ja: "音声: OFF" }, lang)}
             </Button>

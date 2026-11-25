@@ -7,21 +7,109 @@ import type { Locale } from "./types.js";
 
 export type SfxKind = "ptt" | "strobe" | "thermal" | "purge" | "admit" | "heartbeat";
 
+export interface AudioDebugState {
+  ctxState: string;
+  ambienceEnabled: boolean;
+  ambienceDucked: boolean;
+  night: number;
+  hasAmbienceNodes: boolean;
+  voicePlaying: boolean;
+}
+
+declare global {
+  interface Window {
+    __gate0AudioState?: () => AudioDebugState;
+  }
+}
+
 let sharedAudioCtx: AudioContext | null = null;
 let noiseBufferCache: AudioBuffer | null = null;
 
 interface AmbienceHandle {
   masterGain: GainNode;
   stormGain: GainNode;
+  scoreGain: GainNode;
+  scoreFilter: BiquadFilterNode;
+  droneOscs: OscillatorNode[];
   sources: AudioScheduledSourceNode[];
   creakTimer: ReturnType<typeof setInterval> | null;
 }
 
 let activeAmbience: AmbienceHandle | null = null;
 let activeVoiceAudio: HTMLAudioElement | null = null;
+let activeAmbienceEnabled = false;
+let activeAmbienceNight = 1;
+let activeAmbienceDucked = false;
+let unlockListenersAttached = false;
+
+export function getAudioDebugState(): AudioDebugState {
+  return {
+    ctxState: sharedAudioCtx?.state ?? "uninitialized",
+    ambienceEnabled: activeAmbienceEnabled,
+    ambienceDucked: activeAmbienceDucked,
+    night: activeAmbienceNight,
+    hasAmbienceNodes: Boolean(activeAmbience),
+    voicePlaying: Boolean(activeVoiceAudio && !activeVoiceAudio.paused && !activeVoiceAudio.ended)
+  };
+}
+
+function registerAudioDebugHook(): void {
+  if (typeof window !== "undefined") {
+    window.__gate0AudioState = getAudioDebugState;
+  }
+}
+
+registerAudioDebugHook();
+
+function getNightScoreChord(night: number): {
+  freqs: [number, number, number];
+  filterHz: number;
+  gain: number;
+} {
+  if (night >= 6) {
+    // Dawn Break hopeful resolving fifth/octave warm pad (A2, E3, A3)
+    return { freqs: [110.0, 164.81, 220.0], filterHz: 560, gain: 0.22 };
+  }
+  if (night === 5) {
+    // Mirror Finale tense dissonance (G1, D2, G#2)
+    return { freqs: [49.0, 73.42, 103.83], filterHz: 420, gain: 0.28 };
+  }
+  if (night === 3) {
+    // Geomagnetic blackout tension (A1, E2, C3)
+    return { freqs: [55.0, 82.41, 130.81], filterHz: 360, gain: 0.24 };
+  }
+  // Polar thriller D/A minor drone with slow beating detune (A1, E2, A2+detune)
+  return { freqs: [55.0, 82.41, 110.38], filterHz: 320, gain: 0.24 };
+}
+
+function applyAmbienceGains(ctx: AudioContext): void {
+  if (!activeAmbience) return;
+  const now = ctx.currentTime;
+  if (!activeAmbienceEnabled) {
+    activeAmbience.masterGain.gain.setTargetAtTime(0.0001, now, 0.15);
+    return;
+  }
+  const masterTarget = activeAmbienceDucked ? 0.18 : 0.38;
+  const chord = getNightScoreChord(activeAmbienceNight);
+  activeAmbience.masterGain.gain.setTargetAtTime(masterTarget, now, 0.28);
+  activeAmbience.stormGain.gain.setTargetAtTime(
+    activeAmbienceNight === 3 ? 0.08 : 0.006,
+    now,
+    0.35
+  );
+  activeAmbience.scoreGain.gain.setTargetAtTime(chord.gain, now, 0.45);
+  activeAmbience.scoreFilter.frequency.setTargetAtTime(chord.filterHz, now, 0.55);
+  chord.freqs.forEach((hz, i) => {
+    const osc = activeAmbience?.droneOscs[i];
+    if (osc) {
+      osc.frequency.setTargetAtTime(hz, now, 0.55);
+    }
+  });
+}
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === "undefined") return null;
+  registerAudioDebugHook();
   const AC =
     window.AudioContext ||
     (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -30,9 +118,53 @@ function getAudioContext(): AudioContext | null {
     sharedAudioCtx = new AC();
   }
   if (sharedAudioCtx.state === "suspended") {
-    void sharedAudioCtx.resume().catch(() => {});
+    void sharedAudioCtx
+      .resume()
+      .then(() => {
+        if (sharedAudioCtx) applyAmbienceGains(sharedAudioCtx);
+      })
+      .catch(() => {});
   }
   return sharedAudioCtx;
+}
+
+/**
+ * Unlocks WebAudio cleanly on first user pointer/key/touch gesture so background score
+ * and SFX are never stuck silent in autoplay-restricted browsers.
+ */
+export function ensureAudioUnlocked(): void {
+  if (typeof window === "undefined") return;
+  registerAudioDebugHook();
+  const resumeNow = () => {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === "suspended") {
+      void ctx
+        .resume()
+        .then(() => applyAmbienceGains(ctx))
+        .catch(() => {});
+    } else {
+      applyAmbienceGains(ctx);
+    }
+  };
+  resumeNow();
+  if (!unlockListenersAttached) {
+    unlockListenersAttached = true;
+    const onGesture = () => {
+      resumeNow();
+    };
+    window.addEventListener("pointerdown", onGesture, { capture: true, passive: true });
+    window.addEventListener("keydown", onGesture, { capture: true, passive: true });
+    window.addEventListener("touchstart", onGesture, { capture: true, passive: true });
+  }
+}
+
+export function setAmbienceDucking(ducked: boolean): void {
+  activeAmbienceDucked = ducked;
+  const ctx = getAudioContext();
+  if (ctx) {
+    applyAmbienceGains(ctx);
+  }
 }
 
 function getNoiseBuffer(ctx: AudioContext): AudioBuffer {
@@ -124,6 +256,9 @@ function triggerHullStressCreak(ctx: AudioContext, destination: AudioNode): void
  * On Night 3 (`night === 3`), boosts geomagnetic aurora static interference.
  */
 export function setBoothAmbience(enabled: boolean, night: number): void {
+  activeAmbienceEnabled = enabled;
+  activeAmbienceNight = night;
+  registerAudioDebugHook();
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -133,8 +268,7 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
         clearInterval(activeAmbience.creakTimer);
         activeAmbience.creakTimer = null;
       }
-      const now = ctx.currentTime;
-      activeAmbience.masterGain.gain.setTargetAtTime(0.0001, now, 0.15);
+      applyAmbienceGains(ctx);
     }
     return;
   }
@@ -164,7 +298,7 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
       windLfo.connect(windLfoGain).connect(windFilter.frequency);
 
       const windGain = ctx.createGain();
-      windGain.gain.setValueAtTime(0.28, now);
+      windGain.gain.setValueAtTime(0.32, now);
       windSrc.connect(windFilter).connect(windGain).connect(masterGain);
 
       // 2. Deep -46°C sub-bass polar pressure rumble (58Hz resonant lowpass + slow 0.08Hz swell)
@@ -185,18 +319,57 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
       subLfo.connect(subLfoGain).connect(subFilter.frequency);
 
       const subGain = ctx.createGain();
-      subGain.gain.setValueAtTime(0.34, now);
+      subGain.gain.setValueAtTime(0.38, now);
       subWindSrc.connect(subFilter).connect(subGain).connect(masterGain);
 
-      // 3. Interior 60Hz CRT / transformer booth hum
+      // 3. Continuous dark sci-fi thriller harmonic synth score pad
+      const chord = getNightScoreChord(night);
+      const scoreFilter = ctx.createBiquadFilter();
+      scoreFilter.type = "lowpass";
+      scoreFilter.frequency.setValueAtTime(chord.filterHz, now);
+      scoreFilter.Q.setValueAtTime(1.6, now);
+
+      const scoreLfo = ctx.createOscillator();
+      scoreLfo.type = "sine";
+      scoreLfo.frequency.setValueAtTime(0.06, now);
+      const scoreLfoGain = ctx.createGain();
+      scoreLfoGain.gain.setValueAtTime(95, now);
+      scoreLfo.connect(scoreLfoGain).connect(scoreFilter.frequency);
+
+      const scoreGain = ctx.createGain();
+      scoreGain.gain.setValueAtTime(chord.gain, now);
+      scoreFilter.connect(scoreGain).connect(masterGain);
+
+      const osc1 = ctx.createOscillator();
+      osc1.type = "sawtooth";
+      osc1.frequency.setValueAtTime(chord.freqs[0], now);
+      const osc1Gain = ctx.createGain();
+      osc1Gain.gain.setValueAtTime(0.46, now);
+      osc1.connect(osc1Gain).connect(scoreFilter);
+
+      const osc2 = ctx.createOscillator();
+      osc2.type = "triangle";
+      osc2.frequency.setValueAtTime(chord.freqs[1], now);
+      const osc2Gain = ctx.createGain();
+      osc2Gain.gain.setValueAtTime(0.32, now);
+      osc2.connect(osc2Gain).connect(scoreFilter);
+
+      const osc3 = ctx.createOscillator();
+      osc3.type = "sine";
+      osc3.frequency.setValueAtTime(chord.freqs[2], now);
+      const osc3Gain = ctx.createGain();
+      osc3Gain.gain.setValueAtTime(0.28, now);
+      osc3.connect(osc3Gain).connect(scoreFilter);
+
+      // 4. Interior 60Hz CRT / transformer booth hum
       const humOsc = ctx.createOscillator();
       humOsc.type = "sine";
       humOsc.frequency.setValueAtTime(60, now);
       const humGain = ctx.createGain();
-      humGain.gain.setValueAtTime(0.018, now);
+      humGain.gain.setValueAtTime(0.022, now);
       humOsc.connect(humGain).connect(masterGain);
 
-      // 4. Night 3 geomagnetic storm crackle layer
+      // 5. Night 3 geomagnetic storm crackle layer
       const stormSrc = ctx.createBufferSource();
       stormSrc.buffer = getNoiseBuffer(ctx);
       stormSrc.loop = true;
@@ -204,20 +377,38 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
       stormFilter.type = "highpass";
       stormFilter.frequency.setValueAtTime(1900, now);
       const stormGain = ctx.createGain();
-      stormGain.gain.setValueAtTime(night === 3 ? 0.055 : 0.004, now);
+      stormGain.gain.setValueAtTime(night === 3 ? 0.08 : 0.006, now);
       stormSrc.connect(stormFilter).connect(stormGain).connect(masterGain);
 
       windSrc.start(now);
       windLfo.start(now);
       subWindSrc.start(now);
       subLfo.start(now);
+      scoreLfo.start(now);
+      osc1.start(now);
+      osc2.start(now);
+      osc3.start(now);
       humOsc.start(now);
       stormSrc.start(now);
 
       activeAmbience = {
         masterGain,
         stormGain,
-        sources: [windSrc, windLfo, subWindSrc, subLfo, humOsc, stormSrc],
+        scoreGain,
+        scoreFilter,
+        droneOscs: [osc1, osc2, osc3],
+        sources: [
+          windSrc,
+          windLfo,
+          subWindSrc,
+          subLfo,
+          scoreLfo,
+          osc1,
+          osc2,
+          osc3,
+          humOsc,
+          stormSrc
+        ],
         creakTimer: null
       };
     } catch {
@@ -227,15 +418,13 @@ export function setBoothAmbience(enabled: boolean, night: number): void {
 
   if (!activeAmbience.creakTimer) {
     activeAmbience.creakTimer = setInterval(() => {
-      if (activeAmbience) {
+      if (activeAmbience && activeAmbienceEnabled) {
         triggerHullStressCreak(ctx, activeAmbience.masterGain);
       }
     }, 12500);
   }
 
-  const now = ctx.currentTime;
-  activeAmbience.masterGain.gain.setTargetAtTime(0.15, now, 0.35);
-  activeAmbience.stormGain.gain.setTargetAtTime(night === 3 ? 0.065 : 0.004, now, 0.35);
+  applyAmbienceGains(ctx);
 }
 
 export function stopAllBoothAudio(): void {
@@ -350,12 +539,82 @@ export function stopIntercomVoice(): void {
     }
     activeVoiceAudio = null;
   }
+  setAmbienceDucking(false);
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     try {
       window.speechSynthesis.cancel();
     } catch {
       // ignore
     }
+  }
+}
+
+/**
+ * Plays a pre-rendered studio character voice cue for Nights 2–5 FMV clips that have no
+ * baked-in soundtrack (`public/audio/{locale}/{slug}/{file}.mp3`), automatically ducking
+ * background synth/blizzard ambience while the character speaks.
+ */
+export function playStoryVoiceAudio(audioUrl: string, enabled: boolean): void {
+  if (!enabled || typeof window === "undefined" || typeof Audio === "undefined") {
+    stopIntercomVoice();
+    return;
+  }
+  stopIntercomVoice();
+  ensureAudioUnlocked();
+
+  try {
+    const el = new Audio(audioUrl);
+    activeVoiceAudio = el;
+    setAmbienceDucking(true);
+
+    const ctx = getAudioContext();
+    let connectedWebAudio = false;
+
+    const cleanup = () => {
+      if (activeVoiceAudio === el) {
+        activeVoiceAudio = null;
+        setAmbienceDucking(false);
+      }
+    };
+
+    el.addEventListener("error", cleanup, { once: true });
+    el.addEventListener(
+      "ended",
+      () => {
+        if (ctx) playStaticBurst(ctx, 0.08, 0.032, 1300);
+        cleanup();
+      },
+      { once: true }
+    );
+    el.addEventListener(
+      "canplaythrough",
+      () => {
+        if (activeVoiceAudio !== el) return;
+        if (ctx && !connectedWebAudio) {
+          try {
+            const src = ctx.createMediaElementSource(el);
+            const hp = ctx.createBiquadFilter();
+            hp.type = "highpass";
+            hp.frequency.value = 380;
+            const lp = ctx.createBiquadFilter();
+            lp.type = "lowpass";
+            lp.frequency.value = 3100;
+            const boost = ctx.createGain();
+            boost.gain.value = 1.25;
+            src.connect(hp).connect(lp).connect(boost).connect(ctx.destination);
+            connectedWebAudio = true;
+            playStaticBurst(ctx, 0.06, 0.035, 1400);
+          } catch {
+            // Direct HTMLAudioElement playback remains intact
+          }
+        }
+        void el.play().catch(cleanup);
+      },
+      { once: true }
+    );
+    el.load();
+  } catch {
+    setAmbienceDucking(false);
   }
 }
 
