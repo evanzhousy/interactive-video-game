@@ -1,4 +1,7 @@
+import { EP0_SUBTITLE_CUES } from "./ep0-cues.generated.js";
 import type { EndingId, LocalizedText } from "./types.js";
+
+export const EP0_MEDIA_BASE_URL = "https://pub-0ab426eff1a7472199ccc8f2292cac9e.r2.dev/ep0";
 
 export type StoryChapterId =
   | "prologue"
@@ -27,6 +30,13 @@ export interface StoryVoiceCue {
   file: string;
 }
 
+export interface StorySubtitleCue {
+  startSec: number;
+  endSec: number;
+  speaker: LocalizedText;
+  text: LocalizedText;
+}
+
 export interface StoryClipSegment {
   id: string;
   videoSrc: string;
@@ -35,9 +45,11 @@ export interface StoryClipSegment {
   fallbackPosterSrc: string;
   hasAudio?: boolean;
   isLipSync?: boolean;
+  durationSec?: number;
   voiceCue?: StoryVoiceCue;
   speaker: LocalizedText;
   subtitle: LocalizedText;
+  subtitleCues?: readonly StorySubtitleCue[];
   badge?: LocalizedText;
 }
 
@@ -139,102 +151,158 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "prologue",
     code: "SC-00A",
     title: {
-      zh: "序章 · 极夜前哨与深冰异响",
-      en: "Episode 0 · Svalbard Arrival & The Borehole",
-      ja: "序章 · 極夜基地と深氷の異音"
+      zh: "序章 · 极夜前哨与深冰井喷",
+      en: "Episode 0 · Svalbard Arrival & 3,800m Blowout",
+      ja: "序章 · 極夜基地と深氷噴出"
     },
     subtitle: {
-      zh: "北纬 78°13′，最后一艘补给船驶离冰海。刚调入零号站的你并不知道，三千八百米冰层之下到底被钻开了什么。",
-      en: "78°13'N. As the last supply ship sails out before four months of Polar Night, nobody knows what the 3,800m drill rig just struck.",
-      ja: "北緯78度13分。最後の補給船が去った極夜の前哨基地で、地下3,800メートルの掘削機は未知の空洞を貫いた。"
+      zh: "2036 年 10 月 14 日，北纬 78°13′。最后一班补给船鸣笛远去，九个同伴在公共食堂围喝热汤——十四天后，地下三千八百米基岩井喷撕裂了全站。",
+      en: "October 14, 2036, 78°13'N. As the last supply ship sails before four months of Polar Night, nine crewmates share hot soup in the mess hall—until a 3,800m bedrock blowout seals the station.",
+      ja: "2036年10月14日、北緯78度13分。最後の補給船が去り、食堂で温かな湯を囲んだ9人の仲間たち。14日後、地下3,800mの基盤岩噴出が基地を閉ざす。"
     },
     speaker: {
-      zh: "序幕电影 // 第一章：抵达斯瓦尔巴",
-      en: "PROLOGUE FILM // ARRIVAL AT OUTPOST 0",
-      ja: "序幕映画 // スヴァールバル到着"
+      zh: "序幕电影 // 第一章：抵达斯瓦尔巴（05:15）",
+      en: "PROLOGUE FILM // ARRIVAL & BLOWOUT (05:15)",
+      ja: "序幕映画 // スヴァールバル到着 (05:15)"
     },
     kind: "movie",
-    hasAudio: false,
-    videoSrc: "./videos/story/ep0_heli_arrival.mp4",
-    fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+    hasAudio: true,
+    isLipSync: false,
+    videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a1_arrival.mp4`,
+    fallbackVideoSrc: "./videos/story/ep0_heli_arrival.mp4",
     posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
     clips: [
       {
-        id: "ep0_heli_arrival",
-        videoSrc: "./videos/story/ep0_heli_arrival.mp4",
-        fallbackVideoSrc: "./videos/lobby/bg.mp4",
+        id: "ep0_sc00a1_arrival",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a1_arrival.mp4`,
+        fallbackVideoSrc: "./videos/story/ep0_heli_arrival.mp4",
         posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
-        badge: { zh: "序幕 01 · 极夜降临", en: "EP 0 · ARRIVAL", ja: "序幕 01 · 到着" },
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 60,
+        subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a1_arrival,
+        badge: { zh: "SC-00A-1 · 末班降落 (01:00)", en: "SC-00A-1 · ARRIVAL (01:00)", ja: "SC-00A-1 · 到着 (01:00)" },
         speaker: {
-          zh: "2036.11.02 // 北纬 78°13′ 斯瓦尔巴零号前哨站",
-          en: "NOV 2, 2036 // SVALBARD OUTPOST 0",
-          ja: "2036.11.02 // スヴァールバル第0前哨基地"
+          zh: "字幕卡 // 2036.10.14",
+          en: "TITLE CARD // OCT 14, 2036",
+          ja: "字幕 // 2036.10.14"
         },
         subtitle: {
-          zh: "最后一班重型运输直升机穿过风雪降落冰脊，海面上的破冰补给船正在远去——未来四个月，这里将彻底与世隔绝。",
-          en: "Your transport chopper settles onto the icy ridge as the last supply icebreaker fades on the horizon. Four months of polar night begin now.",
-          ja: "輸送ヘリが雪煙の中で氷丘に着陸する。最後の補給船が水平線に消え、四ヶ月の極夜が始まる。"
+          zh: "2036.10.14 · 斯瓦尔巴零号站（78°13'N）· 室外 -46°C · 距离极夜还有 12 天",
+          en: "OCT 14, 2036 · SVALBARD OUTPOST 0 (78°13'N) · -46°C · 12 DAYS TO POLAR NIGHT",
+          ja: "2036.10.14 · スヴァールバル第0基地（北緯78°13'）· 屋外 -46°C · 極夜まで12日"
         }
       },
       {
-        id: "ep0_crew_dinner",
-        videoSrc: "./videos/story/ep0_crew_dinner.mp4",
-        fallbackVideoSrc: "./videos/story/prologue_01.mp4",
-        posterSrc: "./portraits/story/ep0_crew_dinner.jpg",
-        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
-        badge: { zh: "序幕 02 · 封站晚餐", en: "EP 0 · THE CREW", ja: "序幕 02 · 乗組員" },
+        id: "ep0_sc00a2_canteen_crew",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a2_canteen_crew.mp4`,
+        fallbackVideoSrc: "./videos/story/ep0_crew_dinner.mp4",
+        posterSrc: "./portraits/story/ep0/ep0_canteen_leo_thor.jpg",
+        fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 65,
+        subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_crew,
+        badge: { zh: "SC-00A-2 · 食堂热汤 (01:05)", en: "SC-00A-2 · MESS HALL (01:05)", ja: "SC-00A-2 · 食堂 (01:05)" },
         speaker: {
-          zh: "前哨站食堂 // 出事前的最后平静",
-          en: "MESS HALL // BEFORE THE BREACH",
-          ja: "基地食堂 // 異変の前の夜"
+          zh: "焊工 老周 // 公共食堂",
+          en: "WELDER ZHOU // MESS HALL",
+          ja: "溶接工・老周 // 食堂"
         },
         subtitle: {
-          zh: "暖灯下是你在零号站的同伴：严谨的外科医生艾琳娜、爱笑的小机械师莱奥、严肃的亚瑟与安保队友。没人料到几周后会发生什么。",
-          en: "Around the steel mess table sit Dr. Elena Vance, apprentice mechanic Leo, Commander Arthur, and the night crew—warm coffee and quiet laughter before the doors seal.",
-          ja: "暖かいランプの下で笑い合う仲間たち——外科医エレナ、整備士レオ、隊長たち。この夜、まだ誰も異変を知らない。"
+          zh: "气密门隔断 -46°C 狂风。莱奥替你挑开卡死拉链，老周笑揭短，钻井工托尔给 #08 倒酒约好奥斯陆索菲亚的琴与两盒红双喜。",
+          en: "The airlock seals out -46°C gusts. Leo frees your frozen zipper, welder Zhou teases him, and driller Thor pours #08 a cup over bets of Sofia's piano and Double Happiness cigarettes.",
+          ja: "防爆扉が-46°Cの風を断つ。レオが凍結したファスナーを直し、老周が冗談を飛ばし、掘削員トールはソフィアのピアノと紅双喜の賭けを語り#08に酒を注ぐ。"
+        }
+      },
+      {
+        id: "ep0_sc00a2_canteen_clash",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a2_canteen_clash.mp4`,
+        fallbackVideoSrc: "./videos/story/ep0_crew_dinner.mp4",
+        posterSrc: "./portraits/story/ep0/ep0_canteen_marcus_stew.jpg",
+        fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 50,
+        subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_clash,
+        badge: { zh: "SC-00A-2 · 鹿肉与手术钳 (00:50)", en: "SC-00A-2 · STEW & SCALPEL (00:50)", ja: "SC-00A-2 · 鹿肉と鉗子 (00:50)" },
+        speaker: {
+          zh: "V-04 马库斯 & V-01 艾琳娜 // 长桌左侧",
+          en: "MARCUS CHEN & DR. ELENA VANCE",
+          ja: "マーカス & エレナ医師"
+        },
+        subtitle: {
+          zh: "马库斯拍桌怒斥打翻汤锅的学徒，转身却把滚烫炖鹿肉塞进他怀里；艾琳娜擦净眼镜低声道：B 区手术台只认抽签与绝对公平。",
+          en: "Marcus roars at a clumsy mess apprentice—then shoves his own steaming venison stew into the kid's chest. Dr. Vance wipes her glasses: on Sector B's table, only triage lots are fair.",
+          ja: "マーカスは見習いを怒鳴りつけながら自分の熱い鹿肉シチューを押し付け、エレナは眼鏡を拭き「手術台では抽選と絶対的公平だけが文明」と言い切る。"
+        }
+      },
+      {
+        id: "ep0_sc00a2_canteen_corners",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a2_canteen_corners.mp4`,
+        fallbackVideoSrc: "./videos/story/ep0_crew_dinner.mp4",
+        posterSrc: "./portraits/story/ep0/ep0_corner_arthur_holm.jpg",
+        fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 50,
+        subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_corners,
+        badge: { zh: "SC-00A-2 · 角落埋线 (00:50)", en: "SC-00A-2 · CORNER VIGNETTES (00:50)", ja: "SC-00A-2 · 四隅の伏線 (00:50)" },
+        speaker: {
+          zh: "亚瑟 / 安娜 / 英格丽 / 林梅 / 汉娜 // 食堂四角",
+          en: "ARTHUR / ANA / INGRID / LIN MEI / HANNAH",
+          ja: "アーサー / アナ / イングリッド / リン / ハンナ"
+        },
+        subtitle: {
+          zh: "亚瑟密收霍尔姆的《B区 3,800m 变更单》副联；安娜拿十万欧元扣款单当书签；英格丽悄悄篡改汉森心理评估；林梅擦净试剂；汉娜推开克莱尔的热可可。",
+          en: "Arthur pockets Holm's 3,800m carbon slip; Ana bookmarks €100k debt; Ingrid stealthily alters Hansen's eval; Lin Mei wipes a spill; Hannah pushes Claire's cocoa five centimeters away.",
+          ja: "アーサーは変更届の控えを懐に入れ、アナは罰金領収書を栞にし、イングリッドは心理評価を改竄、リンは試薬を拭き、ハンナは甘い話を退ける。"
         }
       },
       {
         id: "prequel_icecore_breach",
-        videoSrc: "./videos/story/prequel_icecore_breach.mp4",
-        fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/prequel_icecore_breach.mp4`,
+        fallbackVideoSrc: "./videos/story/prequel_icecore_breach.mp4",
         posterSrc: "./portraits/story/prequel_icecore_breach.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
-        badge: { zh: "序幕 03 · 深冰异响", en: "EP 0 · 3,800M ANOMALY", ja: "序幕 03 · 深氷の異音" },
+        durationSec: 38,
+        subtitleCues: EP0_SUBTITLE_CUES.prequel_icecore_breach,
+        badge: { zh: "SC-00A-3 · 3,800m 井喷 (00:38)", en: "SC-00A-3 · 3,800M BLOWOUT (00:38)", ja: "SC-00A-3 · 3,800m噴出 (00:38)" },
         speaker: {
-          zh: "第 14 天 02:14 // 地下 3,800 米深冰钻井台",
-          en: "DAY 14 · 02:14 // ICE-CORE RIG (-3,800M)",
+          zh: "第 14 天 02:14 // 3,800m 古生代基岩主井",
+          en: "DAY 14 · 02:14 // 3,800M BEDROCK RIG",
           ja: "14日目 02:14 // 地下3,800m掘削室"
         },
         subtitle: {
-          zh: "两周后深夜，钻头在三千八百米冻土下撞进一段诡异的空腔。刺耳共鸣震裂灯管，全站备用电力瞬间跌入血红警戒。",
-          en: "Two weeks later at 02:14, the deep core bit punctures a resonant void beneath 3,800 meters of permafrost. Alarms scream as main power dies.",
-          ja: "二週間後の深夜、ドリルが永久凍土の奥の謎の空洞を貫いた。不気味な共鳴と共に全基地の主電源が落ちる。"
+          zh: "第 14 天 02:14 · 钻头跌入 3,800 米超热液空腔，井压顶爆 490 bar，两套防喷器死卡！托尔与老孙在蒸汽倒灌中冲进回风道失踪。",
+          en: "DAY 14 · 02:14 · The rig hits a 3,800m thermal cavity at 490 bar; dual BOP valves lock. Thor Berg and Lao Sun vanish into the steam-choked return duct.",
+          ja: "14日目02:14。3,800mの熱水空洞に突入し490barへ暴走。トールと老孫は蒸気逆流の中、還気坑で消息を絶つ。"
         }
       },
       {
         id: "prologue_01_main",
-        videoSrc: "./videos/story/prologue_01.mp4",
-        fallbackVideoSrc: "./videos/lobby/bg.mp4",
-        posterSrc: "./portraits/story/prologue_01_handover.jpg",
-        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
-        badge: { zh: "序幕 04 · 封锁简报", en: "EP 0 · BRIEFING", ja: "序幕 04 · 封鎖会議" },
+        videoSrc: `${EP0_MEDIA_BASE_URL}/prologue_01_main.mp4`,
+        fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+        posterSrc: "./portraits/story/ep0/ep0_briefing_topology.jpg",
+        fallbackPosterSrc: "./portraits/story/prologue_01_handover.jpg",
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 52,
+        subtitleCues: EP0_SUBTITLE_CUES.prologue_01_main,
+        badge: { zh: "SC-00A-3 · 中枢拓扑与质询 (00:52)", en: "SC-00A-3 · TOPOLOGY BRIEF (00:52)", ja: "SC-00A-3 · 構造会議 (00:52)" },
         speaker: {
-          zh: "第 15 天 // 全站隔离简报室",
-          en: "DAY 15 // LOCKDOWN BRIEFING",
-          ja: "15日目 // 緊急隔離会議"
+          zh: "第 15 天 // 站长林德奎斯特 · 简报室",
+          en: "DAY 15 // COMMANDER LINDQVIST",
+          ja: "15日目 // リンドクヴィスト所長"
         },
         subtitle: {
-          zh: "钻井区两名队员失踪在风雪里，前哨站随即封锁。站长把你调去驻守 0 号隔离通道，开口先翻出你的旧档案：“以前小组漏报隐患连累队友时，你是怎么对上级交代的？”",
-          en: "After two drillers vanish into the blizzard, sectors are sealed and you're reassigned to Gate 0. The Commander opens your transfer file: \"When your old crew missed a hazard and someone got hurt, what did you say?\"",
-          ja: "掘削班の2人が吹雪で行方不明となり基地は封鎖。第0関門へ配属されたあなたに、隊長が過去の経歴を問う——「以前ミスで仲間が傷ついた時、どう釈明した？」"
+          zh: "中枢主站与八座外环孤舱外廊已物理断流，0 号闸是进入中枢的唯一气密口。临上岗前，林德奎斯特翻出特罗姆瑟旧卷宗逼问你：",
+          en: "Corridors linking the Hub to all 8 Outer Pods are severed; Gate 0 is the sole passage inside. Lindqvist taps your Tromsø record before sealing the door:",
+          ja: "中枢と外環8孤立区画の連絡路は遮断され、第0関門が唯一の入口となった。着任前、所長はトロムソ時代の査問記録を突きつける——"
         }
       }
     ],
@@ -278,63 +346,70 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "prologue",
     code: "SC-00B",
     title: {
-      zh: "序章 · 孤灯守夜与深夜敲窗",
-      en: "Episode 0 · Midnight Watch & The Knock",
-      ja: "序章 · 孤灯の夜警とノック"
+      zh: "序章 · 提前交班与清晨打盹",
+      en: "Episode 0 · Early Handover & The Inner Knock",
+      ja: "序章 · 早すぎる引継ぎと居眠り"
     },
     subtitle: {
-      zh: "前任 #08 眼神躲闪地把 0 号岗亭交给你。连续二十小时替班时你打了盹，走廊血红警报扫过防爆玻璃。",
-      en: "Watchstander #08 hands over Gate 0 without turning from the glass. Hours into a twenty-hour double shift, a red siren sweeps past as someone raps outside.",
-      ja: "前任者#08は窓を見つめたまま第0ブースを引き継いだ。20時間連続勤務の深夜、赤色灯と共にガラスが叩かれる。"
+      zh: "第 16 天你替发烧室友汉森连顶白班；凌晨 02:40 前任 #08 满眼血丝提前逃离岗亭。04:15 连续清醒满 20 小时的你抵着控制台合眼，身后中枢内门骤然三响！",
+      en: "Day 16: after covering sick Hansen's day shift, #08 flees early at 02:40, hands shaking. At 04:15—20 hours awake—you nod off until three heavy knocks rattle the inner corridor window.",
+      ja: "16日目、発熱したハンセンの代務を経て、02:40に前任#08が震える手で夜勤を押し付けて去る。04:15、連続覚醒20時間の限界で居眠りした瞬間、内側扉が3度叩かれる！"
     },
     speaker: {
-      zh: "序幕电影 // 第 16 天深夜",
-      en: "PROLOGUE FILM // DAY 16 NIGHT",
-      ja: "序幕映画 // 16日目深夜"
+      zh: "序幕电影 // 第 16 天深夜（01:00）",
+      en: "PROLOGUE FILM // DAY 16 NIGHT (01:00)",
+      ja: "序幕映画 // 16日目深夜 (01:00)"
     },
     kind: "movie",
-    hasAudio: false,
-    videoSrc: "./videos/story/ep0_lonely_watch.mp4",
-    fallbackVideoSrc: "./videos/story/prologue_02.mp4",
+    hasAudio: true,
+    isLipSync: false,
+    videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_lonely_watch.mp4`,
+    fallbackVideoSrc: "./videos/story/ep0_lonely_watch.mp4",
     posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
     clips: [
       {
         id: "ep0_lonely_watch",
-        videoSrc: "./videos/story/ep0_lonely_watch.mp4",
-        fallbackVideoSrc: "./videos/story/prologue_02.mp4",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_lonely_watch.mp4`,
+        fallbackVideoSrc: "./videos/story/ep0_lonely_watch.mp4",
         posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
-        badge: { zh: "序幕 05 · 交班暗流", en: "EP 0 · HANDOVER", ja: "序幕 05 · 交代" },
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 36,
+        subtitleCues: EP0_SUBTITLE_CUES.ep0_lonely_watch,
+        badge: { zh: "SC-00B-1 · 提前交班 (00:36)", en: "SC-00B-1 · HANDOVER (00:36)", ja: "SC-00B-1 · 早朝引継 (00:36)" },
         speaker: {
-          zh: "第 16 天 02:40 // 0 号隔离窗交接",
-          en: "DAY 16 · 02:40 // GATE 0 BOOTH",
-          ja: "16日目 02:40 // 第0関門ブース"
+          zh: "前任值班员 #08 // 第 16 天 02:40",
+          en: "OUTGOING OPERATOR #08 // 02:40",
+          ja: "前任当直官 #08 // 02:40"
         },
         subtitle: {
-          zh: "前任 #08 整晚一动不动盯着风雪走廊，像在防备某种不会发出脚步声的东西。交班时他只留下一句：“别轻易信对讲机里的熟人声音。”",
-          en: "Outgoing watchstander #08 stares unblinking into the whiteout corridor. Leaving the booth, his only whisper is: \"Don't trust familiar voices on the intercom too fast.\"",
-          ja: "前任者#08は吹雪の廊下を凝視したまま、ただ一言だけ残した——「馴染みの声でも、すぐには開けるな。」"
+          zh: "“#09……剩下的下半夜交给你了，别多问，天亮前替我盯住这扇门。记住——别靠太近盯着那块防爆玻璃，也别单凭熟人嗓门拉开关。”",
+          en: "\"#09... take the rest of the night shift. Keep back from the blast glass, and never pull the lever just on a familiar voice.\"",
+          ja: "「#09……残りの夜番は任せた。防爆ガラスに顔を近づけるな。馴染みの声だけでレバーを引くなよ。」"
         }
       },
       {
         id: "prologue_02_main",
-        videoSrc: "./videos/story/prologue_02.mp4",
-        fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
-        posterSrc: "./portraits/story/prologue_02_knock.jpg",
-        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
-        badge: { zh: "序幕 06 · 走神警报", en: "EP 0 · SIREN", ja: "序幕 06 · 警報" },
+        videoSrc: `${EP0_MEDIA_BASE_URL}/prologue_02_main.mp4`,
+        fallbackVideoSrc: "./videos/story/prologue_02.mp4",
+        posterSrc: "./portraits/story/ep0/ep0_inner_door_knock.jpg",
+        fallbackPosterSrc: "./portraits/story/prologue_02_knock.jpg",
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 24,
+        subtitleCues: EP0_SUBTITLE_CUES.prologue_02_main,
+        badge: { zh: "SC-00B-2 · 内廊敲窗 (00:24)", en: "SC-00B-2 · INNER DOOR (00:24)", ja: "SC-00B-2 · 内側廊下 (00:24)" },
         speaker: {
-          zh: "第 16 天 04:15 // 走廊警戒灯",
-          en: "DAY 16 · 04:15 // CORRIDOR SIREN",
-          ja: "16日目 04:15 // 廊下警報"
+          zh: "第 16 天 04:15 // 内侧走廊门小窗",
+          en: "DAY 16 · 04:15 // INNER CORRIDOR WINDOW",
+          ja: "16日目 04:15 // 内側廊下小窓"
         },
         subtitle: {
-          zh: "替室友顶班的第 20 小时，疲惫终于压垮了你。红色警戒灯刺破雾霜，主管敲响玻璃喝问失职时，你会如何回应？",
-          en: "Exhausted 20 hours into covering a teammate's shift, you nod off until red sirens flare and your supervisor raps the glass. What do you answer?",
-          ja: "交代勤務の20時間目、眠気に落ちた瞬間、赤い警報と共に上官が窓を叩いた。あなたはどう答える？"
+          zh: "连续清醒 20 小时后打盹，中枢内侧走廊门小窗突然响起三记重叩！值班主管隔着铁网喝问：“零号门灯跳黄三分钟没消警！你刚才睡过去了？！”",
+          en: "Twenty hours awake catch up—until three gloved knocks slam the inner corridor wire-glass! Supervisor: \"Gate Zero stayed amber three minutes! Were you asleep?!\"",
+          ja: "連続20時間覚醒の末に居眠りした瞬間、内側扉の小窓に3度の衝撃！監督「第0関門が3分も黄灯だぞ！居眠りか？！」"
         }
       }
     ],
@@ -378,82 +453,92 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "prologue",
     code: "SC-00C",
     title: {
-      zh: "序章 · 失踪的 #08 与磁带真相",
-      en: "Episode 0 · The Missing Operator & Cassette",
-      ja: "序章 · 消えた前任と遺言テープ"
+      zh: "序章 · 断铅越权面板、#08 磁带与潜艇席位",
+      en: "Episode 0 · Snipped Seal, Cassette & Submarine Seat",
+      ja: "序章 · 切断された鉛封と遺言テープ"
     },
     subtitle: {
-      zh: "次日清晨 #08 不翼而飞，控制台暗格里藏着一盘黄色卡带——按下播放键，整座孤站隐藏的恐怖规则终于揭开。",
-      en: "By morning #08 has vanished without footprints, leaving a hidden yellow cassette beneath the console. Hitting play unveils the horror stalking Outpost 0.",
-      ja: "翌朝、#08は足跡も残さず消えていた。操作盤の下に残されたカセットテープが、この基地の恐ろしい真実を暴く。"
+      zh: "第 17 天 07:00，#08 储物柜全空，闸门日志为零——唯手动越权面板铜丝铅封被剪断！控制台底下的黑磁带放出了整座孤站最恐怖的铁律。",
+      en: "Day 17, 07:00: #08's locker is empty and normal gate logs read zero—yet the manual override copper lead seal hangs snipped in two. Taped underneath lies the truth.",
+      ja: "17日目07:00、#08のロッカーは空、通常開閉記録はゼロ——だが手動オーバーライド盤の銅線鉛封が切断されていた。台の裏の黒テープが真実を語る。"
     },
     speaker: {
-      zh: "序幕终章 // 真相揭晓",
-      en: "PROLOGUE CLIMAX // THE TRUTH",
-      ja: "序幕終章 // 真実の開示"
+      zh: "序幕终章 // 真相揭晓（01:00）",
+      en: "PROLOGUE CLIMAX // THE TRUTH (01:00)",
+      ja: "序幕終章 // 真実の開示 (01:00)"
     },
     kind: "movie",
-    hasAudio: false,
-    videoSrc: "./videos/story/ep0_empty_booth.mp4",
-    fallbackVideoSrc: "./videos/story/prologue_03.mp4",
-    posterSrc: "./portraits/story/ep0_empty_booth.jpg",
-    fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+    hasAudio: true,
+    isLipSync: false,
+    videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_empty_booth.mp4`,
+    fallbackVideoSrc: "./videos/story/ep0_empty_booth.mp4",
+    posterSrc: "./portraits/story/ep0/ep0_override_cut_seal.jpg",
+    fallbackPosterSrc: "./portraits/story/ep0_empty_booth.jpg",
     clips: [
       {
         id: "ep0_empty_booth",
-        videoSrc: "./videos/story/ep0_empty_booth.mp4",
-        fallbackVideoSrc: "./videos/story/prologue_03.mp4",
-        posterSrc: "./portraits/story/ep0_empty_booth.jpg",
-        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
-        badge: { zh: "序幕 07 · 人去椅空", en: "EP 0 · VANISHED", ja: "序幕 07 · 失踪" },
+        videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_empty_booth.mp4`,
+        fallbackVideoSrc: "./videos/story/ep0_empty_booth.mp4",
+        posterSrc: "./portraits/story/ep0/ep0_override_cut_seal.jpg",
+        fallbackPosterSrc: "./portraits/story/ep0_empty_booth.jpg",
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 18,
+        subtitleCues: EP0_SUBTITLE_CUES.ep0_empty_booth,
+        badge: { zh: "SC-00C-1 · 断铅越权面板 (00:18)", en: "SC-00C-1 · SNIPPED SEAL (00:18)", ja: "SC-00C-1 · 鉛封切断 (00:18)" },
         speaker: {
-          zh: "第 17 天清晨 // 空荡的 0 号岗亭",
-          en: "DAY 17 DAWN // EMPTY GATE 0",
-          ja: "17日目朝 // 無人の第0関門"
+          zh: "第 17 天 07:00 // 手动越权面板特写",
+          en: "DAY 17 · 07:00 // OVERRIDE PANEL",
+          ja: "17日目 07:00 // オーバーライド盤"
         },
         subtitle: {
-          zh: "天亮来换班时，#08 连同值班日志一起人间蒸发，只剩半杯结霜的冷咖啡和控制台下露出一角的黄色录像卡带。",
-          en: "At dawn #08 is gone without a single track in the snow—leaving only a frost-rimmed mug and a yellow cassette tucked beneath the console lip.",
-          ja: "翌朝、#08は姿を消し、冷え切ったコーヒーと操作盤の隙間に隠された一本の黄色いテープだけが残されていた。"
+          zh: "#08 储物柜全空，正常开关次数为零——唯有「手动机械越权面板」铜丝铅封被剪断、越权日志清空！黄胶布下粘着一盘黑磁带。",
+          en: "#08's locker is bare and gate logs sit at 0—yet the manual override copper lead seal is freshly snipped and wiped. Underneath hangs a black cassette in yellow tape.",
+          ja: "#08のロッカーは空、通常記録は0——だが手動オーバーライド盤の銅線鉛封が切断されている！黄色いテープの下に黒いカセットが隠されていた。"
         }
       },
       {
         id: "prequel_op08_warning",
-        videoSrc: "./videos/story/prequel_op08_warning.mp4",
-        fallbackVideoSrc: "./videos/operator09/idle.mp4",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/prequel_op08_warning.mp4`,
+        fallbackVideoSrc: "./videos/story/prequel_op08_warning.mp4",
         posterSrc: "./portraits/operator09.jpg",
         fallbackPosterSrc: "./portraits/operator09.jpg",
         hasAudio: true,
-        badge: { zh: "原声口型 · 真相揭晓", en: "LIP-SYNC · THE TRUTH", ja: "口型音声 · 真実" },
+        isLipSync: true,
+        durationSec: 27,
+        subtitleCues: EP0_SUBTITLE_CUES.prequel_op08_warning,
+        badge: { zh: "SC-00C-2 · #08 磁带原声 (00:27)", en: "SC-00C-2 · #08 TAPE (00:27)", ja: "SC-00C-2 · 遺言テープ (00:27)" },
         speaker: {
-          zh: "前任值班员 #08 // 秘密卡带遗言",
-          en: "OPERATOR #08 // SECRET TAPE",
-          ja: "前任当直官 #08 // 秘密の遺言"
+          zh: "前任值班员 #08 // 02:30 黄色胶布黑磁带",
+          en: "OPERATOR #08 // 02:30 CASSETTE TAPE",
+          ja: "前任当直官 #08 // 02:30 遺言テープ"
         },
         subtitle: {
-          zh: "“听着 #09：从冰层下钻出来的东西在学我们的声音和记忆！记住——真人会怕、会认错；越是完美得像教科书的，越不是人！”",
-          en: "\"Listen, #09—what came up from the ice copies our voices and memories! Real humans feel fear and admit mistakes. Anything too textbook-perfect isn't human!\"",
-          ja: "「聞け#09——氷の下から来た奴らは俺たちの声と記憶を真似る！生身の人間は恐れ、過ちを認める。完璧すぎる奴ほど、人間じゃない！」"
+          zh: "“昨晚失踪的托尔就站在闸室里，连欠我两盒红双喜、给索菲亚买琴都一字不差背得出！记住：只照体面人设（SAY）演、不知活人疼时违背诺言（DO）的裂痕——和自我介绍分毫不差的，不是人！今晚两点我在玻璃外看见了自己，若我从外门回来，别开！”",
+          en: "\"Missing driller Thor stood outside reciting Sofia's piano and those two packs of Double Happiness word-for-word! Anything performing its own bio (SAY) without human cracks (DO) isn't human. At 02:00 I saw myself outside. If I return through the outer door—don't open!\"",
+          ja: "「行方不明のトールがソフィアのピアノも紅双喜2箱の貸しも完璧に暗唱した！建前（SAY）だけ演じ誓いを破る裂け目（DO）を持たぬ奴は人間じゃない。今夜2時、ガラスの外に俺がいた。外扉から俺が戻っても絶対に開けるな！」"
         }
       },
       {
         id: "prologue_03_main",
-        videoSrc: "./videos/story/prologue_03.mp4",
-        fallbackVideoSrc: "./videos/operator09/idle.mp4",
+        videoSrc: `${EP0_MEDIA_BASE_URL}/prologue_03_main.mp4`,
+        fallbackVideoSrc: "./videos/story/prologue_03.mp4",
         posterSrc: "./portraits/story/prologue_03.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
-        hasAudio: false,
-        badge: { zh: "序幕终 · 孤守零号窗", en: "EP 0 FINALE // ALONE", ja: "序幕終 // 孤立" },
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 15,
+        subtitleCues: EP0_SUBTITLE_CUES.prologue_03_main,
+        badge: { zh: "SC-00C-3 · 断联与鹦鹉螺 0 号 (00:15)", en: "SC-00C-3 · NAUTILUS-0 (00:15)", ja: "SC-00C-3 · 全線孤立 (00:15)" },
         speaker: {
-          zh: "第 17 天 23:55 // 全站断联",
-          en: "DAY 17 · 23:55 // COMMS SEVERED",
-          ja: "17日目 23:55 // 通信途絶"
+          zh: "第 17 天 23:55 // 暴雪扯断主天线",
+          en: "DAY 17 · 23:55 // ANTENNA SNAPPED",
+          ja: "17日目 23:55 // 主アンテナ破断"
         },
         subtitle: {
-          zh: "暴风雪切断了一切外援，冰冷的钢制密钥压在你掌心。窗外马上就要传来第一声敲门——想起曾经只剩最后一个撤离名额却留给自己的那一晚，你对自己低声说：",
-          en: "The blizzard cuts external comms, leaving only the cold steel gate key under your palm. Before the first knock hits the glass, you remember taking that last evacuation slot for yourself:",
-          ja: "吹雪で外部通信が途絶え、冷たい鋼の鍵だけが手元に残る。最初のノックが響く直前、最後の脱出枠を自分に選んだ夜を思い出し、あなたは呟く——"
+          zh: "暴雪扯断主天线，唯余屏幕底行绿字：「码头铠装硬线联通：鹦鹉螺 0 号（06:00 待命）」。想起曾只剩最后艇位却留给自己的那一夜，你对自己低声说：",
+          en: "Blizzard snaps the satellite mast; only dock hardwire 'NAUTILUS-0 (06:00 STANDBY)' glows green. Remembering keeping that final evacuation seat for yourself, you whisper:",
+          ja: "吹雪がアンテナを破壊し、直通線『ノーチラス0号（06:00待機）』のみが残る。最後の脱出枠を自分に選んだ夜を思い出し、呟く——"
         }
       }
     ],

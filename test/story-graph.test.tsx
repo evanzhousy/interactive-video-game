@@ -60,16 +60,43 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       }
     }
 
-    // Episode 0 slow-burn prologue: zero mimic spoilers in prologue_01/02, big reveal in prologue_03
-    expect(getStoryNode("prologue_01")!.clips?.length).toBe(4);
+    // Episode 0 pilot (07:15 = 435s): zero mimic spoilers in prologue_01/02, big tape reveal in prologue_03
+    expect(getStoryNode("prologue_01")!.clips?.length).toBe(6);
     expect(getStoryNode("prologue_02")!.clips?.length).toBe(2);
     expect(getStoryNode("prologue_03")!.clips?.length).toBe(3);
+
+    const ep0TotalSec = PROLOGUE_NODE_IDS.reduce(
+      (sum, pid) =>
+        sum +
+        (getStoryNode(pid)!.clips ?? []).reduce((clipSum, c) => clipSum + (c.durationSec ?? 0), 0),
+      0
+    );
+    expect(ep0TotalSec).toBe(435);
+
+    for (const pid of PROLOGUE_NODE_IDS) {
+      for (const seg of getStoryNode(pid)!.clips ?? []) {
+        expect(seg.hasAudio).toBe(true);
+        expect(seg.subtitleCues?.length ?? 0).toBeGreaterThan(0);
+      }
+    }
+
     const p1Text = JSON.stringify({
       title: getStoryNode("prologue_01")!.title,
       subtitle: getStoryNode("prologue_01")!.subtitle,
       clips: getStoryNode("prologue_01")!.clips
     });
     expect(p1Text).not.toMatch(/伪人|mimic/i);
+    const p2Text = JSON.stringify({
+      title: getStoryNode("prologue_02")!.title,
+      subtitle: getStoryNode("prologue_02")!.subtitle,
+      clips: getStoryNode("prologue_02")!.clips
+    });
+    expect(p2Text).not.toMatch(/伪人|mimic/i);
+
+    const p3Text = JSON.stringify(getStoryNode("prologue_03")!.clips);
+    expect(p3Text).toContain("红双喜");
+    expect(p3Text).toContain("索菲亚");
+    expect(p3Text).toContain("我在玻璃外看见了自己");
     expect(getStoryNode("prologue_03")!.clips?.some((c) => c.id === "prequel_op08_warning")).toBe(true);
 
     expect(getStoryNode("n1_elena_arrival")!.clips?.length).toBe(2);
@@ -116,9 +143,9 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     });
 
     const p1Preload = getPreloadVideoUrls(getStoryNode("prologue_01")!);
-    expect(p1Preload).toContain("./videos/story/ep0_crew_dinner.mp4");
+    expect(p1Preload.some((u) => u.endsWith("/ep0_sc00a2_canteen_crew.mp4"))).toBe(true);
+    expect(p1Preload.some((u) => u.endsWith("/ep0_lonely_watch.mp4"))).toBe(true);
     expect(p1Preload).toContain("./videos/story/ep0_lonely_watch.mp4");
-    expect(p1Preload).toContain("./videos/story/prologue_02.mp4");
 
     const stats = getStoryCompletionStats(["prologue_01", "prologue_02", "unknown_node"]);
     expect(stats).toEqual({ unlockedCount: 2, totalCount: 32, percent: 6 });
@@ -168,16 +195,24 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(document.getElementById("story-flowchart-modal")).toBeNull();
     expect(document.getElementById("intake-panel")?.getAttribute("data-step")).toBe("1");
 
-    // Complete 3 Prologue movie choices (verifying multi-clip playlist advancement on SC-00A) & enter Booth
+    // Complete 3 Prologue movie choices (verifying multi-clip playlist + live subtitleCues updates) & enter Booth
     expect(
       document.querySelector('[data-story-node="prologue_01"]')?.getAttribute("data-clip-id")
-    ).toBe("ep0_heli_arrival");
+    ).toBe("ep0_sc00a1_arrival");
+    const vidEl = document.querySelector('[data-story-node="prologue_01"] video') as HTMLVideoElement;
+    expect(vidEl).not.toBeNull();
+    Object.defineProperty(vidEl, "currentTime", { value: 9, writable: true, configurable: true });
+    await act(async () => {
+      vidEl.dispatchEvent(new Event("timeupdate"));
+    });
+    expect(document.querySelector(".fmv-speaker-tag")?.textContent).toContain("马库斯");
+
     await act(async () => {
       (document.getElementById("btn-fmv-next-clip") as HTMLButtonElement).click();
     });
     expect(
       document.querySelector('[data-story-node="prologue_01"]')?.getAttribute("data-clip-id")
-    ).toBe("ep0_crew_dinner");
+    ).toBe("ep0_sc00a2_canteen_crew");
 
     for (let i = 0; i < 3; i++) {
       await act(async () => {

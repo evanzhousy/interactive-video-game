@@ -13,8 +13,16 @@ import {
   getPreloadVideoUrls,
   type StoryChoice,
   type StoryClipSegment,
-  type StoryNode
+  type StoryNode,
+  type StorySubtitleCue
 } from "../../game/story-graph.js";
+
+function formatClock(totalSec: number): string {
+  const safe = Math.max(0, Math.floor(totalSec));
+  const m = Math.floor(safe / 60);
+  const s = safe % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
 import type { Locale } from "../../game/types.js";
 import { WebGLAtmosphere } from "./WebGLAtmosphere.js";
 
@@ -87,6 +95,10 @@ export function InteractiveMoviePlayer({
   const [videoReady, setVideoReady] = useState(false);
   const [userMuted, setUserMuted] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
+  const [currentTimeSec, setCurrentTimeSec] = useState(0);
+  const [mediaDurationSec, setMediaDurationSec] = useState<number>(
+    () => segments[0]?.durationSec ?? 0
+  );
   const [remainingMs, setRemainingMs] = useState<number>(() =>
     node.timerSec ? node.timerSec * 1000 : 0
   );
@@ -117,7 +129,9 @@ export function InteractiveMoviePlayer({
     setUseFallbackPoster(false);
     setVideoReady(false);
     setAutoplayBlocked(false);
-  }, [safeClipIndex, activeSegment.id]);
+    setCurrentTimeSec(0);
+    setMediaDurationSec(activeSegment.durationSec ?? 0);
+  }, [safeClipIndex, activeSegment.id, activeSegment.durationSec]);
 
   const activeVideoSrc = useFallbackVideo
     ? activeSegment.fallbackVideoSrc
@@ -188,6 +202,22 @@ export function InteractiveMoviePlayer({
       stopIntercomVoice();
     };
   }, [activeSegment.id, lang, segmentVoiceCue, shouldPlayVoiceCue]);
+
+  const cues = activeSegment.subtitleCues;
+  const activeCue: StorySubtitleCue | undefined =
+    cues && cues.length > 0
+      ? (cues.find((c) => currentTimeSec >= c.startSec && currentTimeSec < c.endSec) ??
+        [...cues].reverse().find((c) => currentTimeSec >= c.startSec) ??
+        cues[0])
+      : undefined;
+  const displayedSpeaker = activeCue?.speaker ?? activeSegment.speaker;
+  const displayedSubtitle = activeCue?.text ?? activeSegment.subtitle;
+  const displayDurationSec =
+    mediaDurationSec > 0 ? mediaDurationSec : (activeSegment.durationSec ?? 0);
+  const timelinePct =
+    displayDurationSec > 0
+      ? Math.min(100, Math.max(0, (currentTimeSec / displayDurationSec) * 100))
+      : 0;
 
   const rawChoices = node.choices ?? [];
   const mainChoices = rawChoices.filter((c) => !c.isSideQuest);
@@ -278,6 +308,15 @@ export function InteractiveMoviePlayer({
           loop={isLastClip}
           muted={!shouldPlayNativeSound}
           playsInline
+          onLoadedMetadata={(e) => {
+            const d = e.currentTarget.duration;
+            if (Number.isFinite(d) && d > 0) {
+              setMediaDurationSec(d);
+            }
+          }}
+          onTimeUpdate={(e) => {
+            setCurrentTimeSec(e.currentTarget.currentTime);
+          }}
           onLoadedData={() => setVideoReady(true)}
           onCanPlay={() => setVideoReady(true)}
           onEnded={() => {
@@ -452,10 +491,46 @@ export function InteractiveMoviePlayer({
       <div className="fmv-hud-bottom">
         <div className="fmv-subtitle-box">
           <div className="fmv-speaker-row">
-            <span className="fmv-rec-dot" aria-hidden="true" />
-            <span className="fmv-speaker-tag">{tl(activeSegment.speaker, lang)}</span>
+            <div className="fmv-speaker-left">
+              <span className="fmv-rec-dot" aria-hidden="true" />
+              <span className="fmv-speaker-tag">{tl(displayedSpeaker, lang)}</span>
+            </div>
+            {displayDurationSec > 0 ? (
+              <span className="fmv-time-readout">
+                {`${formatClock(currentTimeSec)} / ${formatClock(displayDurationSec)}`}
+              </span>
+            ) : null}
           </div>
-          <p className="fmv-subtitle-text">{tl(activeSegment.subtitle, lang)}</p>
+          <p className="fmv-subtitle-text">{tl(displayedSubtitle, lang)}</p>
+          {displayDurationSec > 0 ? (
+            <div
+              className="fmv-timeline-scrubber"
+              role="slider"
+              aria-label={tl({ zh: "影片进度", en: "Clip progress", ja: "再生位置" }, lang)}
+              aria-valuemin={0}
+              aria-valuemax={Math.round(displayDurationSec)}
+              aria-valuenow={Math.round(currentTimeSec)}
+              tabIndex={0}
+              onClick={(e) => {
+                const vid = videoRef.current;
+                if (!vid || displayDurationSec <= 0) return;
+                const rect = e.currentTarget.getBoundingClientRect();
+                const ratio = Math.min(
+                  1,
+                  Math.max(0, (e.clientX - rect.left) / Math.max(1, rect.width))
+                );
+                const target = ratio * displayDurationSec;
+                try {
+                  vid.currentTime = target;
+                } catch {
+                  // ignore headless DOM
+                }
+                setCurrentTimeSec(target);
+              }}
+            >
+              <div className="fmv-timeline-fill" style={{ width: `${timelinePct.toFixed(1)}%` }} />
+            </div>
+          ) : null}
         </div>
 
         {isLastClip && node.timerSec && mainChoices.length > 0 ? (
@@ -504,7 +579,11 @@ export function InteractiveMoviePlayer({
         ) : null}
 
         {mainChoices.length > 0 ? (
-          <div className="fmv-choice-deck" role="group" aria-label={tl(node.title, lang)}>
+          <div
+            className={`fmv-choice-deck ${segments.length > 1 && !isLastClip ? "is-preview-choices" : ""}`.trim()}
+            role="group"
+            aria-label={tl(node.title, lang)}
+          >
             {mainChoices.map((choice, idx) => {
               const rawIdx = Math.max(0, rawChoices.indexOf(choice));
               return (

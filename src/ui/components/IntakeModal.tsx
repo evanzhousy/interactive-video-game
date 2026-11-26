@@ -133,9 +133,9 @@ export function IntakeModal({
           <span>
             {tl(
               {
-                zh: "序幕完 · 2036.11.18 // 北纬 78°13′ 斯瓦尔巴零号站",
-                en: "EPISODE 0 COMPLETE // SVALBARD OUTPOST 0 · 78°13'N",
-                ja: "序章終 // スヴァールバル第0前哨基地 · 北緯78°13'"
+                zh: "序幕完 · 2036.10.30 // 北纬 78°13′ 斯瓦尔巴零号站",
+                en: "EPISODE 0 COMPLETE // OCT 30, 2036 · SVALBARD OUTPOST 0 (78°13'N)",
+                ja: "序章終 // 2036.10.30 スヴァールバル第0前哨基地 · 北緯78°13'"
               },
               lang
             )}
@@ -149,9 +149,9 @@ export function IntakeModal({
           <div className="cinema-curtain-eyebrow">
             {tl(
               {
-                zh: "互动电影剧集 // CHAPTER 01",
-                en: "INTERACTIVE CINEMA // CHAPTER 01",
-                ja: "インタラクティブ映画 // 第一話"
+                zh: "全片片头 // GATE ZERO",
+                en: "MAIN TITLE // GATE ZERO",
+                ja: "メインタイトル // GATE ZERO"
               },
               lang
             )}
@@ -159,9 +159,9 @@ export function IntakeModal({
           <h2 className="cinema-curtain-title">
             {tl(
               {
-                zh: "第一集 · 零号隔离窗",
-                en: "Episode 1 · Gate Zero",
-                ja: "第1話 · 第0隔離窓"
+                zh: "《零号隔离窗 // GATE ZERO》",
+                en: "QUARANTINE GATE 0 // 2036",
+                ja: "『第0隔離窓 // GATE ZERO』"
               },
               lang
             )}
@@ -190,9 +190,9 @@ export function IntakeModal({
             >
               {tl(
                 {
-                  zh: "开始第 1 集 · 暴雪拍窗 ▶",
-                  en: "Begin Episode 1 · The Storm Knock ▶",
-                  ja: "第1話を再生 · 吹雪の叩扉 ▶"
+                  zh: "进入第 1 夜 · 第一道裂缝 ▶",
+                  en: "Enter Night 1 · The First Crack ▶",
+                  ja: "第1夜へ · 最初の亀裂 ▶"
                 },
                 lang
               )}
