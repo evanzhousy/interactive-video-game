@@ -22,10 +22,10 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     HTMLCanvasElement.prototype.getContext = (() => null) as unknown as typeof HTMLCanvasElement.prototype.getContext;
   });
 
-  it("maintains referential integrity across all 31 story nodes, multi-clip segments, edges, fallbacks, and prologue intake mapping", () => {
+  it("maintains referential integrity across all 32 story nodes, multi-clip segments, edges, fallbacks, and prologue intake mapping", () => {
     const nodeIds = new Set(STORY_NODES.map((n) => n.id));
-    expect(STORY_NODES.length).toBe(31);
-    expect(nodeIds.size).toBe(31);
+    expect(STORY_NODES.length).toBe(32);
+    expect(nodeIds.size).toBe(32);
 
     for (const edge of STORY_EDGES) {
       expect(nodeIds.has(edge.from)).toBe(true);
@@ -48,6 +48,11 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
 
       for (const ch of node.choices ?? []) {
         expect(nodeIds.has(ch.nextNodeId)).toBe(true);
+        // Every non-side-quest numbered movie choice must keep the player in Cinema Mode
+        if (!ch.isSideQuest) {
+          expect(ch.sideQuestVisitorId).toBeUndefined();
+          expect(getStoryNode(ch.nextNodeId)?.kind).not.toBe("interrogation");
+        }
       }
       for (const seg of node.clips ?? []) {
         expect(seg.videoSrc).toBeTruthy();
@@ -55,11 +60,22 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       }
     }
 
-    // Prologue 3 beats map 1:1 to INTAKE_QUESTIONS, with 3-clip prequel montage on SC-00A
-    expect(getStoryNode("prologue_01")!.clips?.length).toBe(3);
+    // Episode 0 slow-burn prologue: zero mimic spoilers in prologue_01/02, big reveal in prologue_03
+    expect(getStoryNode("prologue_01")!.clips?.length).toBe(4);
+    expect(getStoryNode("prologue_02")!.clips?.length).toBe(2);
+    expect(getStoryNode("prologue_03")!.clips?.length).toBe(3);
+    const p1Text = JSON.stringify({
+      title: getStoryNode("prologue_01")!.title,
+      subtitle: getStoryNode("prologue_01")!.subtitle,
+      clips: getStoryNode("prologue_01")!.clips
+    });
+    expect(p1Text).not.toMatch(/伪人|mimic/i);
+    expect(getStoryNode("prologue_03")!.clips?.some((c) => c.id === "prequel_op08_warning")).toBe(true);
+
     expect(getStoryNode("n1_elena_arrival")!.clips?.length).toBe(2);
     expect(getStoryNode("n1_leo_aftermath")!.clips?.length).toBe(2);
     expect(getStoryNode("ending_dawn_break")!.clips?.length).toBe(2);
+    expect(getStoryNode("n1_leo_react_toolbox")).toBeDefined();
 
     // Every native-SFX Hollywood clip must be unmuted with isLipSync: false
     const nativeSfxClipIds = [
@@ -100,12 +116,12 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     });
 
     const p1Preload = getPreloadVideoUrls(getStoryNode("prologue_01")!);
-    expect(p1Preload).toContain("./videos/story/prequel_op08_warning.mp4");
+    expect(p1Preload).toContain("./videos/story/ep0_crew_dinner.mp4");
+    expect(p1Preload).toContain("./videos/story/ep0_lonely_watch.mp4");
     expect(p1Preload).toContain("./videos/story/prologue_02.mp4");
-    expect(p1Preload).toContain("./videos/chamber/whiteout.mp4");
 
     const stats = getStoryCompletionStats(["prologue_01", "prologue_02", "unknown_node"]);
-    expect(stats).toEqual({ unlockedCount: 2, totalCount: 31, percent: 6 });
+    expect(stats).toEqual({ unlockedCount: 2, totalCount: 32, percent: 6 });
   });
 
   it("deduplicates and persists unlocked story nodes and edges in compendium state", () => {
@@ -155,13 +171,13 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     // Complete 3 Prologue movie choices (verifying multi-clip playlist advancement on SC-00A) & enter Booth
     expect(
       document.querySelector('[data-story-node="prologue_01"]')?.getAttribute("data-clip-id")
-    ).toBe("prequel_icecore_breach");
+    ).toBe("ep0_heli_arrival");
     await act(async () => {
       (document.getElementById("btn-fmv-next-clip") as HTMLButtonElement).click();
     });
     expect(
       document.querySelector('[data-story-node="prologue_01"]')?.getAttribute("data-clip-id")
-    ).toBe("prequel_op08_warning");
+    ).toBe("ep0_crew_dinner");
 
     for (let i = 0; i < 3; i++) {
       await act(async () => {
@@ -279,12 +295,15 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       });
     };
 
-    // Pure movie path across Nights 1 -> 5 without ever playing booth minigame (V-05 before V-06)
+    // Pure movie path across Nights 1 -> 5 without ever playing booth minigame (including Leo option 02 toolbox close-up!)
     await clickChoice("elena_open_intercom");
     await clickChoice("elena_react_admit");
     await clickChoice("corridor_lock_medbay");
-    await clickChoice("leo_open_intercom");
-    await clickChoice("leo_react_admit");
+    await clickChoice("leo_open_thermal");
+    expect(
+      document.querySelector("#fmv-booth-overlay [data-story-node='n1_leo_react_toolbox']")
+    ).not.toBeNull();
+    await clickChoice("leo_toolbox_admit");
     await clickChoice("n1_aftermath_continue");
     await clickChoice("n2_arthur_trust");
     await clickChoice("n2_marcus_purge");

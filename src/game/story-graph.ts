@@ -139,27 +139,65 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "prologue",
     code: "SC-00A",
     title: {
-      zh: "极夜前传 · 冰芯失守",
-      en: "Polar Prequel · Ice-Core Breach",
-      ja: "極夜前日譚 · 氷床突破"
+      zh: "序章 · 极夜前哨与深冰异响",
+      en: "Episode 0 · Svalbard Arrival & The Borehole",
+      ja: "序章 · 極夜基地と深氷の異音"
     },
     subtitle: {
-      zh: "地下深冰钻井突然报警，外面的东西开始学人说话。复盘会上，所有人都在等你表态。",
-      en: "Deep ice-core alarms blare across the frozen station. Something outside has begun mimicking human voices.",
-      ja: "深層氷床の警報が鳴り響く。外の何かが人間の声を真似し始めた。"
+      zh: "北纬 78°13′，最后一艘补给船驶离冰海。刚调入零号站的你并不知道，三千八百米冰层之下到底被钻开了什么。",
+      en: "78°13'N. As the last supply ship sails out before four months of Polar Night, nobody knows what the 3,800m drill rig just struck.",
+      ja: "北緯78度13分。最後の補給船が去った極夜の前哨基地で、地下3,800メートルの掘削機は未知の空洞を貫いた。"
     },
     speaker: {
-      zh: "前传档案 // 事故回放",
-      en: "PREQUEL REEL // BREACH ARCHIVE",
-      ja: "前日譚記録 // 事故映像"
+      zh: "序幕电影 // 第一章：抵达斯瓦尔巴",
+      en: "PROLOGUE FILM // ARRIVAL AT OUTPOST 0",
+      ja: "序幕映画 // スヴァールバル到着"
     },
     kind: "movie",
     hasAudio: false,
-    videoSrc: "./videos/story/prologue_01.mp4",
-    fallbackVideoSrc: "./videos/lobby/bg.mp4",
-    posterSrc: "./portraits/story/prologue_01.jpg",
+    videoSrc: "./videos/story/ep0_heli_arrival.mp4",
+    fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+    posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
     clips: [
+      {
+        id: "ep0_heli_arrival",
+        videoSrc: "./videos/story/ep0_heli_arrival.mp4",
+        fallbackVideoSrc: "./videos/lobby/bg.mp4",
+        posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "序幕 01 · 极夜降临", en: "EP 0 · ARRIVAL", ja: "序幕 01 · 到着" },
+        speaker: {
+          zh: "2036.11.02 // 北纬 78°13′ 斯瓦尔巴零号前哨站",
+          en: "NOV 2, 2036 // SVALBARD OUTPOST 0",
+          ja: "2036.11.02 // スヴァールバル第0前哨基地"
+        },
+        subtitle: {
+          zh: "最后一班重型运输直升机穿过风雪降落冰脊，海面上的破冰补给船正在远去——未来四个月，这里将彻底与世隔绝。",
+          en: "Your transport chopper settles onto the icy ridge as the last supply icebreaker fades on the horizon. Four months of polar night begin now.",
+          ja: "輸送ヘリが雪煙の中で氷丘に着陸する。最後の補給船が水平線に消え、四ヶ月の極夜が始まる。"
+        }
+      },
+      {
+        id: "ep0_crew_dinner",
+        videoSrc: "./videos/story/ep0_crew_dinner.mp4",
+        fallbackVideoSrc: "./videos/story/prologue_01.mp4",
+        posterSrc: "./portraits/story/ep0_crew_dinner.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "序幕 02 · 封站晚餐", en: "EP 0 · THE CREW", ja: "序幕 02 · 乗組員" },
+        speaker: {
+          zh: "前哨站食堂 // 出事前的最后平静",
+          en: "MESS HALL // BEFORE THE BREACH",
+          ja: "基地食堂 // 異変の前の夜"
+        },
+        subtitle: {
+          zh: "暖灯下是你在零号站的同伴：严谨的外科医生艾琳娜、爱笑的小机械师莱奥、严肃的亚瑟与安保队友。没人料到几周后会发生什么。",
+          en: "Around the steel mess table sit Dr. Elena Vance, apprentice mechanic Leo, Commander Arthur, and the night crew—warm coffee and quiet laughter before the doors seal.",
+          ja: "暖かいランプの下で笑い合う仲間たち——外科医エレナ、整備士レオ、隊長たち。この夜、まだ誰も異変を知らない。"
+        }
+      },
       {
         id: "prequel_icecore_breach",
         videoSrc: "./videos/story/prequel_icecore_breach.mp4",
@@ -168,35 +206,16 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
-        badge: { zh: "前传监控 01", en: "PREQUEL 01", ja: "前日譚 01" },
+        badge: { zh: "序幕 03 · 深冰异响", en: "EP 0 · 3,800M ANOMALY", ja: "序幕 03 · 深氷の異音" },
         speaker: {
-          zh: "斯瓦尔巴深冰钻井台 // 02:14",
-          en: "SVALBARD ICE-CORE RIG // 02:14",
-          ja: "氷床掘削基地 // 02:14"
+          zh: "第 14 天 02:14 // 地下 3,800 米深冰钻井台",
+          en: "DAY 14 · 02:14 // ICE-CORE RIG (-3,800M)",
+          ja: "14日目 02:14 // 地下3,800m掘削室"
         },
         subtitle: {
-          zh: "三千八百米冻土层被钻开后，全站断电。暴风雪里混进了会模仿人类声音的“伪人”。",
-          en: "After breaching 3,800 meters of permafrost, station power failed. Something in the blizzard began copying human voices.",
-          ja: "地下3,800メートルの永久凍土を貫いた直後に停電。吹雪の中に人の声を真似る何かが紛れ込んだ。"
-        }
-      },
-      {
-        id: "prequel_op08_warning",
-        videoSrc: "./videos/story/prequel_op08_warning.mp4",
-        fallbackVideoSrc: "./videos/operator09/idle.mp4",
-        posterSrc: "./portraits/operator09.jpg",
-        fallbackPosterSrc: "./portraits/operator09.jpg",
-        hasAudio: true,
-        badge: { zh: "原声口型 · 前任遗言", en: "LIP-SYNC · #08", ja: "口型音声 · #08" },
-        speaker: {
-          zh: "前任值班员 #08 // 失联前录像",
-          en: "PREVIOUS WATCHSTANDER #08",
-          ja: "前任当直官 #08"
-        },
-        subtitle: {
-          zh: "“记住：真人会怕、会认错；越是完美得像教科书的，越不是人。”",
-          en: "\"Remember this: real humans feel fear and admit mistakes. Anything that sounds too textbook-perfect isn't human.\"",
-          ja: "「忘れるな。生身の人間は恐れ、過ちを認める。教科書通りに完璧すぎる奴ほど、人間じゃない。」"
+          zh: "两周后深夜，钻头在三千八百米冻土下撞进一段诡异的空腔。刺耳共鸣震裂灯管，全站备用电力瞬间跌入血红警戒。",
+          en: "Two weeks later at 02:14, the deep core bit punctures a resonant void beneath 3,800 meters of permafrost. Alarms scream as main power dies.",
+          ja: "二週間後の深夜、ドリルが永久凍土の奥の謎の空洞を貫いた。不気味な共鳴と共に全基地の主電源が落ちる。"
         }
       },
       {
@@ -206,16 +225,16 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/prologue_01_handover.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: false,
-        badge: { zh: "接班考核 01", en: "HANDOVER 01", ja: "引継試験 01" },
+        badge: { zh: "序幕 04 · 封锁简报", en: "EP 0 · BRIEFING", ja: "序幕 04 · 封鎖会議" },
         speaker: {
-          zh: "0 号岗亭 // 你的过去",
-          en: "GATE 0 // YOUR PAST",
-          ja: "第0関門 // あなたの過去"
+          zh: "第 15 天 // 全站隔离简报室",
+          en: "DAY 15 // LOCKDOWN BRIEFING",
+          ja: "15日目 // 緊急隔離会議"
         },
         subtitle: {
-          zh: "现在轮到你值夜班了。先回答站长一个简单的问题：以前小组漏报隐患连累队友受伤时，你是怎么说的？",
-          en: "It is your watch now. First question on the shift form: when your team missed a hazard earlier, what did you say?",
-          ja: "今夜からあなたの当直だ。まず一つだけ答えてくれ。以前報告漏れで仲間が怪我をした時、どう答えた？"
+          zh: "钻井区两名队员失踪在风雪里，前哨站随即封锁。站长把你调去驻守 0 号隔离通道，开口先翻出你的旧档案：“以前小组漏报隐患连累队友时，你是怎么对上级交代的？”",
+          en: "After two drillers vanish into the blizzard, sectors are sealed and you're reassigned to Gate 0. The Commander opens your transfer file: \"When your old crew missed a hazard and someone got hurt, what did you say?\"",
+          ja: "掘削班の2人が吹雪で行方不明となり基地は封鎖。第0関門へ配属されたあなたに、隊長が過去の経歴を問う——「以前ミスで仲間が傷ついた時、どう釈明した？」"
         }
       }
     ],
@@ -259,26 +278,66 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "prologue",
     code: "SC-00B",
     title: {
-      zh: "走神的警报夜",
-      en: "Missed Siren",
-      ja: "居眠りの警報"
+      zh: "序章 · 孤灯守夜与深夜敲窗",
+      en: "Episode 0 · Midnight Watch & The Knock",
+      ja: "序章 · 孤灯の夜警とノック"
     },
     subtitle: {
-      zh: "你替室友顶了一个夜班，太累在防爆窗前打了个盹。红色警戒灯在走廊尽头扫过——值班主管敲响了你的玻璃门。",
-      en: "Hours into covering a teammate's watch, exhaustion pulls you under. A red siren sweeps the frostbitten corridor as your supervisor taps the glass.",
-      ja: "同室者の夜勤を代わった深夜、疲労で意識が落ちた。氷結した廊下の奥で赤色灯が回り、上官がガラスを叩く。"
+      zh: "前任 #08 眼神躲闪地把 0 号岗亭交给你。连续二十小时替班时你打了盹，走廊血红警报扫过防爆玻璃。",
+      en: "Watchstander #08 hands over Gate 0 without turning from the glass. Hours into a twenty-hour double shift, a red siren sweeps past as someone raps outside.",
+      ja: "前任者#08は窓を見つめたまま第0ブースを引き継いだ。20時間連続勤務の深夜、赤色灯と共にガラスが叩かれる。"
     },
     speaker: {
-      zh: "值班档案 // 接班记忆 02",
-      en: "MEMORY REEL // RECORD 02",
-      ja: "当直記録 // 回想 02"
+      zh: "序幕电影 // 第 16 天深夜",
+      en: "PROLOGUE FILM // DAY 16 NIGHT",
+      ja: "序幕映画 // 16日目深夜"
     },
     kind: "movie",
     hasAudio: false,
-    videoSrc: "./videos/story/prologue_02.mp4",
-    fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
-    posterSrc: "./portraits/story/prologue_02_knock.jpg",
+    videoSrc: "./videos/story/ep0_lonely_watch.mp4",
+    fallbackVideoSrc: "./videos/story/prologue_02.mp4",
+    posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+    clips: [
+      {
+        id: "ep0_lonely_watch",
+        videoSrc: "./videos/story/ep0_lonely_watch.mp4",
+        fallbackVideoSrc: "./videos/story/prologue_02.mp4",
+        posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "序幕 05 · 交班暗流", en: "EP 0 · HANDOVER", ja: "序幕 05 · 交代" },
+        speaker: {
+          zh: "第 16 天 02:40 // 0 号隔离窗交接",
+          en: "DAY 16 · 02:40 // GATE 0 BOOTH",
+          ja: "16日目 02:40 // 第0関門ブース"
+        },
+        subtitle: {
+          zh: "前任 #08 整晚一动不动盯着风雪走廊，像在防备某种不会发出脚步声的东西。交班时他只留下一句：“别轻易信对讲机里的熟人声音。”",
+          en: "Outgoing watchstander #08 stares unblinking into the whiteout corridor. Leaving the booth, his only whisper is: \"Don't trust familiar voices on the intercom too fast.\"",
+          ja: "前任者#08は吹雪の廊下を凝視したまま、ただ一言だけ残した——「馴染みの声でも、すぐには開けるな。」"
+        }
+      },
+      {
+        id: "prologue_02_main",
+        videoSrc: "./videos/story/prologue_02.mp4",
+        fallbackVideoSrc: "./videos/chamber/whiteout.mp4",
+        posterSrc: "./portraits/story/prologue_02_knock.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "序幕 06 · 走神警报", en: "EP 0 · SIREN", ja: "序幕 06 · 警報" },
+        speaker: {
+          zh: "第 16 天 04:15 // 走廊警戒灯",
+          en: "DAY 16 · 04:15 // CORRIDOR SIREN",
+          ja: "16日目 04:15 // 廊下警報"
+        },
+        subtitle: {
+          zh: "替室友顶班的第 20 小时，疲惫终于压垮了你。红色警戒灯刺破雾霜，主管敲响玻璃喝问失职时，你会如何回应？",
+          en: "Exhausted 20 hours into covering a teammate's shift, you nod off until red sirens flare and your supervisor raps the glass. What do you answer?",
+          ja: "交代勤務の20時間目、眠気に落ちた瞬間、赤い警報と共に上官が窓を叩いた。あなたはどう答える？"
+        }
+      }
+    ],
     row: 1,
     col: 1,
     choices: [
@@ -319,26 +378,85 @@ export const STORY_NODES: readonly StoryNode[] = [
     chapter: "prologue",
     code: "SC-00C",
     title: {
-      zh: "最后的撤离钥匙",
-      en: "The Last Evacuation Slot",
-      ja: "最後の脱出鍵"
+      zh: "序章 · 失踪的 #08 与磁带真相",
+      en: "Episode 0 · The Missing Operator & Cassette",
+      ja: "序章 · 消えた前任と遺言テープ"
     },
     subtitle: {
-      zh: "上一班值班员戴着手套把冰冷的钢制密钥拍上控制台。只剩最后一个撤离席位时，你曾经把它留给了自己。",
-      en: "A gloved hand slams the steel booth key onto the amber console. When only one evacuation slot remained, you kept it for yourself.",
-      ja: "前任者の手袋が冷たい鋼鉄の鍵を操作盤に置く。脱出枠が残り1つになった夜、あなたは自分を選んだ。"
+      zh: "次日清晨 #08 不翼而飞，控制台暗格里藏着一盘黄色卡带——按下播放键，整座孤站隐藏的恐怖规则终于揭开。",
+      en: "By morning #08 has vanished without footprints, leaving a hidden yellow cassette beneath the console. Hitting play unveils the horror stalking Outpost 0.",
+      ja: "翌朝、#08は足跡も残さず消えていた。操作盤の下に残されたカセットテープが、この基地の恐ろしい真実を暴く。"
     },
     speaker: {
-      zh: "0 号岗亭 // 交接密封令",
-      en: "BOOTH 0 // SEALED HANDOVER",
-      ja: "第0ブース // 引き継ぎ封印令"
+      zh: "序幕终章 // 真相揭晓",
+      en: "PROLOGUE CLIMAX // THE TRUTH",
+      ja: "序幕終章 // 真実の開示"
     },
     kind: "movie",
     hasAudio: false,
-    videoSrc: "./videos/story/prologue_03.mp4",
-    fallbackVideoSrc: "./videos/operator09/idle.mp4",
-    posterSrc: "./portraits/story/prologue_03.jpg",
+    videoSrc: "./videos/story/ep0_empty_booth.mp4",
+    fallbackVideoSrc: "./videos/story/prologue_03.mp4",
+    posterSrc: "./portraits/story/ep0_empty_booth.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+    clips: [
+      {
+        id: "ep0_empty_booth",
+        videoSrc: "./videos/story/ep0_empty_booth.mp4",
+        fallbackVideoSrc: "./videos/story/prologue_03.mp4",
+        posterSrc: "./portraits/story/ep0_empty_booth.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "序幕 07 · 人去椅空", en: "EP 0 · VANISHED", ja: "序幕 07 · 失踪" },
+        speaker: {
+          zh: "第 17 天清晨 // 空荡的 0 号岗亭",
+          en: "DAY 17 DAWN // EMPTY GATE 0",
+          ja: "17日目朝 // 無人の第0関門"
+        },
+        subtitle: {
+          zh: "天亮来换班时，#08 连同值班日志一起人间蒸发，只剩半杯结霜的冷咖啡和控制台下露出一角的黄色录像卡带。",
+          en: "At dawn #08 is gone without a single track in the snow—leaving only a frost-rimmed mug and a yellow cassette tucked beneath the console lip.",
+          ja: "翌朝、#08は姿を消し、冷え切ったコーヒーと操作盤の隙間に隠された一本の黄色いテープだけが残されていた。"
+        }
+      },
+      {
+        id: "prequel_op08_warning",
+        videoSrc: "./videos/story/prequel_op08_warning.mp4",
+        fallbackVideoSrc: "./videos/operator09/idle.mp4",
+        posterSrc: "./portraits/operator09.jpg",
+        fallbackPosterSrc: "./portraits/operator09.jpg",
+        hasAudio: true,
+        badge: { zh: "原声口型 · 真相揭晓", en: "LIP-SYNC · THE TRUTH", ja: "口型音声 · 真実" },
+        speaker: {
+          zh: "前任值班员 #08 // 秘密卡带遗言",
+          en: "OPERATOR #08 // SECRET TAPE",
+          ja: "前任当直官 #08 // 秘密の遺言"
+        },
+        subtitle: {
+          zh: "“听着 #09：从冰层下钻出来的东西在学我们的声音和记忆！记住——真人会怕、会认错；越是完美得像教科书的，越不是人！”",
+          en: "\"Listen, #09—what came up from the ice copies our voices and memories! Real humans feel fear and admit mistakes. Anything too textbook-perfect isn't human!\"",
+          ja: "「聞け#09——氷の下から来た奴らは俺たちの声と記憶を真似る！生身の人間は恐れ、過ちを認める。完璧すぎる奴ほど、人間じゃない！」"
+        }
+      },
+      {
+        id: "prologue_03_main",
+        videoSrc: "./videos/story/prologue_03.mp4",
+        fallbackVideoSrc: "./videos/operator09/idle.mp4",
+        posterSrc: "./portraits/story/prologue_03.jpg",
+        fallbackPosterSrc: "./portraits/lobby_bg.jpg",
+        hasAudio: false,
+        badge: { zh: "序幕终 · 孤守零号窗", en: "EP 0 FINALE // ALONE", ja: "序幕終 // 孤立" },
+        speaker: {
+          zh: "第 17 天 23:55 // 全站断联",
+          en: "DAY 17 · 23:55 // COMMS SEVERED",
+          ja: "17日目 23:55 // 通信途絶"
+        },
+        subtitle: {
+          zh: "暴风雪切断了一切外援，冰冷的钢制密钥压在你掌心。窗外马上就要传来第一声敲门——想起曾经只剩最后一个撤离名额却留给自己的那一晚，你对自己低声说：",
+          en: "The blizzard cuts external comms, leaving only the cold steel gate key under your palm. Before the first knock hits the glass, you remember taking that last evacuation slot for yourself:",
+          ja: "吹雪で外部通信が途絶え、冷たい鋼の鍵だけが手元に残る。最初のノックが響く直前、最後の脱出枠を自分に選んだ夜を思い出し、あなたは呟く——"
+        }
+      }
+    ],
     row: 1,
     col: 2,
     choices: [
@@ -1070,26 +1188,23 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "leo_open_thermal",
-        nextNodeId: "n1_leo_confront",
-        isSideQuest: true,
-        sideQuestVisitorId: "V-02",
-        sideQuestReturnNodeId: "n1_leo_aftermath",
+        nextNodeId: "n1_leo_react_toolbox",
         label: {
-          zh: "🔍 强光闪测 · 直接开启防爆窗调查（高玩支线）",
-          en: "🔍 Flash Test · Open Booth Audit (Side Quest)",
-          ja: "🔍 閃光検査・防爆窓へ（任意支線）"
+          zh: "让他举起白色工具箱贴近防爆窗核验",
+          en: "Tell him to hold the white tool chest up to the glass",
+          ja: "白い工具箱を窓に近づけて見せるよう命じる"
         },
         sublabel: {
-          zh: "消耗 1 电量 // 直接窗口观察",
-          en: "1 PWR FLASH // Open booth",
-          ja: "センサー検査 // ブースへ"
+          zh: "继续电影剧情 · 近距查看工具箱封扣与神情",
+          en: "Continue film · Inspect latch & valve close-up",
+          ja: "本編継続 · 工具箱と表情を近接確認"
         },
         boothEffect: {
           action: "strobe",
           systemNote: {
-            zh: "【剧情切入】强光扫过里奥脸颊，捕捉到他猛地躲闪时的反应。",
-            en: "[SCENE ENTRY] Strobe light hits Leo's soot-streaked face as he flinches.",
-            ja: "【場面導入】閃光を受けて怯むリオの反応を記録した。"
+            zh: "【剧情切入】你没有立刻拉闸，让他先把那只焦黑工具箱贴近玻璃给你看清细节。",
+            en: "[SCENE ENTRY] You keep the bolts shut and order Leo to lift the scorched tool chest up to the frosted glass.",
+            ja: "【場面導入】扉を開ける前に、工具箱を防爆ガラスに近づけさせた。"
           }
         }
       },
@@ -1193,6 +1308,85 @@ export const STORY_NODES: readonly StoryNode[] = [
           zh: "可选支线 · 想用扫描仪查真假就点这里",
           en: "Optional scanner & chat detour",
           ja: "自由質問と検査"
+        }
+      }
+    ]
+  },
+  {
+    id: "n1_leo_react_toolbox",
+    chapter: "night1_leo",
+    code: "SC-02B-2",
+    title: {
+      zh: "近距核验 · 焦黑工具箱与阀门",
+      en: "Close-Up Check · Scorched Tool Chest",
+      ja: "近接確認・焦げた工具箱とバルブ"
+    },
+    subtitle: {
+      zh: "“看，备用黄铜减压阀真在里面！箱扣被电弧熏黑了……扳手刚才跑太急掉风闸口了，快放我进去吧！”",
+      en: "\"Look—the brass thermal valve is right inside! The latch got scorched by the arc… I dropped the wrench by the vent hatch, just open the lock!\"",
+      ja: "「見てくれ、予備の真鍮バルブは中にある！留め金が焦げて……レンチはハッチで落とした、早く入れてくれ！」"
+    },
+    speaker: {
+      zh: "V-02 // 佐藤莱奥（窗前近景）",
+      en: "V-02 // LEO SATO (GLASS CLOSE-UP)",
+      ja: "V-02 // 佐藤レオ（窓前近景）"
+    },
+    kind: "movie",
+    hasAudio: true,
+    isLipSync: false,
+    visitorId: "V-02",
+    videoSrc: "./videos/story/n1_leo_toolbox_check.mp4",
+    fallbackVideoSrc: "./videos/leo/flinch.mp4",
+    posterSrc: "./portraits/story/n1_leo_toolbox_check.jpg",
+    fallbackPosterSrc: "./portraits/leo.jpg",
+    row: 2,
+    col: 9,
+    choices: [
+      {
+        id: "leo_toolbox_admit",
+        nextNodeId: "n1_leo_aftermath",
+        directVerdict: "ADMIT",
+        label: {
+          zh: "阀门与焦痕对得上，开门放他进站",
+          en: "The valve matches—open the gate for Leo",
+          ja: "バルブは本物だ、中へ通す"
+        },
+        sublabel: {
+          zh: "放行 // 相信这个丢了扳手的实习机械师",
+          en: "ADMIT // Watch Night 1 ending",
+          ja: "許可 // 第1夜結末へ"
+        }
+      },
+      {
+        id: "leo_toolbox_purge",
+        nextNodeId: "n1_leo_aftermath",
+        directVerdict: "PURGE",
+        label: {
+          zh: "偏偏关键扳手不在箱里，果断净化",
+          en: "Too convenient—trigger thermal purge",
+          ja: "肝心のレンチがない、焼却する"
+        },
+        sublabel: {
+          zh: "净化 [-1 FUEL] // 宁可错杀不留隐患",
+          en: "PURGE [-1 FUEL] // Watch Night 1 ending",
+          ja: "焼却 [-1 FUEL] // 第1夜結末へ"
+        }
+      },
+      {
+        id: "leo_toolbox_to_booth",
+        nextNodeId: "n1_leo_confront",
+        isSideQuest: true,
+        sideQuestVisitorId: "V-02",
+        sideQuestReturnNodeId: "n1_leo_aftermath",
+        label: {
+          zh: "🔍 进入防爆窗 · 深度鉴真莱奥（高玩支线）",
+          en: "🔍 Booth Interrogation · Audit Leo (Side Quest)",
+          ja: "🔍 防爆窓で詳しく尋問（任意支線）"
+        },
+        sublabel: {
+          zh: "可选硬核支线 · 用扫描仪测心率与谎言",
+          en: "Optional scanner & interrogation detour",
+          ja: "任意で追加尋問"
         }
       }
     ]
@@ -2349,9 +2543,12 @@ export const STORY_EDGES: readonly StoryEdge[] = [
   { id: "e_corr_admit_leo", from: "n1_corridor_admit", to: "n1_leo_arrival", branch: "admit" },
   { id: "e_corr_purge_leo", from: "n1_corridor_purge", to: "n1_leo_arrival", branch: "purge" },
   { id: "e_n1l_arr_int", from: "n1_leo_arrival", to: "n1_leo_react_intercom", branch: "default" },
+  { id: "e_n1l_arr_tbox", from: "n1_leo_arrival", to: "n1_leo_react_toolbox", branch: "default" },
   { id: "e_n1l_arr_con", from: "n1_leo_arrival", to: "n1_leo_confront", branch: "default" },
   { id: "e_n1l_int_after", from: "n1_leo_react_intercom", to: "n1_leo_aftermath", branch: "default" },
   { id: "e_n1l_int_con", from: "n1_leo_react_intercom", to: "n1_leo_confront", branch: "default" },
+  { id: "e_n1l_tbox_after", from: "n1_leo_react_toolbox", to: "n1_leo_aftermath", branch: "default" },
+  { id: "e_n1l_tbox_con", from: "n1_leo_react_toolbox", to: "n1_leo_confront", branch: "default" },
   {
     id: "e_n1l_con_admit",
     from: "n1_leo_confront",

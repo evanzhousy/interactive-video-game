@@ -273,7 +273,14 @@ export function App() {
   const [sideQuestClues, setSideQuestClues] = useState<string[]>([]);
   const [storyFlags, setStoryFlags] = useState<{ medbayLocked?: boolean; ventSealed?: boolean }>({});
   const [prologueInitialStep, setPrologueInitialStep] = useState(0);
+  const [cinemaNotice, setCinemaNotice] = useState<string | null>(null);
   const returnStageRef = useRef<Exclude<Stage, "studio">>("lobby");
+
+  useEffect(() => {
+    if (!cinemaNotice) return undefined;
+    const tid = window.setTimeout(() => setCinemaNotice(null), 3400);
+    return () => window.clearTimeout(tid);
+  }, [cinemaNotice]);
 
   const openStudioFrom = (fromStage: Exclude<Stage, "studio">) => {
     stopIntercomVoice();
@@ -1622,6 +1629,35 @@ export function App() {
 
     if (nextNode && (nextNode.kind === "movie" || nextNode.kind === "ending")) {
       setActiveStoryNodeId(nextNode.id);
+      if (choice.directVerdict === "ADMIT") {
+        setCinemaNotice(
+          tl(
+            { zh: "▲ 已决定放行 · 对方记住了你的信任", en: "▲ ADMITTED · THEY WILL REMEMBER THIS", ja: "▲ 通過許可 · 相手はあなたの信頼を覚えている" },
+            lang
+          )
+        );
+      } else if (choice.directVerdict === "PURGE") {
+        setCinemaNotice(
+          tl(
+            { zh: "◆ 已执行净化 · 走廊线被改写", en: "◆ PURGED · BRANCH TRAJECTORY ALTERED", ja: "◆ 焼却完了 · 分岐ルートが変化した" },
+            lang
+          )
+        );
+      } else if (nextNode.kind === "ending") {
+        setCinemaNotice(
+          tl(
+            { zh: "◆ 终局线已锁定", en: "◆ FINALE TRAJECTORY LOCKED", ja: "◆ 終局ルート確定" },
+            lang
+          )
+        );
+      } else {
+        setCinemaNotice(
+          tl(
+            { zh: "◆ 剧情分支已记录", en: "◆ BRANCH CHOICE RECORDED", ja: "◆ 分岐の選択が記録された" },
+            lang
+          )
+        );
+      }
     } else {
       setActiveStoryNodeId(null);
     }
@@ -1824,7 +1860,7 @@ export function App() {
 
           <Button
             id="btn-studio"
-            className={`ctrl-btn ${stage === "studio" ? "amber" : ""}`}
+            className={`ctrl-btn cinema-hide ${stage === "studio" ? "amber" : ""}`}
             onClick={() => {
               if (stage === "studio") {
                 transitionStage(() => setStage(returnStageRef.current), "backward");
@@ -1867,7 +1903,7 @@ export function App() {
 
           <Button
             id="btn-compendium"
-            className={`ctrl-btn ${compendiumOpen ? "amber" : ""}`}
+            className={`ctrl-btn cinema-hide ${compendiumOpen ? "amber" : ""}`}
             onClick={() => setCompendiumOpen((o) => !o)}
           >
             <ArchiveIcon />
@@ -2531,6 +2567,7 @@ export function App() {
                     onOpenStoryMap={() => setStoryMapOpen(true)}
                     unlockedEndingsCount={compendium.unlockedEndings.length}
                     sideQuestClueCount={sideQuestClues.length}
+                    consequenceNotice={cinemaNotice}
                     onReturnLobby={handleReturnToLobby}
                     onEnterChallengeMode={handleStartChallengeMode}
                   />
@@ -2564,9 +2601,9 @@ export function App() {
                     <span>
                       {tl(
                         {
-                          zh: "🛡️ 支线 · 伪人深度鉴真模式",
-                          en: "🛡️ SIDE QUEST · BOOTH AUDIT",
-                          ja: "🛡️ 任意支線 · 防爆窓尋問中"
+                          zh: "🛡️ 可选高玩支线 · 伪人鉴真台（非主线必玩）",
+                          en: "🛡️ OPTIONAL SIDE QUEST · BOOTH AUDIT",
+                          ja: "🛡️ 任意サブ · 防爆窓尋問モード"
                         },
                         lang
                       )}

@@ -34,6 +34,7 @@ interface Props {
   onOpenStoryMap?: () => void;
   unlockedEndingsCount?: number;
   sideQuestClueCount?: number;
+  consequenceNotice?: string | null;
   onReturnLobby?: () => void;
   onEnterChallengeMode?: () => void;
   footerExtra?: ReactNode;
@@ -55,6 +56,7 @@ export function InteractiveMoviePlayer({
   onOpenStoryMap,
   unlockedEndingsCount = 0,
   sideQuestClueCount = 0,
+  consequenceNotice = null,
   onReturnLobby,
   onEnterChallengeMode,
   footerExtra
@@ -187,10 +189,14 @@ export function InteractiveMoviePlayer({
     };
   }, [activeSegment.id, lang, segmentVoiceCue, shouldPlayVoiceCue]);
 
-  // Timed QTE choice countdown — runs ONLY on the final clip in a montage so earlier story shots finish playing
+  const rawChoices = node.choices ?? [];
+  const mainChoices = rawChoices.filter((c) => !c.isSideQuest);
+  const sideQuestChoices = rawChoices.filter((c) => c.isSideQuest);
+
+  // Timed QTE choice countdown — runs ONLY on the final clip in a montage and picks main story choice 01
   useEffect(() => {
     const totalSec = node.timerSec;
-    const firstChoice = node.choices?.[0];
+    const firstChoice = mainChoices[0];
     if (!totalSec || !firstChoice || motionPaused || !isLastClip) return;
 
     const totalMs = totalSec * 1000;
@@ -205,7 +211,7 @@ export function InteractiveMoviePlayer({
       if (currentMs <= 0 && !timerFiredRef.current) {
         timerFiredRef.current = true;
         window.clearInterval(timerId);
-        onSelectChoiceRef.current(firstChoice, 0);
+        onSelectChoiceRef.current(firstChoice, Math.max(0, rawChoices.indexOf(firstChoice)));
       }
     }, stepMs);
 
@@ -324,6 +330,22 @@ export function InteractiveMoviePlayer({
                 )}
               </span>
             ) : null}
+            {segments.length > 1 ? (
+              <div className="fmv-reel-dots" role="group" aria-label="Reel shots">
+                {segments.map((seg, sIdx) => (
+                  <button
+                    key={seg.id}
+                    type="button"
+                    aria-label={`Shot ${sIdx + 1}`}
+                    className={`fmv-reel-dot ${sIdx === safeClipIndex ? "is-active" : sIdx < safeClipIndex ? "is-seen" : ""}`}
+                    onClick={() => {
+                      ensureAudioUnlocked();
+                      setClipIndex(sIdx);
+                    }}
+                  />
+                ))}
+              </div>
+            ) : null}
             {segmentIsLipSync ? (
               <span className="fmv-audio-pill">
                 {tl({ zh: "原声口型", en: "LIP-SYNC", ja: "口型音声" }, lang)}
@@ -418,6 +440,14 @@ export function InteractiveMoviePlayer({
         </div>
       </div>
 
+      {/* Detroit-style subtle consequence diamond toast */}
+      {consequenceNotice ? (
+        <div className="fmv-detroit-toast" id="fmv-detroit-toast" role="status" aria-live="polite">
+          <span className="fmv-detroit-diamond" aria-hidden="true" />
+          <span>{consequenceNotice}</span>
+        </div>
+      ) : null}
+
       {/* Bottom GTA Cinema Subtitle + QTE Countdown + Branch Choice Deck */}
       <div className="fmv-hud-bottom">
         <div className="fmv-subtitle-box">
@@ -428,7 +458,7 @@ export function InteractiveMoviePlayer({
           <p className="fmv-subtitle-text">{tl(activeSegment.subtitle, lang)}</p>
         </div>
 
-        {isLastClip && node.timerSec && node.choices && node.choices.length > 0 ? (
+        {isLastClip && node.timerSec && mainChoices.length > 0 ? (
           <div className="fmv-qte-timer" role="timer" aria-live="off">
             <div className="fmv-qte-header">
               <span>
@@ -460,40 +490,77 @@ export function InteractiveMoviePlayer({
           </div>
         ) : null}
 
-        {node.choices && node.choices.length > 0 ? (
+        {segments.length > 1 && !isLastClip && mainChoices.length > 0 ? (
+          <div className="fmv-watching-hint">
+            {tl(
+              {
+                zh: `▶ 电影剧情放映中（镜头 ${safeClipIndex + 1}/${segments.length}）· 播完自动切换或随时作出选择`,
+                en: `▶ PLAYING SEQUENCE (${safeClipIndex + 1}/${segments.length}) · AUTO-ADVANCES OR CHOOSE ANYTIME`,
+                ja: `▶ 映画再生中（カット ${safeClipIndex + 1}/${segments.length}）· 自動切替またはいつでも選択可`
+              },
+              lang
+            )}
+          </div>
+        ) : null}
+
+        {mainChoices.length > 0 ? (
           <div className="fmv-choice-deck" role="group" aria-label={tl(node.title, lang)}>
-            {node.choices.map((choice, idx) => (
-              <Button
-                key={choice.id}
-                type="button"
-                data-story-choice={choice.id}
-                className={`option-card fmv-choice-btn ${
-                  choice.directVerdict === "ADMIT"
-                    ? "is-verdict-admit"
-                    : choice.directVerdict === "PURGE"
-                      ? "is-verdict-purge"
-                      : choice.isSideQuest
-                        ? "is-side-quest"
+            {mainChoices.map((choice, idx) => {
+              const rawIdx = Math.max(0, rawChoices.indexOf(choice));
+              return (
+                <Button
+                  key={choice.id}
+                  type="button"
+                  data-story-choice={choice.id}
+                  className={`option-card fmv-choice-btn ${
+                    choice.directVerdict === "ADMIT"
+                      ? "is-verdict-admit"
+                      : choice.directVerdict === "PURGE"
+                        ? "is-verdict-purge"
                         : ""
-                }`.trim()}
-                onClick={() => {
-                  timerFiredRef.current = true;
-                  onSelectChoice(choice, idx);
-                }}
-              >
-                <span className="opt-index">
-                  {choice.isSideQuest
-                    ? tl({ zh: "支线", en: "SIDE", ja: "支線" }, lang)
-                    : `0${idx + 1}`}
-                </span>
-                <span className="fmv-choice-copy">
-                  <span className="fmv-choice-main">{tl(choice.label, lang)}</span>
-                  {choice.sublabel ? (
-                    <span className="fmv-choice-sub">{tl(choice.sublabel, lang)}</span>
-                  ) : null}
-                </span>
-              </Button>
-            ))}
+                  }`.trim()}
+                  onClick={() => {
+                    timerFiredRef.current = true;
+                    onSelectChoice(choice, rawIdx);
+                  }}
+                >
+                  <span className="opt-index">{`0${idx + 1}`}</span>
+                  <span className="fmv-choice-copy">
+                    <span className="fmv-choice-main">{tl(choice.label, lang)}</span>
+                    {choice.sublabel ? (
+                      <span className="fmv-choice-sub">{tl(choice.sublabel, lang)}</span>
+                    ) : null}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+        ) : null}
+
+        {sideQuestChoices.length > 0 ? (
+          <div className="fmv-sidequest-strip" aria-label={tl({ zh: "可选支线", en: "Optional Side Quest", ja: "任意サブ" }, lang)}>
+            <span className="fmv-sidequest-tag">
+              {tl({ zh: "可选高玩支线", en: "OPTIONAL SIDE QUEST", ja: "任意サブ" }, lang)}
+            </span>
+            <div className="fmv-sidequest-actions">
+              {sideQuestChoices.map((choice) => {
+                const rawIdx = Math.max(0, rawChoices.indexOf(choice));
+                return (
+                  <Button
+                    key={choice.id}
+                    type="button"
+                    data-story-choice={choice.id}
+                    className="fmv-sidequest-pill"
+                    onClick={() => {
+                      timerFiredRef.current = true;
+                      onSelectChoice(choice, rawIdx);
+                    }}
+                  >
+                    {tl(choice.label, lang)}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         ) : null}
 

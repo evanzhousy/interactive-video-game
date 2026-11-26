@@ -1,17 +1,38 @@
 import { Button } from "@ui-sdk/react/button";
 import { useEffect, useState } from "react";
-import { VALUE_I18N, tl } from "../../game/i18n.js";
+import { tl } from "../../game/i18n.js";
 import {
   INTAKE_QUESTIONS,
-  SIG_LABELS,
   computePlayerProfile,
   type IntakeOption,
   type PlayerCompactProfile
 } from "../../game/night5.js";
 import { PROLOGUE_NODE_IDS, getStoryNode } from "../../game/story-graph.js";
-import type { Locale } from "../../game/types.js";
+import type { Locale, LocalizedText } from "../../game/types.js";
 import { InteractiveMoviePlayer } from "./InteractiveMoviePlayer.js";
-import { IsometricOutpostBanner } from "./Schematics.js";
+
+const TRAIT_POETIC_LINE: Record<string, LocalizedText> = {
+  care: {
+    zh: "你选择先把人的温度记在心里，即使极夜要求你攥紧门闸。",
+    en: "You carry the human cost inside, even as the Polar Night demands an iron gate.",
+    ja: "極夜が鉄の扉を求めても、あなたは仲間の温度を心に留めようとした。"
+  },
+  order: {
+    zh: "你习惯以秩序与规则抵御未知，相信程序是黑夜里最后的栏杆。",
+    en: "You anchor yourself to protocol—trusting the last railing against the unknown.",
+    ja: "未知の暗闇に対し、あなたは規律と手順を最後の拠り所として選んだ。"
+  },
+  truth: {
+    zh: "你不愿靠谎言换取安宁，哪怕直面真相会让整座站陷入寒意。",
+    en: "You refuse easy lies for comfort, even when truth chills every corridor.",
+    ja: "安らぎのための嘘を拒み、凍てつく真実と向き合う道を選んだ。"
+  },
+  bond: {
+    zh: "纵使风雪切断了一切无线电，你仍把同伴的脸与名字当作底线。",
+    en: "With radios dead in the whiteout, faces and names remain the line you refuse to cross.",
+    ja: "通信が途絶えても、仲間の顔と名前だけは手放さないと決めた。"
+  }
+};
 
 interface Props {
   lang: Locale;
@@ -94,81 +115,84 @@ export function IntakeModal({
     );
   }
 
+  const baselineNarrative =
+    baseline && (TRAIT_POETIC_LINE[baseline.kept] ?? TRAIT_POETIC_LINE.truth)!;
+
   return (
-    <section className="panel modal-stage fmv-handover-card" id="intake-panel">
-      <div className="section-kicker intake-header-row">
-        <span>
-          {tl(
-            {
-              zh: "序章完成 // 第 0 夜值班记忆封存",
-              en: "PROLOGUE COMPLETE // NIGHT 0 HANDOVER SEALED",
-              ja: "序章完了 // 第0夜 引き継ぎ記録封印"
-            },
-            lang
-          )}
-        </span>
-        <span className="tech-stamp">
-          {tl({ zh: `值班卡 // ${displayOp}`, en: `BADGE // ${displayOp}`, ja: `当直証 // ${displayOp}` }, lang)}
-        </span>
-      </div>
-
-      <IsometricOutpostBanner
-        step={INTAKE_QUESTIONS.length}
-        totalSteps={INTAKE_QUESTIONS.length}
-        lang={lang}
+    <section className="panel modal-stage fmv-handover-card cinema-title-curtain" id="intake-panel">
+      <img
+        src="./portraits/story/ep0_lonely_watch.jpg"
+        alt=""
+        className="cinema-curtain-bg"
+        aria-hidden="true"
       />
+      <div className="cinema-curtain-scrim" aria-hidden="true" />
 
-      {baseline ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "10px" }}>
-          <div className="dossier-section" style={{ marginBottom: 0 }}>
-            <div className="section-kicker">
-              {tl(
-                {
-                  zh: "#09 值班员交接侧写",
-                  en: "OPERATOR #09 HANDOVER PROFILE",
-                  ja: "#09 検疫官・引き継ぎ記録"
-                },
-                lang
-              )}
-            </div>
-            <div style={{ fontSize: "0.88rem" }}>
-              <strong style={{ color: "var(--amber-crt)" }}>
-                {VALUE_I18N[baseline.kept][lang]}
-              </strong>{" "}
-              &gt; {VALUE_I18N[baseline.dropped][lang]} · {tl(SIG_LABELS[baseline.sig], lang)}
-            </div>
+      <div className="cinema-curtain-content">
+        <div className="section-kicker intake-header-row">
+          <span>
+            {tl(
+              {
+                zh: "序幕完 · 2036.11.18 // 北纬 78°13′ 斯瓦尔巴零号站",
+                en: "EPISODE 0 COMPLETE // SVALBARD OUTPOST 0 · 78°13'N",
+                ja: "序章終 // スヴァールバル第0前哨基地 · 北緯78°13'"
+              },
+              lang
+            )}
+          </span>
+          <span className="tech-stamp">
+            {tl({ zh: `值班卡 // ${displayOp}`, en: `BADGE // ${displayOp}`, ja: `当直証 // ${displayOp}` }, lang)}
+          </span>
+        </div>
+
+        <div className="cinema-curtain-hero">
+          <div className="cinema-curtain-eyebrow">
+            {tl(
+              {
+                zh: "互动电影剧集 // CHAPTER 01",
+                en: "INTERACTIVE CINEMA // CHAPTER 01",
+                ja: "インタラクティブ映画 // 第一話"
+              },
+              lang
+            )}
           </div>
+          <h2 className="cinema-curtain-title">
+            {tl(
+              {
+                zh: "第一集 · 零号隔离窗",
+                en: "Episode 1 · Gate Zero",
+                ja: "第1話 · 第0隔離窓"
+              },
+              lang
+            )}
+          </h2>
+          {baselineNarrative ? (
+            <p className="cinema-curtain-quote">{tl(baselineNarrative, lang)}</p>
+          ) : null}
+          <p className="cinema-curtain-hook">
+            {tl(
+              {
+                zh: "极夜彻底吞没站外风雪，对讲机里传来第一声急促敲窗——你的每一个抉择都会决定谁能活过这五个夜晚。",
+                en: "The polar whiteout swallows the perimeter. Moments later, the first desperate knock hits Gate 0—every choice from here shapes who survives the five nights.",
+                ja: "極夜が基地を飲み込んだ直後、防爆ガラスに最初のノックが響く——ここからの選択が五つの夜の生死を分ける。"
+              },
+              lang
+            )}
+          </p>
+        </div>
 
-          <div className="audit-pipeline-strip" aria-label="Shift Flow">
-            <span className="pipe-node active">
-              {tl({ zh: "第0夜 // 记忆抉择", en: "NIGHT 0 // WORDS", ja: "第0夜 // 選択" }, lang)}
-            </span>
-            <svg aria-hidden="true" className="svg-flow-arrow" width="18" height="10" viewBox="0 0 18 10" fill="none">
-              <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />
-            </svg>
-            <span className="pipe-node">
-              {tl({ zh: "第1–4夜 // 剧情与审讯", en: "N1–N4 // ACTIONS", ja: "第1〜4夜 // 行動" }, lang)}
-            </span>
-            <svg aria-hidden="true" className="svg-flow-arrow" style={{ animationDelay: "0.4s" }} width="18" height="10" viewBox="0 0 18 10" fill="none">
-              <path d="M0 5h15M12 1l4 4-4 4" stroke="var(--amber-crt)" strokeWidth="1.3" />
-            </svg>
-            <span className="pipe-node danger">
-              {tl({ zh: "第5夜 // 镜像终局", en: "NIGHT 5 // MIRROR", ja: "第5夜 // 鏡像終局" }, lang)}
-            </span>
-          </div>
-
-          <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+        {baseline ? (
+          <div className="cinema-curtain-actions">
             <Button
               id="btn-start-shift"
-              className="ctrl-btn amber"
-              style={{ flex: "1 1 220px", padding: "10px", fontWeight: 700 }}
+              className="ctrl-btn amber cinema-curtain-cta"
               onClick={() => onComplete(baseline, answers)}
             >
               {tl(
                 {
-                  zh: "进入 0 号隔离岗亭 →",
-                  en: "Enter Quarantine Booth 0 →",
-                  ja: "第0検疫ブースへ入る →"
+                  zh: "开始第 1 集 · 暴雪拍窗 ▶",
+                  en: "Begin Episode 1 · The Storm Knock ▶",
+                  ja: "第1話を再生 · 吹雪の叩扉 ▶"
                 },
                 lang
               )}
@@ -178,11 +202,11 @@ export function IntakeModal({
               className="ctrl-btn"
               onClick={() => setAnswers([])}
             >
-              {tl({ zh: "重播序章", en: "Replay Prologue", ja: "序章をやり直す" }, lang)}
+              {tl({ zh: "↺ 重播序章背景", en: "↺ Replay Episode 0", ja: "↺ 序章を最初から" }, lang)}
             </Button>
           </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </section>
   );
 }
