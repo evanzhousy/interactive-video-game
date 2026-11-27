@@ -93,6 +93,8 @@ export function InteractiveMoviePlayer({
   const [useFallbackVideo, setUseFallbackVideo] = useState(false);
   const [useFallbackPoster, setUseFallbackPoster] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
+  const [hasPlayedInNode, setHasPlayedInNode] = useState(false);
+  const [videoFailed, setVideoFailed] = useState(false);
   const [userMuted, setUserMuted] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [currentTimeSec, setCurrentTimeSec] = useState(0);
@@ -118,6 +120,8 @@ export function InteractiveMoviePlayer({
     setUseFallbackVideo(false);
     setUseFallbackPoster(false);
     setVideoReady(false);
+    setHasPlayedInNode(false);
+    setVideoFailed(false);
     setAutoplayBlocked(false);
     timerFiredRef.current = false;
     setRemainingMs(node.timerSec ? node.timerSec * 1000 : 0);
@@ -128,6 +132,7 @@ export function InteractiveMoviePlayer({
     setUseFallbackVideo(false);
     setUseFallbackPoster(false);
     setVideoReady(false);
+    setVideoFailed(false);
     setAutoplayBlocked(false);
     setCurrentTimeSec(0);
     setMediaDurationSec(activeSegment.durationSec ?? 0);
@@ -284,59 +289,74 @@ export function InteractiveMoviePlayer({
     >
       {/* Full-bleed poster underneath double-buffered video for 0ms cut smoothness */}
       <div className="fmv-media-layer" aria-hidden="true">
-        <img
-          src={activePosterSrc}
-          alt=""
-          className="fmv-poster-img"
-          decoding="async"
-          onError={() => {
-            if (
-              !useFallbackPoster &&
-              activeSegment.fallbackPosterSrc !== activeSegment.posterSrc
-            ) {
-              setUseFallbackPoster(true);
-            }
-          }}
-        />
-        <video
-          key={`${activeSegment.id}:${activeVideoSrc}`}
-          ref={videoRef}
-          className="fmv-video-el"
-          style={{ opacity: videoReady ? 1 : 0 }}
-          poster={activePosterSrc}
-          autoPlay={!motionPaused}
-          loop={isLastClip}
-          muted={!shouldPlayNativeSound}
-          playsInline
-          onLoadedMetadata={(e) => {
-            const d = e.currentTarget.duration;
-            if (Number.isFinite(d) && d > 0) {
-              setMediaDurationSec(d);
-            }
-          }}
-          onTimeUpdate={(e) => {
-            setCurrentTimeSec(e.currentTarget.currentTime);
-          }}
-          onLoadedData={() => setVideoReady(true)}
-          onCanPlay={() => setVideoReady(true)}
-          onEnded={() => {
-            if (!isLastClip) {
-              setClipIndex((i) => Math.min(segments.length - 1, i + 1));
-            }
-          }}
-          onError={() => {
-            if (
-              !useFallbackVideo &&
-              activeSegment.fallbackVideoSrc !== activeSegment.videoSrc
-            ) {
-              setUseFallbackVideo(true);
-            } else {
-              setVideoReady(false);
-            }
-          }}
-        >
-          <source src={activeVideoSrc} type="video/mp4" />
-        </video>
+        {(() => {
+          const showPosterUnderlay = !hasPlayedInNode || motionPaused || videoFailed;
+          return (
+            <>
+              <img
+                src={activePosterSrc}
+                alt=""
+                className="fmv-poster-img"
+                style={{ opacity: showPosterUnderlay ? 1 : 0 }}
+                decoding="async"
+                onError={() => {
+                  if (
+                    !useFallbackPoster &&
+                    activeSegment.fallbackPosterSrc !== activeSegment.posterSrc
+                  ) {
+                    setUseFallbackPoster(true);
+                  }
+                }}
+              />
+              <video
+                key={`${activeSegment.id}:${activeVideoSrc}`}
+                ref={videoRef}
+                className="fmv-video-el"
+                style={{ opacity: videoReady ? 1 : 0 }}
+                poster={showPosterUnderlay ? activePosterSrc : undefined}
+                autoPlay={!motionPaused}
+                loop={isLastClip}
+                muted={!shouldPlayNativeSound}
+                playsInline
+                onLoadedMetadata={(e) => {
+                  const d = e.currentTarget.duration;
+                  if (Number.isFinite(d) && d > 0) {
+                    setMediaDurationSec(d);
+                  }
+                }}
+                onTimeUpdate={(e) => {
+                  setCurrentTimeSec(e.currentTarget.currentTime);
+                }}
+                onLoadedData={() => {
+                  setVideoReady(true);
+                  setHasPlayedInNode(true);
+                }}
+                onCanPlay={() => {
+                  setVideoReady(true);
+                  setHasPlayedInNode(true);
+                }}
+                onEnded={() => {
+                  if (!isLastClip) {
+                    setClipIndex((i) => Math.min(segments.length - 1, i + 1));
+                  }
+                }}
+                onError={() => {
+                  if (
+                    !useFallbackVideo &&
+                    activeSegment.fallbackVideoSrc !== activeSegment.videoSrc
+                  ) {
+                    setUseFallbackVideo(true);
+                  } else {
+                    setVideoReady(false);
+                    setVideoFailed(true);
+                  }
+                }}
+              >
+                <source src={activeVideoSrc} type="video/mp4" />
+              </video>
+            </>
+          );
+        })()}
         <div className="fmv-cinema-vignette" />
       </div>
 

@@ -60,7 +60,7 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       }
     }
 
-    // Episode 0 pilot (MiniMax-H3 05:46 = 346s): zero mimic spoilers in prologue_01/02, big tape reveal in prologue_03
+    // Episode 0 v2 continuous master (MiniMax-H3 06:26 = 386s): zero mimic spoilers in prologue_01/02, big tape reveal in prologue_03
     expect(getStoryNode("prologue_01")!.clips?.length).toBe(6);
     expect(getStoryNode("prologue_02")!.clips?.length).toBe(2);
     expect(getStoryNode("prologue_03")!.clips?.length).toBe(3);
@@ -71,7 +71,12 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
         (getStoryNode(pid)!.clips ?? []).reduce((clipSum, c) => clipSum + (c.durationSec ?? 0), 0),
       0
     );
-    expect(ep0TotalSec).toBe(346);
+    expect(ep0TotalSec).toBe(386);
+    const a2cCues = JSON.stringify(
+      getStoryNode("prologue_01")!.clips?.find((c) => c.id === "ep0_sc00a2_canteen_crew")?.subtitleCues ?? []
+    );
+    expect(a2cCues).toContain("姜茶");
+    expect(a2cCues).toContain("转正");
 
     for (const pid of PROLOGUE_NODE_IDS) {
       for (const seg of getStoryNode(pid)!.clips ?? []) {

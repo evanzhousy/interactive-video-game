@@ -1,4 +1,4 @@
-// AUTO-GENERATED FROM videos/ep0-h3/ep0_h3_manifest.json — DO NOT EDIT BY HAND.
+// AUTO-GENERATED FROM videos/ep0-h3-v2/ep0_h3_manifest.json — DO NOT EDIT BY HAND.
 import type { StorySubtitleCue } from "./story-graph.js";
 
 export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
@@ -33,7 +33,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
     },
     {
       "startSec": 16.0,
-      "endSec": 21.89,
+      "endSec": 21.85,
       "speaker": {
         "zh": "V-04 // 安保队长 马库斯",
         "en": "CAPTAIN MARCUS CHEN",
@@ -46,8 +46,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 21.89,
-      "endSec": 29.89,
+      "startSec": 21.85,
+      "endSec": 29.85,
       "speaker": {
         "zh": "新任值班员 // 主角 #09",
         "en": "INCOMING OPERATOR #09",
@@ -60,8 +60,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 29.89,
-      "endSec": 37.89,
+      "startSec": 29.85,
+      "endSec": 37.85,
       "speaker": {
         "zh": "V-04 // 安保队长 马库斯",
         "en": "CAPTAIN MARCUS CHEN",
@@ -74,8 +74,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 37.89,
-      "endSec": 45.92,
+      "startSec": 37.85,
+      "endSec": 45.87,
       "speaker": {
         "zh": "V-04 // 安保队长 马库斯",
         "en": "CAPTAIN MARCUS CHEN",
@@ -119,7 +119,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
     },
     {
       "startSec": 18.14,
-      "endSec": 26.14,
+      "endSec": 26.1,
       "speaker": {
         "zh": "V-02 // 实习机械师 莱奥",
         "en": "V-02 // LEO SATO",
@@ -132,8 +132,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 26.14,
-      "endSec": 34.14,
+      "startSec": 26.1,
+      "endSec": 34.06,
       "speaker": {
         "zh": "V-02 // 实习机械师 莱奥",
         "en": "V-02 // LEO SATO",
@@ -146,8 +146,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 34.14,
-      "endSec": 42.21,
+      "startSec": 34.06,
+      "endSec": 44.16,
       "speaker": {
         "zh": "资深钻井工 // 托尔·伯格",
         "en": "DRILLER // THOR BERG",
@@ -157,6 +157,34 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
         "zh": "我下个月回奥斯陆看我小女儿索菲亚买琴——对了零八，上回打赌那两盒红双喜别忘了欠账！",
         "en": "Next month I fly home to Oslo to buy my little girl Sofia a piano—hey #08, don't forget those two packs of Double Happiness!",
         "ja": "来月オスロへ帰って娘のソフィアにピアノを買うんだ——おい#08、賭けの紅双喜2箱、忘れるなよ！"
+      }
+    },
+    {
+      "startSec": 44.16,
+      "endSec": 52.16,
+      "speaker": {
+        "zh": "V-02 // 莱奥（压低嗓音）",
+        "en": "LEO SATO (WHISPERING)",
+        "ja": "レオ（小声で）"
+      },
+      "text": {
+        "zh": "……哥，我离三个月转正评估就差一个月。真哪晚干活笨手笨脚捅了小漏子，",
+        "en": "...Hey, I'm one month shy of my three-month probation pass. If I ever mess up some small job on night shift,",
+        "ja": "……先輩、本採用まであと1ヶ月なんです。もし夜勤で俺がヘマをしても、"
+      }
+    },
+    {
+      "startSec": 52.16,
+      "endSec": 60.21,
+      "speaker": {
+        "zh": "V-02 // 莱奥（压低嗓音）",
+        "en": "LEO SATO (WHISPERING)",
+        "ja": "レオ（小声で）"
+      },
+      "text": {
+        "zh": "您可别当着工头大喇叭点我名儿，二号舱灶台夜里总温着姜茶。",
+        "en": "don't call me out over the foreman's PA... I keep hot ginger tea warming on Bay 2's stove every night.",
+        "ja": "班長の前で名指しだけは勘弁を。第2区画のストーブには毎晩生姜湯を温めてますから。"
       }
     }
   ],
@@ -177,7 +205,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
     },
     {
       "startSec": 8.0,
-      "endSec": 16.0,
+      "endSec": 18.1,
       "speaker": {
         "zh": "V-04 // 马库斯（别开眼神低骂）",
         "en": "MARCUS CHEN (MUTTERING)",
@@ -190,8 +218,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 16.0,
-      "endSec": 21.89,
+      "startSec": 18.1,
+      "endSec": 23.99,
       "speaker": {
         "zh": "V-01 // 首席外科 艾琳娜",
         "en": "V-01 // DR. ELENA VANCE",
@@ -204,8 +232,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 21.89,
-      "endSec": 29.89,
+      "startSec": 23.99,
+      "endSec": 31.95,
       "speaker": {
         "zh": "V-01 // 首席外科 艾琳娜",
         "en": "V-01 // DR. ELENA VANCE",
@@ -218,8 +246,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 29.89,
-      "endSec": 37.92,
+      "startSec": 31.95,
+      "endSec": 39.98,
       "speaker": {
         "zh": "V-01 // 首席外科 艾琳娜",
         "en": "V-01 // DR. ELENA VANCE",
@@ -235,7 +263,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
   "ep0_sc00a2_canteen_corners": [
     {
       "startSec": 0.0,
-      "endSec": 8.0,
+      "endSec": 10.14,
       "speaker": {
         "zh": "V-03 // 行政审计 亚瑟（会签 3,800m 变更单）",
         "en": "V-03 // ARTHUR STERLING",
@@ -248,8 +276,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 8.0,
-      "endSec": 16.0,
+      "startSec": 10.14,
+      "endSec": 18.14,
       "speaker": {
         "zh": "V-05 // 高压潜水员 安娜",
         "en": "V-05 // ANA RIBEIRO",
@@ -262,8 +290,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 16.0,
-      "endSec": 24.0,
+      "startSec": 18.14,
+      "endSec": 26.14,
       "speaker": {
         "zh": "V-06 // 心理医生 英格丽（悄改汉森评估）",
         "en": "V-06 // DR. INGRID SOLBERG",
@@ -276,8 +304,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 24.0,
-      "endSec": 32.0,
+      "startSec": 26.14,
+      "endSec": 34.14,
       "speaker": {
         "zh": "V-07 // 低温生物 林梅",
         "en": "V-07 // DR. LIN MEI",
@@ -290,8 +318,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 32.0,
-      "endSec": 40.04,
+      "startSec": 34.14,
+      "endSec": 44.3,
       "speaker": {
         "zh": "V-08 // 维生技师 汉娜（拒绝克莱尔补贴）",
         "en": "V-08 // HANNAH WEISS",
@@ -321,7 +349,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
     },
     {
       "startSec": 8.0,
-      "endSec": 16.0,
+      "endSec": 15.96,
       "speaker": {
         "zh": "第 14 天 02:16 // BOP 防喷器卡死 · 蒸汽倒灌",
         "en": "DAY 14 · 02:16 // BOP VALVES JAMMED",
@@ -334,8 +362,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 16.0,
-      "endSec": 24.0,
+      "startSec": 15.96,
+      "endSec": 23.92,
       "speaker": {
         "zh": "钻井公频 // 紧急失真通讯",
         "en": "DRILL RIG PA // EMERGENCY",
@@ -348,8 +376,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 24.0,
-      "endSec": 32.04,
+      "startSec": 23.92,
+      "endSec": 32.0,
       "speaker": {
         "zh": "第 14 天 02:19 // 全站一级物理封锁",
         "en": "DAY 14 · 02:19 // LEVEL-1 LOCKDOWN",
@@ -365,7 +393,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
   "prologue_01_main": [
     {
       "startSec": 0.0,
-      "endSec": 8.0,
+      "endSec": 10.14,
       "speaker": {
         "zh": "站长 林德奎斯特 // 立体拓扑简报",
         "en": "COMMANDER LINDQVIST",
@@ -378,8 +406,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 8.0,
-      "endSec": 16.0,
+      "startSec": 10.14,
+      "endSec": 20.25,
       "speaker": {
         "zh": "站长 林德奎斯特 // 外环断流指令",
         "en": "COMMANDER LINDQVIST",
@@ -392,8 +420,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 16.0,
-      "endSec": 24.0,
+      "startSec": 20.25,
+      "endSec": 30.35,
       "speaker": {
         "zh": "站长 林德奎斯特 // 零号闸铁律",
         "en": "COMMANDER LINDQVIST",
@@ -406,8 +434,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 24.0,
-      "endSec": 32.0,
+      "startSec": 30.35,
+      "endSec": 38.35,
       "speaker": {
         "zh": "站长 林德奎斯特 // 人事档案开启",
         "en": "COMMANDER LINDQVIST",
@@ -420,8 +448,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 32.0,
-      "endSec": 40.04,
+      "startSec": 38.35,
+      "endSec": 46.38,
       "speaker": {
         "zh": "站长 林德奎斯特 // 抉择点 01",
         "en": "COMMANDER LINDQVIST // DECISION 01",
@@ -437,7 +465,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
   "ep0_lonely_watch": [
     {
       "startSec": 0.0,
-      "endSec": 8.0,
+      "endSec": 10.14,
       "speaker": {
         "zh": "前任值班员 #08 // 第 16 天 02:40",
         "en": "OPERATOR #08 // 02:40 HANDOVER",
@@ -450,8 +478,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 8.0,
-      "endSec": 16.0,
+      "startSec": 10.14,
+      "endSec": 18.1,
       "speaker": {
         "zh": "前任值班员 #08",
         "en": "OPERATOR #08",
@@ -464,8 +492,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 16.0,
-      "endSec": 24.0,
+      "startSec": 18.1,
+      "endSec": 26.06,
       "speaker": {
         "zh": "主角 #09",
         "en": "OPERATOR #09",
@@ -478,8 +506,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 24.0,
-      "endSec": 29.92,
+      "startSec": 26.06,
+      "endSec": 31.98,
       "speaker": {
         "zh": "前任值班员 #08",
         "en": "OPERATOR #08",
@@ -523,7 +551,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
     },
     {
       "startSec": 13.89,
-      "endSec": 21.92,
+      "endSec": 24.06,
       "speaker": {
         "zh": "值班主管 // 内侧走廊门小窗",
         "en": "SHIFT SUPERVISOR // INNER DOOR",
@@ -553,7 +581,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
     },
     {
       "startSec": 8.0,
-      "endSec": 16.04,
+      "endSec": 18.18,
       "speaker": {
         "zh": "手动越权面板 // 断铅越权 · 黄色胶布磁带",
         "en": "MANUAL OVERRIDE // SNIPPED SEAL & TAPE",
@@ -569,7 +597,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
   "prequel_op08_warning": [
     {
       "startSec": 0.0,
-      "endSec": 8.0,
+      "endSec": 10.14,
       "speaker": {
         "zh": "前任值班员 #08 // 02:30 磁带遗言",
         "en": "OPERATOR #08 // 02:30 TAPE",
@@ -582,8 +610,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 8.0,
-      "endSec": 16.0,
+      "startSec": 10.14,
+      "endSec": 20.25,
       "speaker": {
         "zh": "前任值班员 #08 // SAY / DO GAP 铁律",
         "en": "OPERATOR #08 // THE SAY/DO CRACK",
@@ -596,8 +624,8 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
       }
     },
     {
-      "startSec": 16.0,
-      "endSec": 24.04,
+      "startSec": 20.25,
+      "endSec": 28.34,
       "speaker": {
         "zh": "前任值班员 #08 // 绝笔警句",
         "en": "OPERATOR #08 // FINAL WARNING",
@@ -627,7 +655,7 @@ export const EP0_SUBTITLE_CUES: Record<string, readonly StorySubtitleCue[]> = {
     },
     {
       "startSec": 8.0,
-      "endSec": 16.04,
+      "endSec": 16.08,
       "speaker": {
         "zh": "抉择点 03 // 最后艇席独白",
         "en": "DECISION 03 // LAST SUBMARINE SEAT",

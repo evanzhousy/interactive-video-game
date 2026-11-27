@@ -1,7 +1,7 @@
 import { EP0_SUBTITLE_CUES } from "./ep0-cues.generated.js";
 import type { EndingId, LocalizedText } from "./types.js";
 
-export const EP0_MEDIA_BASE_URL = "https://pub-0ab426eff1a7472199ccc8f2292cac9e.r2.dev/ep0-h3";
+export const EP0_MEDIA_BASE_URL = "https://pub-0ab426eff1a7472199ccc8f2292cac9e.r2.dev/ep0-h3-v2";
 
 export type StoryChapterId =
   | "prologue"
@@ -170,14 +170,14 @@ export const STORY_NODES: readonly StoryNode[] = [
     isLipSync: true,
     videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a1_arrival.mp4`,
     fallbackVideoSrc: "./videos/story/ep0_heli_arrival.mp4",
-    posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
+    posterSrc: "./portraits/story/ep0/posters/ep0_sc00a1_arrival.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
     clips: [
       {
         id: "ep0_sc00a1_arrival",
         videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a1_arrival.mp4`,
         fallbackVideoSrc: "./videos/story/ep0_heli_arrival.mp4",
-        posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
+        posterSrc: "./portraits/story/ep0/posters/ep0_sc00a1_arrival.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: true,
@@ -199,11 +199,11 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "ep0_sc00a2_canteen_crew",
         videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a2_canteen_crew.mp4`,
         fallbackVideoSrc: "./videos/story/ep0_crew_dinner.mp4",
-        posterSrc: "./portraits/story/ep0/ep0_canteen_leo_thor.jpg",
+        posterSrc: "./portraits/story/ep0/posters/ep0_sc00a2_canteen_crew.jpg",
         fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 42,
+        durationSec: 60,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_crew,
         badge: { zh: "SC-00A-2 · 食堂热汤 (00:42)", en: "SC-00A-2 · MESS HALL (00:42)", ja: "SC-00A-2 · 食堂 (00:42)" },
         speaker: {
@@ -221,11 +221,11 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "ep0_sc00a2_canteen_clash",
         videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a2_canteen_clash.mp4`,
         fallbackVideoSrc: "./videos/story/ep0_crew_dinner.mp4",
-        posterSrc: "./portraits/story/ep0/ep0_canteen_marcus_stew.jpg",
+        posterSrc: "./portraits/story/ep0/posters/ep0_sc00a2_canteen_clash.jpg",
         fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 38,
+        durationSec: 40,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_clash,
         badge: { zh: "SC-00A-2 · 鹿肉与手术钳 (00:38)", en: "SC-00A-2 · STEW & SCALPEL (00:38)", ja: "SC-00A-2 · 鹿肉と鉗子 (00:38)" },
         speaker: {
@@ -243,11 +243,11 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "ep0_sc00a2_canteen_corners",
         videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a2_canteen_corners.mp4`,
         fallbackVideoSrc: "./videos/story/ep0_crew_dinner.mp4",
-        posterSrc: "./portraits/story/ep0/ep0_corner_arthur_holm.jpg",
+        posterSrc: "./portraits/story/ep0/posters/ep0_sc00a2_canteen_corners.jpg",
         fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 40,
+        durationSec: 44,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_corners,
         badge: { zh: "SC-00A-2 · 角落埋线 (00:40)", en: "SC-00A-2 · CORNER VIGNETTES (00:40)", ja: "SC-00A-2 · 四隅の伏線 (00:40)" },
         speaker: {
@@ -265,7 +265,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "prequel_icecore_breach",
         videoSrc: `${EP0_MEDIA_BASE_URL}/prequel_icecore_breach.mp4`,
         fallbackVideoSrc: "./videos/story/prequel_icecore_breach.mp4",
-        posterSrc: "./portraits/story/prequel_icecore_breach.jpg",
+        posterSrc: "./portraits/story/ep0/posters/prequel_icecore_breach.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
@@ -287,11 +287,11 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "prologue_01_main",
         videoSrc: `${EP0_MEDIA_BASE_URL}/prologue_01_main.mp4`,
         fallbackVideoSrc: "./videos/story/prologue_01.mp4",
-        posterSrc: "./portraits/story/ep0/ep0_briefing_topology.jpg",
+        posterSrc: "./portraits/story/ep0/posters/prologue_01_main.jpg",
         fallbackPosterSrc: "./portraits/story/prologue_01_handover.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 40,
+        durationSec: 46,
         subtitleCues: EP0_SUBTITLE_CUES.prologue_01_main,
         badge: { zh: "SC-00A-3 · 中枢拓扑与质询 (00:40)", en: "SC-00A-3 · TOPOLOGY BRIEF (00:40)", ja: "SC-00A-3 · 構造会議 (00:40)" },
         speaker: {
@@ -365,18 +365,18 @@ export const STORY_NODES: readonly StoryNode[] = [
     isLipSync: true,
     videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_lonely_watch.mp4`,
     fallbackVideoSrc: "./videos/story/ep0_lonely_watch.mp4",
-    posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
+    posterSrc: "./portraits/story/ep0/posters/ep0_lonely_watch.jpg",
     fallbackPosterSrc: "./portraits/lobby_bg.jpg",
     clips: [
       {
         id: "ep0_lonely_watch",
         videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_lonely_watch.mp4`,
         fallbackVideoSrc: "./videos/story/ep0_lonely_watch.mp4",
-        posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
+        posterSrc: "./portraits/story/ep0/posters/ep0_lonely_watch.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 30,
+        durationSec: 32,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_lonely_watch,
         badge: { zh: "SC-00B-1 · 提前交班 (00:30)", en: "SC-00B-1 · HANDOVER (00:30)", ja: "SC-00B-1 · 早朝引継 (00:30)" },
         speaker: {
@@ -394,11 +394,11 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "prologue_02_main",
         videoSrc: `${EP0_MEDIA_BASE_URL}/prologue_02_main.mp4`,
         fallbackVideoSrc: "./videos/story/prologue_02.mp4",
-        posterSrc: "./portraits/story/ep0/ep0_inner_door_knock.jpg",
+        posterSrc: "./portraits/story/ep0/posters/prologue_02_main.jpg",
         fallbackPosterSrc: "./portraits/story/prologue_02_knock.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 22,
+        durationSec: 24,
         subtitleCues: EP0_SUBTITLE_CUES.prologue_02_main,
         badge: { zh: "SC-00B-2 · 内廊敲窗 (00:22)", en: "SC-00B-2 · INNER DOOR (00:22)", ja: "SC-00B-2 · 内側廊下 (00:22)" },
         speaker: {
@@ -472,7 +472,7 @@ export const STORY_NODES: readonly StoryNode[] = [
     isLipSync: false,
     videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_empty_booth.mp4`,
     fallbackVideoSrc: "./videos/story/ep0_empty_booth.mp4",
-    posterSrc: "./portraits/story/ep0/ep0_override_cut_seal.jpg",
+    posterSrc: "./portraits/story/ep0/posters/ep0_empty_booth.jpg",
     fallbackPosterSrc: "./portraits/story/ep0_empty_booth.jpg",
     clips: [
       {
@@ -483,7 +483,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackPosterSrc: "./portraits/story/ep0_empty_booth.jpg",
         hasAudio: true,
         isLipSync: false,
-        durationSec: 16,
+        durationSec: 18,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_empty_booth,
         badge: { zh: "SC-00C-1 · 断铅越权面板 (00:16)", en: "SC-00C-1 · SNIPPED SEAL (00:16)", ja: "SC-00C-1 · 鉛封切断 (00:16)" },
         speaker: {
@@ -501,11 +501,11 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "prequel_op08_warning",
         videoSrc: `${EP0_MEDIA_BASE_URL}/prequel_op08_warning.mp4`,
         fallbackVideoSrc: "./videos/story/prequel_op08_warning.mp4",
-        posterSrc: "./portraits/operator09.jpg",
+        posterSrc: "./portraits/story/ep0/posters/prequel_op08_warning.jpg",
         fallbackPosterSrc: "./portraits/operator09.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 24,
+        durationSec: 28,
         subtitleCues: EP0_SUBTITLE_CUES.prequel_op08_warning,
         badge: { zh: "SC-00C-2 · #08 磁带原声 (00:24)", en: "SC-00C-2 · #08 TAPE (00:24)", ja: "SC-00C-2 · 遺言テープ (00:24)" },
         speaker: {
@@ -523,7 +523,7 @@ export const STORY_NODES: readonly StoryNode[] = [
         id: "prologue_03_main",
         videoSrc: `${EP0_MEDIA_BASE_URL}/prologue_03_main.mp4`,
         fallbackVideoSrc: "./videos/story/prologue_03.mp4",
-        posterSrc: "./portraits/story/prologue_03.jpg",
+        posterSrc: "./portraits/story/ep0/posters/prologue_03_main.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
