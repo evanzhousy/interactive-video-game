@@ -28,10 +28,11 @@ COMFY_DIR = Path("/content/ComfyUI")
 CN_DIR = COMFY_DIR / "custom_nodes"
 INPUT_DIR = COMFY_DIR / "input"
 OUTPUT_DIR = COMFY_DIR / "output"
-SHOTS_DIR = Path("/content/ep0_h3_out")
-FINAL_DIR = Path("/content/ep0_h3_final")
-DRIVE_SHOTS_DIR = Path("/content/drive/MyDrive/gate0_ep0_h3_shots")
-DRIVE_FINAL_DIR = Path("/content/drive/MyDrive/gate0_ep0_h3_final")
+SHOTS_DIR = Path("/content/ep0_h3_v2_out")
+FINAL_DIR = Path("/content/ep0_h3_v2_final")
+V1_DRIVE_SHOTS_DIR = Path("/content/drive/MyDrive/gate0_ep0_h3_shots")
+DRIVE_SHOTS_DIR = Path("/content/drive/MyDrive/gate0_ep0_h3_v2_shots")
+DRIVE_FINAL_DIR = Path("/content/drive/MyDrive/gate0_ep0_h3_v2_final")
 API_URL = "http://127.0.0.1:8188"
 
 
@@ -79,13 +80,16 @@ CLIP_INT8 = (
 
 IMAGES = {
     "ep0_heli_arrival.jpg": f"{RAW_GH}/story/ep0_heli_arrival.jpg",
+    "ep0_helipad_ship_reverse.jpg": f"{RAW_GH}/story/ep0/ep0_helipad_ship_reverse.jpg",
     "ep0_helipad_marcus_grab.jpg": f"{RAW_GH}/story/ep0/ep0_helipad_marcus_grab.jpg",
     "ep0_crew_dinner.jpg": f"{RAW_GH}/story/ep0_crew_dinner.jpg",
+    "ep0_canteen_wide_v2.jpg": f"{RAW_GH}/story/ep0/ep0_canteen_wide_v2.jpg",
     "ep0_canteen_leo_thor.jpg": f"{RAW_GH}/story/ep0/ep0_canteen_leo_thor.jpg",
     "ep0_canteen_leo_biscuit.jpg": f"{RAW_GH}/story/ep0/ep0_canteen_leo_biscuit.jpg",
     "ep0_canteen_marcus_stew.jpg": f"{RAW_GH}/story/ep0/ep0_canteen_marcus_stew.jpg",
     "ep0_canteen_elena_scalpel.jpg": f"{RAW_GH}/story/ep0/ep0_canteen_elena_scalpel.jpg",
     "ep0_corner_arthur_holm.jpg": f"{RAW_GH}/story/ep0/ep0_corner_arthur_holm.jpg",
+    "ep0_corner_arthur_canteen.jpg": f"{RAW_GH}/story/ep0/ep0_corner_arthur_canteen.jpg",
     "ep0_corner_ana.jpg": f"{RAW_GH}/story/ep0/ep0_corner_ana.jpg",
     "ep0_corner_ingrid.jpg": f"{RAW_GH}/story/ep0/ep0_corner_ingrid.jpg",
     "ep0_corner_linmei_hannah.jpg": f"{RAW_GH}/story/ep0/ep0_corner_linmei_hannah.jpg",
@@ -93,9 +97,11 @@ IMAGES = {
     "ep0_briefing_topology.jpg": f"{RAW_GH}/story/ep0/ep0_briefing_topology.jpg",
     "prologue_01_handover.jpg": f"{RAW_GH}/story/prologue_01_handover.jpg",
     "ep0_lonely_watch.jpg": f"{RAW_GH}/story/ep0_lonely_watch.jpg",
+    "ep0_op08_handover_booth.jpg": f"{RAW_GH}/story/ep0/ep0_op08_handover_booth.jpg",
     "ep0_inner_door_knock.jpg": f"{RAW_GH}/story/ep0/ep0_inner_door_knock.jpg",
     "ep0_empty_booth.jpg": f"{RAW_GH}/story/ep0_empty_booth.jpg",
     "ep0_override_cut_seal.jpg": f"{RAW_GH}/story/ep0/ep0_override_cut_seal.jpg",
+    "ep0_op08_tape_booth.jpg": f"{RAW_GH}/story/ep0/ep0_op08_tape_booth.jpg",
     "operator09.jpg": f"{RAW_GH}/operator09.jpg",
     "prologue_03.jpg": f"{RAW_GH}/story/prologue_03.jpg",
 }
@@ -124,6 +130,9 @@ def make_shot(
     text_ja: str,
     spoken_mandarin: str | None = None,
     dialogue_window: tuple[str, str] = ("00:00.45", "00:07.10"),
+    chain_prev: str | None = None,
+    last_frame_img: str | None = None,
+    reuse_v1: bool = False,
 ) -> dict:
     dur_s = length / 24.0
     tail_t = f"00:{dur_s:05.2f}"
@@ -138,8 +147,13 @@ def make_shot(
     else:
         speech_block = "No spoken dialogue; pure environmental tension and physical action across the full shot."
 
+    chain_hint = (
+        "Seamless direct visual continuation from the exact opening frame actor pose, wardrobe, camera framing, and lighting; zero jump cut. "
+        if chain_prev
+        else ""
+    )
     prompt = (
-        f"{STYLE} {visual_motion} {speech_block} "
+        f"{STYLE} {chain_hint}{visual_motion} {speech_block} "
         f"Overall soundscape: {sound_desc} Non-diegetic music: None."
     )
     return {
@@ -147,6 +161,9 @@ def make_shot(
         "reel": reel,
         "img": f"h3_1344_{img}",
         "raw_img": img,
+        "chain_prev": chain_prev,
+        "last_frame_img": f"h3_1344_{last_frame_img}" if last_frame_img else None,
+        "reuse_v1": reuse_v1,
         "length": length,
         "closeup_lora": closeup_lora,
         "seed": seed,
@@ -166,6 +183,7 @@ SHOTS: list[dict] = [
         "2036.10.14 · 斯瓦尔巴零号站（78°13'N）· 室外 -46°C · 距离极夜还有 12 天（最后一班补给船鸣笛远去）",
         "OCT 14, 2036 · SVALBARD OUTPOST 0 (78°13'N) · -46°C · 12 DAYS TO POLAR NIGHT",
         "2036.10.14 · スヴァールバル第0基地（北緯78°13'）· 屋外 -46°C · 極夜まで12日",
+        reuse_v1=True,
     ),
     make_shot(
         "a1_02", "ep0_sc00a1_arrival", "ep0_helipad_marcus_grab.jpg", 192, 0.30, 30102,
@@ -177,10 +195,11 @@ SHOTS: list[dict] = [
         "トロムソの事務屋は氷坂で左膝のカーボン装具を締めろと教えなかったのか？中へ入れ——",
         spoken_mandarin="特罗姆瑟那帮文职没教过你下冰坡先锁紧左膝碳纤护带？往里滚！",
         dialogue_window=("00:00.45", "00:06.80"),
+        reuse_v1=True,
     ),
     make_shot(
-        "a1_03", "ep0_sc00a1_arrival", "ep0_helipad_marcus_grab.jpg", 141, 0.30, 30103,
-        "Continuing on the freezing helipad: the gruff fur-hooded captain shoves the recruit toward the glowing amber hydraulic airlock door, knocking frost off his shoulder as wind whips snow past.",
+        "a1_03", "ep0_sc00a1_arrival", "ep0_helipad_marcus_grab.jpg", 141, 0.30, 31103,
+        "Continuing directly from the previous gesture on the freezing helipad: the gruff fur-hooded captain shoves the recruit firmly toward the glowing amber hydraulic airlock doorway, knocking frost off his shoulder as wind whips snow past.",
         "Heavy insulated boot thuds on steel deck, hydraulic airlock hum, sharp commanding male voice.",
         "V-04 // 安保队长 马库斯", "CAPTAIN MARCUS CHEN", "警備隊長 マーカス",
         "暖风外闸两分钟后泄压！",
@@ -188,11 +207,12 @@ SHOTS: list[dict] = [
         "暖房外門はあと2分で減圧するぞ！",
         spoken_mandarin="暖风外闸两分钟后泄压！",
         dialogue_window=("00:00.45", "00:04.20"),
+        chain_prev="a1_02",
     ),
     make_shot(
-        "a1_04", "ep0_sc00a1_arrival", "ep0_heli_arrival.jpg", 192, 0.15, 30104,
-        "Reverse wide angle from the steel airlock threshold looking past the frost-covered recruit silhouetted against the distant vanishing black icebreaker ship in freezing mist as he pulls up his frosted parka collar.",
-        "Cold freezing intake breath, howling polar wind whistling past open airlock seal, earnest young male voice shouting back.",
+        "a1_04", "ep0_sc00a1_arrival", "ep0_helipad_ship_reverse.jpg", 192, 0.15, 31104,
+        "Over-the-shoulder reverse shot from right beside the open steel airlock threshold: looking past the frost-dusted black parka recruit (#09) silhouette—while the olive Mi-26 helicopter remains landed solidly on the helipad behind him with rotors slowing—he pulls up his collar staring out at the vanishing black supply ship steaming into freezing fjord mist and calls back earnestly.",
+        "Cold freezing intake breath, howling polar wind whistling past open airlock seal, dying turbine whine, earnest young male voice shouting back.",
         "新任值班员 // 主角 #09", "INCOMING OPERATOR #09", "新任当直官 // #09",
         "刚才那班船……四个月内不会再回来了吧？",
         "That supply ship... won't be back for four months, will it?",
@@ -201,8 +221,8 @@ SHOTS: list[dict] = [
         dialogue_window=("00:00.50", "00:05.80"),
     ),
     make_shot(
-        "a1_05", "ep0_sc00a1_arrival", "ep0_helipad_marcus_grab.jpg", 243, 0.30, 30105,
-        "Medium shot by the heavy opened airlock wheel: the captain slaps crushed snow off his own parka shoulder, grabs the steel inner wheel, scoffs at the recruit, and jerks his thumb inside toward the warm station corridor.",
+        "a1_05", "ep0_sc00a1_arrival", "ep0_helipad_marcus_grab.jpg", 243, 0.30, 31105,
+        "Continuing directly inside the open amber airlock threshold from a1_03: the fur-hooded captain shakes crushed snow off his glove, grabs the heavy steel hatch wheel, scoffs bluntly at the recruit, and jerks his thumb inside toward the warm station corridor.",
         "Clank of heavy steel wheel turning, crisp wind fading behind airlock threshold, gruff gravelly male voice.",
         "V-04 // 安保队长 马库斯", "CAPTAIN MARCUS CHEN", "警備隊長 マーカス",
         "想回家就现在顺着尾桨爬回去。赶紧去食堂找莱奥领块热饼干把身子暖过来——",
@@ -210,10 +230,11 @@ SHOTS: list[dict] = [
         "帰りたければ今すぐ尾翼にしがみつけ。食堂へ行ってレオから温かいビスケットを貰って温まれ——",
         spoken_mandarin="想回家就现在顺着尾桨爬回去！赶紧去食堂找莱奥领块热饼干把身子暖过来！",
         dialogue_window=("00:00.45", "00:08.50"),
+        chain_prev="a1_03",
     ),
     make_shot(
-        "a1_06", "ep0_sc00a1_arrival", "ep0_helipad_marcus_grab.jpg", 243, 0.30, 30106,
-        "Close medium shot inside the amber-lit steel airlock entry as the heavy blast hatch starts swinging shut behind them: the captain gives one final blunt warning before turning down the hall.",
+        "a1_06", "ep0_sc00a1_arrival", "ep0_helipad_marcus_grab.jpg", 243, 0.30, 31106,
+        "Direct seamless continuation inside the amber-lit airlock chamber as the heavy blast hatch swings shut behind them: the captain gives one final blunt warning before turning down the steel station corridor.",
         "Heavy pneumatic airlock hatch sealing shut cutting off the -46C wind, deep gruff male warning.",
         "V-04 // 安保队长 马库斯", "CAPTAIN MARCUS CHEN", "警備隊長 マーカス",
         "记住，站里暖气全靠主泵硬顶着，今天顶缺口就剩你一个，外头零下四十六度可不等人！",
@@ -221,13 +242,14 @@ SHOTS: list[dict] = [
         "基地の暖房は主ポンプ一本頼みだ。今日の穴埋めはお前一人。零下46度は待ってくれんぞ！",
         spoken_mandarin="记住，站里暖气全靠主泵硬顶着！今天顶缺口就剩你一个，外头零下四十六度可不等人！",
         dialogue_window=("00:00.45", "00:08.60"),
+        chain_prev="a1_05",
     ),
 
     # ================= 2. ep0_sc00a2_canteen_crew =================
     make_shot(
-        "a2c_01", "ep0_sc00a2_canteen_crew", "ep0_crew_dinner.jpg", 192, 0.05, 30201,
-        "Warm atmospheric establishing slow dolly through the crowded stainless-steel mess hall lit by warm sodium lamps. Condensation lines the frosted steel portholes while nine crewmates sit shoulder-to-shoulder ladling steaming hot soup over stainless trays.",
-        "Heavy airtight door thud closing off polar storm, warm indoor canteen hum, faint spoons against stainless bowls, rising soup steam.",
+        "a2c_01", "ep0_sc00a2_canteen_crew", "ep0_canteen_wide_v2.jpg", 192, 0.05, 31201,
+        "Warm atmospheric establishing slow dolly down the riveted brushed-steel mess hall lit by warm amber cage sodium sconces. Condensation coats the frosted circular portholes while nine bundled Arctic crewmates sit along steel benches ladling steaming golden soup into battered aluminum bowls.",
+        "Heavy airtight door thud closing off polar storm, warm indoor canteen hum, faint spoons against aluminum bowls, rising soup steam.",
         "2036.10.14 // 公共食堂 · 封站前最后一顿热汤", "MESS HALL // BEFORE LOCKDOWN", "公共食堂 // 最後の温かな食事",
         "厚重气密外门隔断了室外 -46°C 狂风。昏黄防爆钠灯下，全站老少挤在暖气食堂里喝着封站前最后一次热汤……",
         "Thick airtight doors seal out the -46C gale. Beneath amber sodium lights, the whole station huddles for one last shared hot soup...",
@@ -243,10 +265,11 @@ SHOTS: list[dict] = [
         "新入り、レオのお人好し面に騙されるな！先月2番油圧弁を潰してこっそり代打を頼んだのは誰だ？",
         spoken_mandarin="新来的，别信莱奥这副热心肠！上个月二号液压阀手轮滑丝，是谁偷偷找别人替工？",
         dialogue_window=("00:00.50", "00:08.50"),
+        reuse_v1=True,
     ),
     make_shot(
-        "a2c_03", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_thor.jpg", 192, 0.35, 30203,
-        "At the crowded steel table, the young 22-year-old mechanic immediately sits up straight in playful indignation, waving his small wrench as teammates chuckle nearby, protesting loudly to the whole table.",
+        "a2c_03", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_thor.jpg", 192, 0.35, 31203,
+        "Seamless continuation from the previous canteen reaction: the young 22-year-old mechanic raises his head in playful indignation with a small hex wrench in hand, waving toward the bearded welder as crewmates chuckle nearby.",
         "Light metallic clatter, cheerful bustling mess hall chatter, energetic young male Mandarin protest.",
         "V-02 // 实习机械师 莱奥", "V-02 // LEO SATO", "V-02 // レオ・サトウ",
         "周师兄您可别泼脏水，那是密封圈自己不耐寒——",
@@ -254,10 +277,11 @@ SHOTS: list[dict] = [
         "周さん、濡れ衣ですよ！パッキンが寒さで勝手に割れたんです——",
         spoken_mandarin="周师兄您可别泼脏水！那是密封圈自己不耐寒！",
         dialogue_window=("00:00.40", "00:06.20"),
+        chain_prev="a2c_02",
     ),
     make_shot(
-        "a2c_04", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_thor.jpg", 192, 0.35, 30204,
-        "Still seated proudly at the canteen table, the young East Asian mechanic pounds his fist lightly onto his chest and raises his chin so the whole mess hall hears his solemn boastful promise.",
+        "a2c_04", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_thor.jpg", 192, 0.35, 31204,
+        "Seamless continuation of the young East Asian mechanic at the table: he taps his fist lightly onto his chest and raises his chin proudly so the table hears his solemn boast.",
         "Hollow thump on quilted thermal vest against canteen table hum, earnest young male boasting clearly.",
         "V-02 // 实习机械师 莱奥", "V-02 // LEO SATO", "V-02 // レオ・サトウ",
         "再说我莱奥一条底线：搞砸了零件我第一个站出来认，绝不叫同班兄弟替我背锅！",
@@ -265,10 +289,11 @@ SHOTS: list[dict] = [
         "それに俺の流儀は一つ、ミスしたら真っ先に名乗り出る。仲間に泥は被せません！",
         spoken_mandarin="再说我莱奥一条底线：搞砸了零件我第一个站出来认，绝不叫同班兄弟替我背锅！",
         dialogue_window=("00:00.45", "00:06.80"),
+        chain_prev="a2c_03",
     ),
     make_shot(
-        "a2c_05", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_thor.jpg", 243, 0.25, 30205,
-        "Across the warm sodium-lit bench, the sturdy orange-coverall Scandinavian driller stands slightly to pour amber liquor into the quiet weathered watchstander's tin cup, grinning warmly as he raises his mug.",
+        "a2c_05", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_thor.jpg", 243, 0.25, 31205,
+        "Continuing smoothly from the lively canteen group table, panning right toward the orange-coverall Scandinavian driller as he pours amber liquor into the quiet weathered watchstander's tin mug and grins warmly.",
         "Liquid pouring cleanly into tin mug, warm laughter, hearty older male voice.",
         "资深钻井工 // 托尔·伯格", "DRILLER // THOR BERG", "掘削員 // トール・ベルグ",
         "我下个月回奥斯陆看我小女儿索菲亚买琴——对了零八，上回打赌那两盒红双喜别忘了欠账！",
@@ -276,9 +301,10 @@ SHOTS: list[dict] = [
         "来月オスロへ帰って娘のソフィアにピアノを買うんだ——おい#08、賭けの紅双喜2箱、忘れるなよ！",
         spoken_mandarin="我下个月回奥斯陆看我小女儿索菲亚买琴！对了零八，上回打赌那两盒红双喜别忘了欠账！",
         dialogue_window=("00:00.50", "00:08.60"),
+        chain_prev="a2c_04",
     ),
     make_shot(
-        "a2c_06", "ep0_sc00a2_canteen_biscuit", "ep0_canteen_leo_biscuit.jpg", 243, 0.45, 30206,
+        "a2c_06", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_biscuit.jpg", 243, 0.45, 30206,
         "Intimate tight close-up across the scratched stainless steel table: the young mechanic's bright grin abruptly drops into tense earnest anxiety as crewmates blur behind him. His oil-smudged fingers discreetly slide half a ration biscuit across the metal while speaking in a hushed low whisper.",
         "Soft scraping of ration biscuit across steel, background canteen chatter subdued, low anxious hushed male whisper.",
         "V-02 // 莱奥（压低嗓音）", "LEO SATO (WHISPERING)", "レオ（小声で）",
@@ -287,10 +313,11 @@ SHOTS: list[dict] = [
         "……先輩、本採用まであと1ヶ月なんです。もし夜勤で俺がヘマをしても、",
         spoken_mandarin="哥，我离三个月转正评估就差一个月……真哪晚干活笨手笨脚捅了小漏子……",
         dialogue_window=("00:00.55", "00:08.40"),
+        reuse_v1=True,
     ),
     make_shot(
-        "a2c_07", "ep0_sc00a2_canteen_biscuit", "ep0_canteen_leo_biscuit.jpg", 192, 0.45, 30207,
-        "Same intimate close-up across the scratched metal table: keeping his head slightly lowered and glancing toward the kitchen, the young mechanic whispers his secret pact softly before withdrawing his hand.",
+        "a2c_07", "ep0_sc00a2_canteen_crew", "ep0_canteen_leo_biscuit.jpg", 192, 0.45, 31207,
+        "Direct seamless continuation of the hushed close-up across the table: keeping his voice low and glancing nervously back toward the kitchen counter, the young mechanic finishes whispering his secret plea and gently withdraws his fingers from the ration biscuit.",
         "Hushed urgent young male whisper, faint distant kettle hum.",
         "V-02 // 莱奥（压低嗓音）", "LEO SATO (WHISPERING)", "レオ（小声で）",
         "您可别当着工头大喇叭点我名儿，二号舱灶台夜里总温着姜茶。",
@@ -298,6 +325,7 @@ SHOTS: list[dict] = [
         "班長の前で名指しだけは勘弁を。第2区画のストーブには毎晩生姜湯を温めてますから。",
         spoken_mandarin="您可别当着工头大喇叭点我名儿……二号舱灶台夜里总温着姜茶。",
         dialogue_window=("00:00.40", "00:06.60"),
+        chain_prev="a2c_06",
     ),
 
     # ================= 3. ep0_sc00a2_canteen_clash =================
@@ -311,10 +339,11 @@ SHOTS: list[dict] = [
         "目がついてるのか？！水配給3日分カットだ——第3トイレへ行って1ヶ月スチールウールで磨いてこい！",
         spoken_mandarin="长没长眼？！连续熬夜端热锅扣三天淡水配额！滚去三号厕所拿钢丝球刷一个月！",
         dialogue_window=("00:00.45", "00:08.70"),
+        reuse_v1=True,
     ),
     make_shot(
-        "a2m_02", "ep0_sc00a2_canteen_clash", "ep0_canteen_marcus_stew.jpg", 243, 0.30, 30302,
-        "Continuing at the canteen table: looking away awkwardly with a gruff scowl as the apprentice tears up, the security captain roughly shoves his own brimming steaming stainless bowl of hot venison stew firmly into the boy's arms and mutters under his breath.",
+        "a2m_02", "ep0_sc00a2_canteen_clash", "ep0_canteen_marcus_stew.jpg", 243, 0.30, 31302,
+        "Direct seamless continuation at the table: looking awkwardly away with a gruff scowl as the teary apprentice clutches the ladle, the captain firmly presses his own steaming stainless stew bowl into the boy's hands and mutters under his breath.",
         "Heavy scrape of hot steel bowl across mess table, faint sizzling soup aroma, rough muttered low male grumble.",
         "V-04 // 马库斯（别开眼神低骂）", "MARCUS CHEN (MUTTERING)", "マーカス（小声で）",
         "端走吃了再刷！冻发烧了占床位，艾琳娜大夫明天真能让你抽签等死！",
@@ -322,6 +351,7 @@ SHOTS: list[dict] = [
         "これ持って食ってから磨け！凍えて熱出してベッドを塞いだら、エレナ医師は明日にでも籤引きで切り捨てるぞ！",
         spoken_mandarin="端走吃了再刷！冻发烧了占床位，艾琳娜大夫明天真能让你抽签等死！",
         dialogue_window=("00:00.50", "00:08.50"),
+        chain_prev="a2m_01",
     ),
     make_shot(
         "a2m_03", "ep0_sc00a2_canteen_clash", "ep0_canteen_elena_scalpel.jpg", 141, 0.45, 30303,
@@ -333,10 +363,11 @@ SHOTS: list[dict] = [
         "チェン隊長は口が悪いだけ。",
         spoken_mandarin="老陈嘴臭心软。",
         dialogue_window=("00:00.80", "00:04.20"),
+        reuse_v1=True,
     ),
     make_shot(
-        "a2m_04", "ep0_sc00a2_canteen_clash", "ep0_canteen_elena_scalpel.jpg", 192, 0.45, 30304,
-        "Tight medium close-up of the female surgeon holding her clean rimless glasses: she looks sharply across the canteen without raising her voice, speaking in crisp unshakeable clinical Mandarin.",
+        "a2m_04", "ep0_sc00a2_canteen_clash", "ep0_canteen_elena_scalpel.jpg", 192, 0.45, 31304,
+        "Seamless continuation of the female surgeon holding her clean rimless glasses: looking steadily across the table, she speaks calmly in crisp clinical Mandarin without raising her voice.",
         "Clean quiet acoustic room presence, crisp composed female surgeon voice.",
         "V-01 // 首席外科 艾琳娜", "V-01 // DR. ELENA VANCE", "V-01 // エレナ・ヴァンス医師",
         "但在 B 区手术台上，唯有抽签与绝对公平才配叫文明，",
@@ -344,10 +375,11 @@ SHOTS: list[dict] = [
         "でもB区の手術台では、抽選と絶対的公平だけが文明よ——",
         spoken_mandarin="但在B区手术台上，唯有抽签与绝对公平才配叫文明。",
         dialogue_window=("00:00.40", "00:06.60"),
+        chain_prev="a2m_03",
     ),
     make_shot(
-        "a2m_05", "ep0_sc00a2_canteen_clash", "ep0_canteen_elena_scalpel.jpg", 192, 0.45, 30305,
-        "Continuing tight close-up of the stern female surgeon: she folds the sterile gauze pad neatly beside the steel tray and delivers her chillingly unsentimental conclusion with cold steady eyes.",
+        "a2m_05", "ep0_sc00a2_canteen_clash", "ep0_canteen_elena_scalpel.jpg", 192, 0.45, 31305,
+        "Seamless continuation of the stern female surgeon: folding the sterile gauze pad down beside her steel tray, she delivers her chilling conclusion with cold steady eyes.",
         "Crisp cloth fold sound, icy clinical female voice.",
         "V-01 // 首席外科 艾琳娜", "V-01 // DR. ELENA VANCE", "V-01 // エレナ・ヴァンス医師",
         "人情填不饱三十张病床的止痛针。",
@@ -355,13 +387,14 @@ SHOTS: list[dict] = [
         "情けは30床分の鎮痛剤を増やしてはくれないのよ。",
         spoken_mandarin="人情，填不饱三十张病床的止痛针。",
         dialogue_window=("00:00.45", "00:06.40"),
+        chain_prev="a2m_04",
     ),
 
     # ================= 4. ep0_sc00a2_canteen_corners =================
     make_shot(
-        "a2k_01", "ep0_sc00a2_canteen_corners", "ep0_corner_arthur_holm.jpg", 243, 0.35, 30401,
-        "Shadowed filing alcove off the canteen: the suited British auditor adjusts his grip over the blue-ruled engineering change sheet held by the Scandinavian deputy commander, signs briskly, folds the blue carbon duplicate neatly into his inner breast pocket, and speaks dryly.",
-        "Crisp ballpoint pen scratching signature, paper fold into coat pocket, dry clipped male voice.",
+        "a2k_01", "ep0_sc00a2_canteen_corners", "ep0_corner_arthur_canteen.jpg", 243, 0.35, 31401,
+        "Shadowed stainless corner booth inside the same warm amber riveted mess hall: the bespectacled British auditor signs the pale blue 3,800m engineering change slip opposite the Scandinavian deputy, folds the blue carbon duplicate briskly into his inner coat pocket, and speaks dryly.",
+        "Crisp ballpoint pen scratching signature, paper fold into coat pocket, muted canteen murmur, dry clipped male voice.",
         "V-03 // 行政审计 亚瑟（会签 3,800m 变更单）", "V-03 // ARTHUR STERLING", "V-03 // アーサー・スターリング",
         "形式要件审完了——出事按签字人追溯。",
         "Formal requirements verified. If anything goes wrong, liability traces strictly to the signatory.",
@@ -379,6 +412,7 @@ SHOTS: list[dict] = [
         "署名は10万ユーロの罰金領収書にあるだろ。",
         spoken_mandarin="字，签在上面了。",
         dialogue_window=("00:01.00", "00:05.20"),
+        reuse_v1=True,
     ),
     make_shot(
         "a2k_03", "ep0_sc00a2_canteen_corners", "ep0_corner_ingrid.jpg", 192, 0.40, 30403,
@@ -390,6 +424,7 @@ SHOTS: list[dict] = [
         "極夜前の軽い不安よ。少し耐えれば落ち着くわ。（密かに帰還勧告を消し適性優に丸）",
         spoken_mandarin="只是极夜前嗜睡焦虑，撑撑就过去了。",
         dialogue_window=("00:00.45", "00:06.20"),
+        reuse_v1=True,
     ),
     make_shot(
         "a2k_04", "ep0_sc00a2_canteen_corners", "ep0_corner_linmei_hannah.jpg", 192, 0.30, 30404,
@@ -401,10 +436,11 @@ SHOTS: list[dict] = [
         "休みなさい。第4冷凍庫には触れないで。",
         spoken_mandarin="去休息吧，四号冷库别碰。",
         dialogue_window=("00:00.80", "00:05.80"),
+        reuse_v1=True,
     ),
     make_shot(
-        "a2k_05", "ep0_sc00a2_canteen_corners", "ep0_corner_linmei_hannah.jpg", 243, 0.35, 30405,
-        "Right table beside the icy -46C twilight window: the strict bespectacled German life-support technician ignores an offered steaming mug of cocoa, pushes the ceramic mug five centimeters away without glancing up from her filter canister logbook, and replies sharply.",
+        "a2k_05", "ep0_sc00a2_canteen_corners", "ep0_corner_linmei_hannah.jpg", 243, 0.35, 31405,
+        "Seamless rightward pan to the icy window table beside the same porthole: the strict bespectacled German life-support technician pushes away an offered ceramic cocoa mug five centimeters without glancing up from her logbook and replies sharply.",
         "Ceramic cocoa mug sliding across brushed steel table, pen click, sharp crisp female voice.",
         "V-08 // 维生技师 汉娜（拒绝克莱尔补贴）", "V-08 // HANNAH WEISS", "V-08 // ハンナ・ヴァイス",
         "克莱尔：老滤芯读数放宽十格，补贴咱俩分？ 汉娜：不用。原始串口已锁定。",
@@ -412,6 +448,7 @@ SHOTS: list[dict] = [
         "クレア「古い数値少し緩めない？」ハンナ「結構。シリアル生データは固定済みよ。」",
         spoken_mandarin="不用。原始串口已锁定。",
         dialogue_window=("00:04.20", "00:08.50"),
+        chain_prev="a2k_04",
     ),
 
     # ================= 5. prequel_icecore_breach =================
@@ -423,19 +460,21 @@ SHOTS: list[dict] = [
         "第 14 天 02:14 · 钻头穿透 280 米永冻层跌入 3,800 米超热液空腔，压力表自 340 bar 瞬间顶爆 490 bar！",
         "DAY 14 · 02:14 · Bit pierces 280m permafrost into a 3,800m thermal brine cavity—pressure spikes from 340 to 490 bar!",
         "14日目 02:14 · 3,800mの熱水空洞に突入。井圧が340→490barへ急騰！",
+        reuse_v1=True,
     ),
     make_shot(
-        "a3b_02", "prequel_icecore_breach", "prequel_icecore_breach.jpg", 192, 0.0, 30502,
-        "Violent industrial blowout inside the drilling shaft hall: dual yellow-black hydraulic BOP valves jam motionless as blistering high-pressure scalding steam bursts sideways across steel decking, shattering overhead tube lamps into pulsing blood-red emergency strobe illumination.",
+        "a3b_02", "prequel_icecore_breach", "prequel_icecore_breach.jpg", 192, 0.0, 31502,
+        "Direct continuous escalation of the industrial blowout: scalding white high-pressure steam erupts denser across steel decking under pulsing blood-red emergency strobe lights as dual hydraulic BOP manifolds shudder violently.",
         "Explosive superheated steam blowout roar, hydraulic valve lockup shriek, shattering glass overhead, pulsing crimson klaxon siren.",
         "第 14 天 02:16 // BOP 防喷器卡死 · 蒸汽倒灌", "DAY 14 · 02:16 // BOP VALVES JAMMED", "14日目 02:16 // 防噴装置ロック",
         "两套防喷器（BOP）液压阀死卡！超高温高压蒸汽倒灌全廊，灯管轰碎切入血红应急灯——",
         "Dual BOP hydraulic valves jam shut! Superheated steam surges backwards, shattering overhead lamps into red emergency glare!",
         "防噴装置の油圧弁が固着！高圧蒸気が逆流し照明が砕け、全廊下が赤い非常灯へ切り替わる！",
+        chain_prev="a3b_01",
     ),
     make_shot(
-        "a3b_03", "prequel_icecore_breach", "prequel_icecore_breach.jpg", 192, 0.0, 30503,
-        "Chaos through swirling white scalding steam and flashing red alarms on the rig catwalk: sparks crackle from the overhead PA loudspeaker horn over the stairwell as a distorted panicked voice screams urgent evacuation orders.",
+        "a3b_03", "prequel_icecore_breach", "prequel_icecore_breach.jpg", 192, 0.0, 31503,
+        "Seamless continuation inside the steam-choked crimson-lit rig cavern: sparks shower down from the overhead PA loudspeaker horn above the steel gangway while a frantic distorted voice screams evacuation orders.",
         "Roaring steam leaks, distorted crackling PA horn alarm, frantic shouted male Mandarin voice over industrial klaxon.",
         "钻井公频 // 紧急失真通讯", "DRILL RIG PA // EMERGENCY", "掘削室無線 // 緊急通信",
         "平衡舱锁扣爆了！托尔和老孙冲进回风道了——封外闸！",
@@ -443,21 +482,23 @@ SHOTS: list[dict] = [
         "均衡室のロックが吹き飛んだ！トールと老孫が還気坑に飛び込んだ——外門を閉じろ！",
         spoken_mandarin="平衡舱锁扣爆了！托尔和老孙冲进回风道了！封外闸！",
         dialogue_window=("00:00.40", "00:06.80"),
+        chain_prev="a3b_02",
     ),
     make_shot(
-        "a3b_04", "prequel_icecore_breach", "prequel_icecore_breach.jpg", 192, 0.0, 30504,
-        "Heavy ribbed blast bulkhead shutter descending in thick steam and pulsing crimson strobe light, slamming shut with a shower of welding sparks as alarms echo inside an empty steel corridor. Pure mechanical disaster.",
+        "a3b_04", "prequel_icecore_breach", "prequel_icecore_breach.jpg", 192, 0.0, 31504,
+        "Direct continuation as thick ribbed steel bulkhead doors drop rapidly down into the steam-filled corridor under pulsing crimson strobes, slamming shut in a shower of sparks.",
         "Heavy hydraulic blast door slamming shut on steel floor, subsiding steam hiss, distant echoing emergency klaxon.",
         "第 14 天 02:19 // 全站一级物理封锁", "DAY 14 · 02:19 // LEVEL-1 LOCKDOWN", "14日目 02:19 // 第1種物理封鎖",
         "平衡闸门轰然落下，托尔·伯格与老孙生死未卜……站长下令物理切断中枢与八座外环孤舱间的恒温外廊。",
         "Blast doors slam down; Thor Berg and Lao Sun vanish. The Commander orders outer connecting corridors physically severed.",
         "隔離扉が落下しトールと老孫は行方不明に。所長は中枢と外環8区画の連絡路遮断を下令した。",
+        chain_prev="a3b_03",
     ),
 
     # ================= 6. prologue_01_main =================
     make_shot(
-        "a3m_01", "prologue_01_main", "ep0_briefing_topology.jpg", 243, 0.25, 30601,
-        "Cold steel subterranean command briefing room: the stern graying station commander stands across the glowing 3D holographic outpost map pointing firmly at the central core hub cluster while recruited trainees watch silently in foreground silhouette.",
+        "a3m_01", "prologue_01_main", "ep0_briefing_topology.jpg", 243, 0.15, 31601,
+        "Locked steady medium-wide camera across the glowing 3D holographic outpost map in the cold steel command room (NO extreme facial close-up; keep full table and standing commander framed cleanly): stern graying commander Lindqvist points down at the central hub cluster while trainees listen silently.",
         "Sterile ventilation hum, crisp glowing holographic scan pulse, cold authoritative older male voice.",
         "站长 林德奎斯特 // 立体拓扑简报", "COMMANDER LINDQVIST", "リンドクヴィスト所長",
         "听清楚全站拓扑：食堂、母本库、宿舍与码头竖井合称中枢主站；",
@@ -467,8 +508,8 @@ SHOTS: list[dict] = [
         dialogue_window=("00:00.55", "00:08.50"),
     ),
     make_shot(
-        "a3m_02", "prologue_01_main", "ep0_briefing_topology.jpg", 243, 0.25, 30602,
-        "Over the glowing blueprint hologram table, the stern commander gestures around the outer ring of eight isolated cyan perimeter pods whose dark connecting radial corridors flicker out one by one.",
+        "a3m_02", "prologue_01_main", "ep0_briefing_topology.jpg", 243, 0.20, 31602,
+        "Seamless continuation across the glowing holographic outpost map: staying in medium framing above the table, the stern commander sweeps one gloved finger around the eight isolated cyan outer pods as their radial corridor lines blink red and go dark.",
         "Low ominous hologram pulse tone, cool echoing concrete room acoustics, commanding older male voice.",
         "站长 林德奎斯特 // 外环断流指令", "COMMANDER LINDQVIST", "リンドクヴィスト所長",
         "外围 B 区医疗、二号动力、行政、安保风道、潜水舱、通讯舱、四号冷库与外风井八座孤舱外廊昨晚已物理断流，五夜内供暖将逐一枯竭。",
@@ -476,10 +517,11 @@ SHOTS: list[dict] = [
         "外環8孤立区画への連絡通路は昨夜物理遮断され、5夜以内に暖房が順次停止する。",
         spoken_mandarin="外围B区医疗、二号动力、行政、安保、潜水、通讯、冷库与外风井八座孤舱昨晚已断流，五夜内供暖枯竭。",
         dialogue_window=("00:00.40", "00:09.20"),
+        chain_prev="a3m_01",
     ),
     make_shot(
-        "a3m_03", "prologue_01_main", "ep0_briefing_topology.jpg", 243, 0.25, 30603,
-        "Zooming subtly toward the commander beside the lone amber-glowing Gate 0 chokepoint on the hologram map: he locks his cold eyes directly onto the foreground watchstander and speaks slowly with absolute authority.",
+        "a3m_03", "prologue_01_main", "ep0_briefing_topology.jpg", 243, 0.25, 31603,
+        "Smooth slow push-in toward the commander beside the lone amber-glowing Gate 0 chokepoint on the map: he raises his gaze steadily onto the foreground watchstander and speaks with icy authority.",
         "Cold quiet briefing room hum, severe older male authoritative voice.",
         "站长 林德奎斯特 // 零号闸铁律", "COMMANDER LINDQVIST", "リンドクヴィスト所長",
         "你守的零号闸是外环进入中枢的唯一气密口——核验未过严禁开内闸，违者按叛逃论处。",
@@ -487,6 +529,7 @@ SHOTS: list[dict] = [
         "第0関門は外環から中枢への唯一の空気閘だ——確認なしで内扉を開ければ反逆罪とみなす。",
         spoken_mandarin="你守的零号闸是外环进入中枢的唯一气密口。核验未过严禁开内闸，违者按叛逃论处。",
         dialogue_window=("00:00.45", "00:08.90"),
+        chain_prev="a3m_02",
     ),
     make_shot(
         "a3m_04", "prologue_01_main", "prologue_01_handover.jpg", 192, 0.30, 30604,
@@ -498,10 +541,11 @@ SHOTS: list[dict] = [
         "トールたち2名は零下46度の坑区で行方不明のままだ。着任前に過去記録の最終確認をする：",
         spoken_mandarin="托尔两人仍失踪在零下四十六度井区。接掌零号位前，复核最后一栏旧账：",
         dialogue_window=("00:00.45", "00:06.80"),
+        reuse_v1=True,
     ),
     make_shot(
-        "a3m_05", "prologue_01_main", "prologue_01_handover.jpg", 192, 0.35, 30605,
-        "Tight medium close-up across the briefing desk: with the red REC indicator steady, the commander taps one line on the Tromsø incident report and presses the newcomer with a quiet probing stare.",
+        "a3m_05", "prologue_01_main", "prologue_01_handover.jpg", 192, 0.35, 31605,
+        "Seamless continuation across the briefing desk with the glowing red REC switch engaged: tapping one stamped line in the open Tromsø dossier, the commander delivers the sharp interrogation prompt quietly.",
         "Quiet analog tape transport hiss, pen tapping dossier gently, calm cold older male interrogation.",
         "站长 林德奎斯特 // 抉择点 01", "COMMANDER LINDQVIST // DECISION 01", "リンドクヴィスト所長 // 決断 01",
         "过去你们小组漏报隐患连累同事受伤，复盘会上你当时怎么说的？",
@@ -509,12 +553,13 @@ SHOTS: list[dict] = [
         "以前お前の班が危険を見落とし同僚が負傷した時、監査の場で何と答えた？",
         spoken_mandarin="过去你们小组漏报隐患连累同事受伤，复盘会上，你当时怎么说的？",
         dialogue_window=("00:00.45", "00:06.80"),
+        chain_prev="a3m_04",
     ),
 
     # ================= 7. ep0_lonely_watch =================
     make_shot(
-        "b1_01", "ep0_lonely_watch", "ep0_lonely_watch.jpg", 243, 0.35, 30701,
-        "Deep night 02:40 inside cramped dim Gate 0 watchbooth: the exhausted older watchstander #08—skin pale, half his hair prematurely white, eyes bloodshot—grips the desk edge with visibly trembling fingers as he hands over the shift four hours early.",
+        "b1_01", "ep0_lonely_watch", "ep0_op08_handover_booth.jpg", 243, 0.35, 31701,
+        "Deep night 02:40 inside cramped Gate 0 steel watchbooth: pale, gaunt, prematurely gray-haired older watchstander #08 thrusts the metal logbook clipboard across to foreground #09 with trembling fingers, speaking hoarsely as emerald CRTs flicker beside them.",
         "60Hz CRT flyback hum, muffled -46C wind outside thick glass, hoarse trembling exhausted male whisper.",
         "前任值班员 #08 // 第 16 天 02:40", "OPERATOR #08 // 02:40 HANDOVER", "前任当直官 #08 // 02:40",
         "#09……剩下的下半夜交给你了，别多问，天亮前替我盯住这扇门。",
@@ -524,8 +569,8 @@ SHOTS: list[dict] = [
         dialogue_window=("00:00.55", "00:08.50"),
     ),
     make_shot(
-        "b1_02", "ep0_lonely_watch", "ep0_lonely_watch.jpg", 192, 0.35, 30702,
-        "Inside the lonely green-lit booth: the trembling older watchstander #08 leans slightly closer without daring to look at the frosted outer blast pane behind him, his voice dropping to an urgent tense warning.",
+        "b1_02", "ep0_lonely_watch", "ep0_op08_handover_booth.jpg", 192, 0.35, 31702,
+        "Seamless continuation inside the dim green-lit booth: refusing to turn around toward the frosted outer blast window behind him, pale gray-haired #08 leans closer and drops his voice to a harsh urgent warning.",
         "CRT hum and muffled polar wind gusts, urgent cracked older male warning.",
         "前任值班员 #08", "OPERATOR #08", "前任当直官 #08",
         "记住——别靠太近盯着那块防爆玻璃，也别单凭熟人嗓门拉开关。",
@@ -533,10 +578,11 @@ SHOTS: list[dict] = [
         "いいか——防爆ガラスに顔を近づけるな。馴染みの声だけでレバーを引くなよ。",
         spoken_mandarin="记住！别靠太近盯着那块防爆玻璃，也别单凭熟人嗓门拉开关！",
         dialogue_window=("00:00.40", "00:06.80"),
+        chain_prev="b1_01",
     ),
     make_shot(
-        "b1_03", "ep0_lonely_watch", "ep0_lonely_watch.jpg", 192, 0.25, 30703,
-        "Inside Gate 0 booth as the older man's ballpoint pen trembles visibly on the logbook: looking at the older operator's shaking hands from the desk side, the incoming recruit #09 speaks up nervously.",
+        "b1_03", "ep0_lonely_watch", "ep0_op08_handover_booth.jpg", 192, 0.25, 31703,
+        "Direct seamless continuation in the booth: #08's trembling left hand drops the blue plastic pen onto the console desk while the foreground young watchstander #09 asks anxiously.",
         "Plastic pen clattering lightly onto metal desk, quiet tense room tone, earnest young male voice.",
         "主角 #09", "OPERATOR #09", "主角 #09",
         "老前辈，你手抖得连签字笔都捏不住了——到底外头出什么事了？",
@@ -544,10 +590,11 @@ SHOTS: list[dict] = [
         "先輩、手が震えてペンも握れてないじゃないですか——外で何が起きたんです？",
         spoken_mandarin="老前辈，你手抖得连签字笔都捏不住了……到底外头出什么事了？",
         dialogue_window=("00:00.45", "00:06.60"),
+        chain_prev="b1_02",
     ),
     make_shot(
-        "b1_04", "ep0_lonely_watch", "ep0_lonely_watch.jpg", 141, 0.30, 30704,
-        "Turning without looking back, the pale older watchstander #08 pulls open the heavy central-corridor pneumatic exit door, mutters one quiet farewell over his shoulder, and pulls the door shut into darkness.",
+        "b1_04", "ep0_lonely_watch", "ep0_op08_handover_booth.jpg", 141, 0.30, 31704,
+        "Seamless continuation: avoiding eye contact, pale half-gray #08 rises stiffly, speaks flatly over his shoulder, and retreats quickly out the shadowed exit leaving #09 alone facing the frosted blast window.",
         "Flat defeated male voice, heavy central-corridor door pneumatic latch clicking shut.",
         "前任值班员 #08", "OPERATOR #08", "前任当直官 #08",
         "按表盯住就是。天亮你就什么都懂了。",
@@ -555,6 +602,7 @@ SHOTS: list[dict] = [
         "計器通りに監視していろ。夜が明けたら何もかも分かる。",
         spoken_mandarin="按表盯住就是。天亮你就什么都懂了。",
         dialogue_window=("00:00.40", "00:04.80"),
+        chain_prev="b1_03",
     ),
 
     # ================= 8. prologue_02_main =================
@@ -566,6 +614,7 @@ SHOTS: list[dict] = [
         "替发烧室友汉森连顶白班后你已连续清醒满 20 小时，头一歪抵着温热控制台合上了眼……",
         "After covering sick Hansen's entire day shift, twenty straight hours awake pull your head down onto the warm console...",
         "発熱したハンセンの代務から連続20時間。眠気に抗えず、温かい操作盤に額を落としたその瞬間——",
+        reuse_v1=True,
     ),
     make_shot(
         "b2_02", "prologue_02_main", "ep0_inner_door_knock.jpg", 141, 0.0, 30802,
@@ -575,10 +624,11 @@ SHOTS: list[dict] = [
         "管道报警灯骤然闪红！你身后的中枢内侧走廊门小窗猛然传来三记沉重叩响！",
         "Pipeline sirens flash red! Behind you, three heavy gloved knocks slam against the inner corridor wired glass!",
         "警報灯が赤く点滅！背後の内側廊下ドアの小窓が3度強く叩かれる！",
+        reuse_v1=True,
     ),
     make_shot(
-        "b2_03", "prologue_02_main", "ep0_inner_door_knock.jpg", 243, 0.20, 30803,
-        "Same tense interior view facing the inner-corridor steel blast door: backlit by flashing amber warning beacons through the frost-edged wired glass square, the silhouette of the stern night shift supervisor leans close to the grate and barks angrily into the booth.",
+        "b2_03", "prologue_02_main", "ep0_inner_door_knock.jpg", 243, 0.20, 31803,
+        "Direct seamless continuation facing the wired glass square of the inner steel blast door: lit by pulsing amber corridor strobes through frost-edged wire glass, the stern night supervisor presses close to the grate and barks indignantly into the booth.",
         "Flashing corridor alarm buzzer, muffled stern older male supervisor shouting indignantly through wired door glass.",
         "值班主管 // 内侧走廊门小窗", "SHIFT SUPERVISOR // INNER DOOR", "当直監督 // 内側廊下小窓",
         "零号门灯跳黄三分钟没消警！#09，你刚才在值班台底下睡过去了？！",
@@ -586,6 +636,7 @@ SHOTS: list[dict] = [
         "第0関門の黄灯が3分も鳴りっぱなしだぞ！#09、お前まさか居眠りしていたのか？！",
         spoken_mandarin="零号门灯跳黄三分钟没消警！零九，你刚才在值班台底下睡过去了？！",
         dialogue_window=("00:00.50", "00:08.50"),
+        chain_prev="b2_02",
     ),
 
     # ================= 9. ep0_empty_booth =================
@@ -597,21 +648,24 @@ SHOTS: list[dict] = [
         "早钟响过，前任 #08 个人储物柜全空，主机显示零号气密闸及内门正常开关次数 = 0。",
         "Morning bell rings. #08's personal locker stands empty; primary airlock logs read ZERO normal gate openings.",
         "朝の鐘が鳴る。前任#08のロッカーは完全に空、通常開閉記録はゼロのまま。",
+        reuse_v1=True,
     ),
     make_shot(
-        "c1_02", "ep0_empty_booth", "ep0_override_cut_seal.jpg", 243, 0.0, 30902,
-        "Tense David Fincher macro close-up slowly pushing in beneath the scratched painted steel booth desk: stark tungsten worklight reveals the recessed manual mechanical override box whose twisted copper wire lead seal hangs freshly snipped open, and right beside it in dark shadow under the lip sticks out a black cassette taped with torn yellow electrical tape.",
+        "c1_02", "ep0_empty_booth", "ep0_empty_booth.jpg", 243, 0.0, 31902,
+        "Smooth single-take camera tilt pushing down from the deserted steel console desk lip into the dark underside panel illuminated by stark tungsten worklight, landing directly on the recessed manual mechanical override box with its snipped copper wire seal and black cassette taped in torn yellow electrical tape.",
         "Eerie tense low industrial bass, crisp peel sound of yellow electric tape tearing off cold steel, mechanical cassette deck clunk.",
         "手动越权面板 // 断铅越权 · 黄色胶布磁带", "MANUAL OVERRIDE // SNIPPED SEAL & TAPE", "手動オーバーライド盤 // 鉛封切断",
         "「手动机械越权面板」铜丝铅封被硬生生剪断、越权日志清空！钢台底沿用黄色电工胶布粘着一盘黑磁带——",
         "On the manual override box, the copper lead seal hangs freshly snipped and wiped! Beneath the desk lip sticks a black cassette in yellow tape.",
         "手動オーバーライド盤の銅線鉛封がペンチで切断され記録が消去されている——台の裏には黄色テープで貼られた黒いカセットが！",
+        chain_prev="c1_01",
+        last_frame_img="ep0_override_cut_seal.jpg",
     ),
 
     # ================= 10. prequel_op08_warning =================
     make_shot(
-        "c2_01", "prequel_op08_warning", "operator09.jpg", 243, 0.45, 31001,
-        "Grainy 02:30 CCTV security playback inside the dim green CRT monitor frame: pale, hollow-eyed operator #08 stares straight into the lens in cold panic, leaning near the recorder mic with visible tremors as he whispers an urgent warning in Mandarin.",
+        "c2_01", "prequel_op08_warning", "ep0_op08_tape_booth.jpg", 243, 0.45, 32001,
+        "Tight haunting 02:30 cassette playback inside the dark CRT-lit Gate 0 booth: pale, gaunt, half-gray-haired watchstander #08 holds the brushed-metal wired handheld mic close to his lips in cold terror, whispering urgently straight into the lens.",
         "Analog cassette hiss, low 50Hz deck flutter, pale exhausted hoarse male voice trembling.",
         "前任值班员 #08 // 02:30 磁带遗言", "OPERATOR #08 // 02:30 TAPE", "前任当直官 #08 // 02:30 遺言",
         "#09，别凭熟人声开门。昨晚失踪的托尔就站在闸室里，连欠我两盒红双喜、给女儿索菲亚买琴都一字不差背得出。",
@@ -621,8 +675,8 @@ SHOTS: list[dict] = [
         dialogue_window=("00:00.40", "00:09.10"),
     ),
     make_shot(
-        "c2_02", "prequel_op08_warning", "operator09.jpg", 243, 0.45, 31002,
-        "Grainy 02:30 playback continues: gripping the edge of the console off-frame, trembling operator #08 leans closer into the shadows and stresses every word about the fatal crack between words and human betrayal.",
+        "c2_02", "prequel_op08_warning", "ep0_op08_tape_booth.jpg", 243, 0.45, 32002,
+        "Seamless continuation of pale half-gray #08 leaning closer over the spinning cassette reels: his eyes widen and tremble as he stresses the chilling rule distinguishing real human pain from bloodless bio mimicry.",
         "Analog cassette tape hiss and flutter, urgent desperate older male warning.",
         "前任值班员 #08 // SAY / DO GAP 铁律", "OPERATOR #08 // THE SAY/DO CRACK", "前任当直官 #08 // 鉄則",
         "记住：它们只照你嘴上宣称过的体面人设（SAY）去演，却不知道活人真疼时背叛诺言的裂痕（DO）。和自我介绍分毫不差的，不是人。",
@@ -630,11 +684,12 @@ SHOTS: list[dict] = [
         "奴らは口先の建前（SAY）だけを演じ、痛みに負けて誓いを破る裂け目（DO）を知らない。自己紹介と寸分違わぬ奴は、人間じゃない。",
         spoken_mandarin="记住：它们只照你嘴上宣称过的体面人设去演，却不知道活人真疼时背叛诺言的裂痕。和自我介绍分毫不差的，不是人！",
         dialogue_window=("00:00.40", "00:09.20"),
+        chain_prev="c2_01",
     ),
     make_shot(
-        "c2_03", "prequel_op08_warning", "operator09.jpg", 192, 0.48, 31003,
-        "Final seconds of 02:30 tape: dark shadows swallow half of #08's terrified face as he glances horizontally toward the frosted blast window beside him, spits out his final chilling warning into the mic, and reaches out to click off the deck.",
-        "Terrified trembling final warning on cassette, abrupt mechanical tape stop clunk and sudden silence.",
+        "c2_03", "prequel_op08_warning", "operator09.jpg", 192, 0.40, 32003,
+        "Chilling subjective smash-cut looking out through Gate 0's frost-framed wire-reinforced blast glass into blinding snow squalls: a motionless hooded duplicate wearing an identical winter parka with an orange OP-09 patch stands smiling unblinkingly through the ice as #08's trembling cassette voice delivers his final terrified warning, ending in a sharp mechanical tape-stop click.",
+        "Terrified trembling final warning over cassette hiss, muffled blizzard wind against glass, abrupt mechanical tape stop clunk and sudden silence.",
         "前任值班员 #08 // 绝笔警句", "OPERATOR #08 // FINAL WARNING", "前任当直官 #08 // 最期の警告",
         "今晚两点我在玻璃外看见了自己，出去确认。若我从外门回来，别开！",
         "Tonight at two I saw myself outside the glass. Going out to check. If I come back through the outer door—do NOT open!",
@@ -652,17 +707,33 @@ SHOTS: list[dict] = [
         "屋外 -46°C 暴雪扯断主天线，全站对外彻底断联——唯余屏幕底行绿字：「码头铠装硬线联通：鹦鹉螺 0 号（06:00 待命）」。",
         "The -46C blizzard snaps the main antenna. Only one armored dock hardwire survives: 'NAUTILUS-0 (06:00 STANDBY)'.",
         "吹雪が主アンテナを引きちぎり全線孤立。画面最下段にだけ緑の文字『ノーチラス0号（06:00 待機）』。",
+        reuse_v1=True,
     ),
     make_shot(
-        "c3_02", "prologue_03_main", "prologue_03.jpg", 192, 0.0, 31102,
-        "Slow ominous push-in across the frosted booth console: an icy heavy steel gate key rests coldly beside green hardwire status reflections against the blizzard-lashed blast pane, waiting in dead Polar Night stillness for the first knock.",
+        "c3_02", "prologue_03_main", "prologue_03.jpg", 192, 0.0, 32102,
+        "Direct seamless continuation pushing slowly inward across the frosted booth console: an icy heavy steel gate key rests coldly beside green hardwire status reflections against the blizzard-lashed blast pane, waiting in dead Polar Night stillness for the first knock.",
         "Howling blizzard outside steel pane fading beneath resonant ominous low brass cinema hold.",
         "抉择点 03 // 最后艇席独白", "DECISION 03 // LAST SUBMARINE SEAT", "決断 03 // 最後の潜水艦席",
         "冰冷的钢制密钥压在你掌心。想起往昔只剩最后一个艇位却留给自己的那一夜，你对自己低声说：",
         "The cold steel gate key presses into your palm. Remembering that night when only one submarine seat remained and you kept it for yourself, you whisper:",
         "冷たい鋼の鍵が掌に食い込む。ただ一席残された脱出枠を自分に選んだあの夜を思い出し、呟く——",
+        chain_prev="c3_01",
     ),
 ]
+
+REEL_FADES: dict[str, tuple[float, float]] = {
+    "ep0_sc00a1_arrival": (0.0, 0.65),
+    "ep0_sc00a2_canteen_crew": (0.60, 0.0),
+    "ep0_sc00a2_canteen_clash": (0.0, 0.0),
+    "ep0_sc00a2_canteen_corners": (0.0, 0.80),
+    "prequel_icecore_breach": (0.70, 0.80),
+    "prologue_01_main": (0.70, 0.60),
+    "ep0_lonely_watch": (0.65, 0.75),
+    "prologue_02_main": (0.70, 0.65),
+    "ep0_empty_booth": (0.70, 0.35),
+    "prequel_op08_warning": (0.35, 0.75),
+    "prologue_03_main": (0.75, 0.0),
+}
 
 REEL_ORDER = [
     "ep0_sc00a1_arrival",
@@ -825,11 +896,18 @@ def ensure_comfyui(flags: list[str]) -> dict:
     return obj_info
 
 
-def build_fl2va_workflow(obj_info: dict, shot: dict, clip_filename: str) -> dict:
+def build_fl2va_workflow(
+    obj_info: dict,
+    shot: dict,
+    clip_filename: str,
+    first_frame_name: str | None = None,
+    use_last_frame: bool = True,
+) -> dict:
     i2v_meta = obj_info.get("MiniMaxH3ImageToVideo", {}).get("input", {})
     i2v_all_keys = set(i2v_meta.get("required", {}).keys()) | set(i2v_meta.get("optional", {}).keys())
     has_sigma_tail = "MiniMaxH3SigmasTail" in obj_info
     has_sep_av = "LTXVSeparateAVLatent" in obj_info
+    ff_img = first_frame_name or shot["img"]
 
     wf: dict = {
         "1": {
@@ -885,7 +963,7 @@ def build_fl2va_workflow(obj_info: dict, shot: dict, clip_filename: str) -> dict
         },
         "10": {
             "class_type": "LoadImage",
-            "inputs": {"image": shot["img"]},
+            "inputs": {"image": ff_img},
         },
     }
 
@@ -903,6 +981,14 @@ def build_fl2va_workflow(obj_info: dict, shot: dict, clip_filename: str) -> dict
         i2v_inputs["first_frame"] = ["10", 0]
     elif "image" in i2v_all_keys:
         i2v_inputs["image"] = ["10", 0]
+
+    lf_img = shot.get("last_frame_img")
+    if use_last_frame and lf_img and "last_frame" in i2v_all_keys:
+        wf["11"] = {"class_type": "LoadImage", "inputs": {"image": lf_img}}
+        i2v_inputs["last_frame"] = ["11", 0]
+    elif not use_last_frame and lf_img:
+        # Fallback if dual-frame bridge rejected: open straight on target macro frame
+        wf["10"]["inputs"]["image"] = lf_img
 
     wf["20"] = {
         "class_type": "MiniMaxH3ImageToVideo",
@@ -1010,21 +1096,54 @@ def submit_and_wait(wf: dict, shot_id: str) -> Path:
             return dst
 
 
+def extract_chain_first_frame(prev_shot_id: str, cur_shot_id: str) -> str:
+    prev_mp4 = SHOTS_DIR / f"{prev_shot_id}.mp4"
+    if (not prev_mp4.exists() or prev_mp4.stat().st_size <= 150_000) and drive_ready():
+        for d in (DRIVE_SHOTS_DIR, V1_DRIVE_SHOTS_DIR):
+            cand = d / f"{prev_shot_id}.mp4"
+            if cand.exists() and cand.stat().st_size > 150_000:
+                shutil.copy2(cand, prev_mp4)
+                break
+    if not prev_mp4.exists() or prev_mp4.stat().st_size <= 150_000:
+        raise RuntimeError(f"Missing chain_prev source shot: {prev_shot_id}")
+    chain_name = f"h3_chain_{cur_shot_id}.jpg"
+    chain_path = INPUT_DIR / chain_name
+    sh(
+        f'ffmpeg -y -v error -sseof -0.06 -i "{prev_mp4}" -frames:v 1 '
+        f'-vf "scale=1344:768:force_original_aspect_ratio=increase,crop=1344:768" '
+        f'-q:v 2 "{chain_path}"'
+    )
+    return chain_name
+
+
 def run_render(pilot_only: bool) -> None:
     _, _, vram_mb, clip_filename, comfy_flags = setup_env()
     obj_info = ensure_comfyui(comfy_flags)
     targets = [s for s in SHOTS if (not pilot_only or s["id"] in PILOT_SHOT_IDS)]
-    print(f"=== [4/4] Rendering {len(targets)} MiniMax-H3 Shots (pilot={pilot_only}) ===", flush=True)
+    print(f"=== [4/4] Rendering {len(targets)} MiniMax-H3 v2 Shots (pilot={pilot_only}) ===", flush=True)
     for idx, shot in enumerate(targets, 1):
         out_p = SHOTS_DIR / f"{shot['id']}.mp4"
         if (not out_p.exists() or out_p.stat().st_size <= 150_000) and drive_ready():
             drv_p = DRIVE_SHOTS_DIR / f"{shot['id']}.mp4"
             if drv_p.exists() and drv_p.stat().st_size > 150_000:
                 shutil.copy2(drv_p, out_p)
-                print(f"☁️ [{idx}/{len(targets)}] Restored {shot['id']} from Drive ({out_p.stat().st_size // 1024} KB)", flush=True)
+                print(f"☁️ [{idx}/{len(targets)}] Restored {shot['id']} from v2 Drive ({out_p.stat().st_size // 1024} KB)", flush=True)
+            elif shot.get("reuse_v1"):
+                v1_p = V1_DRIVE_SHOTS_DIR / f"{shot['id']}.mp4"
+                if v1_p.exists() and v1_p.stat().st_size > 150_000:
+                    shutil.copy2(v1_p, out_p)
+                    DRIVE_SHOTS_DIR.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(v1_p, drv_p)
+                    print(f"♻️ [{idx}/{len(targets)}] Reused v1 anchor {shot['id']} ({out_p.stat().st_size // 1024} KB)", flush=True)
         if out_p.exists() and out_p.stat().st_size > 150_000:
             print(f"↷ [{idx}/{len(targets)}] Skip existing {shot['id']} ({out_p.stat().st_size // 1024} KB)", flush=True)
             continue
+
+        first_frame_override = None
+        if shot.get("chain_prev"):
+            first_frame_override = extract_chain_first_frame(shot["chain_prev"], shot["id"])
+            print(f"🔗 [{idx}/{len(targets)}] Chained {shot['chain_prev']} end-frame -> {shot['id']} first_frame", flush=True)
+
         last_err: Exception | None = None
         for attempt in range(3):
             try:
@@ -1032,7 +1151,13 @@ def run_render(pilot_only: bool) -> None:
                 if vram_mb < 70000 and cur["length"] > 192:
                     cur["length"] = 192
                 cur["seed"] = shot["seed"] + attempt * 100
-                wf = build_fl2va_workflow(obj_info, cur, clip_filename)
+                wf = build_fl2va_workflow(
+                    obj_info,
+                    cur,
+                    clip_filename,
+                    first_frame_name=first_frame_override,
+                    use_last_frame=(attempt == 0),
+                )
                 submit_and_wait(wf, shot["id"])
                 last_err = None
                 break
@@ -1046,7 +1171,12 @@ def run_render(pilot_only: bool) -> None:
 
 
 def stitch_reels() -> None:
+    shot_reels = {s["reel"] for s in SHOTS}
+    assert shot_reels == set(REEL_ORDER), f"Orphaned reel(s): {shot_reels - set(REEL_ORDER)}"
+
     FINAL_DIR.mkdir(parents=True, exist_ok=True)
+    posters_dir = FINAL_DIR / "posters"
+    posters_dir.mkdir(parents=True, exist_ok=True)
     manifest: dict[str, dict] = {}
     tmp_dir = Path("/tmp/ep0_stitch_tmp")
     shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -1068,20 +1198,25 @@ def stitch_reels() -> None:
         norm_parts: list[Path] = []
         cues: list[dict] = []
         t_cursor = 0.0
+        prev_sid: str | None = None
 
         for s in reel_shots:
             src_mp4 = SHOTS_DIR / f"{s['id']}.mp4"
-            dur = probe_duration(src_mp4)
+            raw_dur = probe_duration(src_mp4)
+            # Trim 1 duplicate boundary frame (42ms @ 24fps) when directly chaining from previous shot in same reel
+            trim_ss = "-ss 0.042 " if (prev_sid and s.get("chain_prev") == prev_sid and raw_dur > 1.5) else ""
+            eff_dur = max(0.2, raw_dur - (0.042 if trim_ss else 0.0))
             norm_p = tmp_dir / f"{s['id']}_norm.mp4"
+            af_edge = f"afade=t=in:st=0:d=0.04,afade=t=out:st={max(0.05, eff_dur - 0.04):.3f}:d=0.04"
             if reel_id == "prequel_op08_warning":
                 vf = "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,fps=24,eq=saturation=0.65:contrast=1.10,drawgrid=w=1280:h=4:t=1:c=black@0.20,vignette=PI/4,format=yuv420p"
-                af = "highpass=f=300,lowpass=f=3400,acompressor=threshold=-18dB:ratio=4:attack=3:release=50,aresample=48000"
+                af = f"highpass=f=300,lowpass=f=3400,acompressor=threshold=-18dB:ratio=4:attack=3:release=50,{af_edge},aresample=48000"
             else:
                 vf = "scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,fps=24,format=yuv420p"
-                af = "highpass=f=70,acompressor=threshold=-18dB:ratio=2.5:attack=5:release=60,aresample=48000"
+                af = f"highpass=f=70,acompressor=threshold=-18dB:ratio=2.5:attack=5:release=60,{af_edge},aresample=48000"
 
             sh(
-                f'ffmpeg -y -v error -i "{src_mp4}" -vf "{vf}" -af "{af}" '
+                f'ffmpeg -y -v error {trim_ss}-i "{src_mp4}" -vf "{vf}" -af "{af}" '
                 f'-ar 48000 -ac 2 -c:v libx264 -preset fast -crf 20 -c:a aac -b:a 160k "{norm_p}"'
             )
             norm_dur = probe_duration(norm_p)
@@ -1095,18 +1230,40 @@ def stitch_reels() -> None:
             )
             t_cursor += norm_dur
             norm_parts.append(norm_p)
+            prev_sid = s["id"]
 
         concat_txt = tmp_dir / f"{reel_id}_concat.txt"
         concat_txt.write_text("".join(f"file '{p}'\n" for p in norm_parts))
+        concat_raw_p = tmp_dir / f"{reel_id}_rawcat.mp4"
+        sh(f'ffmpeg -y -v error -f concat -safe 0 -i "{concat_txt}" -c copy "{concat_raw_p}"')
+
+        raw_cat_dur = probe_duration(concat_raw_p)
+        fade_in_d, fade_out_d = REEL_FADES.get(reel_id, (0.0, 0.0))
+        vf_fades = []
+        af_fades = ["loudnorm=I=-16:TP=-1.5:LRA=8"]
+        if fade_in_d > 0:
+            vf_fades.append(f"fade=t=in:st=0:d={fade_in_d:.2f}")
+            af_fades.append(f"afade=t=in:st=0:d={fade_in_d:.2f}")
+        if fade_out_d > 0 and raw_cat_dur > fade_out_d + 0.5:
+            out_st = raw_cat_dur - fade_out_d
+            vf_fades.append(f"fade=t=out:st={out_st:.3f}:d={fade_out_d:.2f}")
+            af_fades.append(f"afade=t=out:st={out_st:.3f}:d={fade_out_d:.2f}")
+
+        vf_arg = f'-vf "{",".join(vf_fades)},format=yuv420p" ' if vf_fades else "-pix_fmt yuv420p "
+        af_str = ",".join(af_fades)
         merged_p = tmp_dir / f"{reel_id}_merged.mp4"
         sh(
-            f'ffmpeg -y -v error -f concat -safe 0 -i "{concat_txt}" '
-            f'-c:v libx264 -preset medium -crf 22 -pix_fmt yuv420p '
-            f'-af "loudnorm=I=-16:TP=-1.5:LRA=8" -ar 48000 -ac 2 -c:a aac -b:a 128k '
+            f'ffmpeg -y -v error -i "{concat_raw_p}" '
+            f'-c:v libx264 -preset medium -crf 22 {vf_arg}'
+            f'-af "{af_str}" -ar 48000 -ac 2 -c:a aac -b:a 128k '
             f'-movflags +faststart "{merged_p}"'
         )
         final_p = FINAL_DIR / f"{reel_id}.mp4"
         shutil.move(str(merged_p), str(final_p))
+        poster_t = 0.90 if fade_in_d > 0 else 0.25
+        poster_p = posters_dir / f"{reel_id}.jpg"
+        sh(f'ffmpeg -y -v error -ss {poster_t:.2f} -i "{final_p}" -frames:v 1 -q:v 2 "{poster_p}"')
+
         final_dur = probe_duration(final_p)
         if cues:
             cues[-1]["endSec"] = round(final_dur, 2)
@@ -1125,9 +1282,13 @@ def stitch_reels() -> None:
     man_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     if drive_ready():
         DRIVE_FINAL_DIR.mkdir(parents=True, exist_ok=True)
+        (DRIVE_FINAL_DIR / "posters").mkdir(parents=True, exist_ok=True)
         for p in FINAL_DIR.iterdir():
             if p.is_file():
                 shutil.copy2(p, DRIVE_FINAL_DIR / p.name)
+        for p in posters_dir.iterdir():
+            if p.is_file():
+                shutil.copy2(p, DRIVE_FINAL_DIR / "posters" / p.name)
     print(f"\nSTITCH_COMPLETE | total={total_sec:.2f}s ({int(total_sec // 60):02d}:{total_sec % 60:05.2f}) | manifest={man_path}", flush=True)
 
 
