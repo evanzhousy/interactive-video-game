@@ -60,7 +60,7 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       }
     }
 
-    // Episode 0 pilot (07:15 = 435s): zero mimic spoilers in prologue_01/02, big tape reveal in prologue_03
+    // Episode 0 pilot (MiniMax-H3 05:46 = 346s): zero mimic spoilers in prologue_01/02, big tape reveal in prologue_03
     expect(getStoryNode("prologue_01")!.clips?.length).toBe(6);
     expect(getStoryNode("prologue_02")!.clips?.length).toBe(2);
     expect(getStoryNode("prologue_03")!.clips?.length).toBe(3);
@@ -71,7 +71,7 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
         (getStoryNode(pid)!.clips ?? []).reduce((clipSum, c) => clipSum + (c.durationSec ?? 0), 0),
       0
     );
-    expect(ep0TotalSec).toBe(435);
+    expect(ep0TotalSec).toBe(346);
 
     for (const pid of PROLOGUE_NODE_IDS) {
       for (const seg of getStoryNode(pid)!.clips ?? []) {

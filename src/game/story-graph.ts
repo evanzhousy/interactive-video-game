@@ -1,7 +1,7 @@
 import { EP0_SUBTITLE_CUES } from "./ep0-cues.generated.js";
 import type { EndingId, LocalizedText } from "./types.js";
 
-export const EP0_MEDIA_BASE_URL = "https://pub-0ab426eff1a7472199ccc8f2292cac9e.r2.dev/ep0";
+export const EP0_MEDIA_BASE_URL = "https://pub-0ab426eff1a7472199ccc8f2292cac9e.r2.dev/ep0-h3";
 
 export type StoryChapterId =
   | "prologue"
@@ -161,13 +161,13 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "2036年10月14日、北緯78度13分。最後の補給船が去り、食堂で温かな湯を囲んだ9人の仲間たち。14日後、地下3,800mの基盤岩噴出が基地を閉ざす。"
     },
     speaker: {
-      zh: "序幕电影 // 第一章：抵达斯瓦尔巴（05:15）",
-      en: "PROLOGUE FILM // ARRIVAL & BLOWOUT (05:15)",
-      ja: "序幕映画 // スヴァールバル到着 (05:15)"
+      zh: "序幕电影 // 第一章：抵达斯瓦尔巴（03:58）",
+      en: "PROLOGUE FILM // ARRIVAL & BLOWOUT (03:58)",
+      ja: "序幕映画 // スヴァールバル到着 (03:58)"
     },
     kind: "movie",
     hasAudio: true,
-    isLipSync: false,
+    isLipSync: true,
     videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_sc00a1_arrival.mp4`,
     fallbackVideoSrc: "./videos/story/ep0_heli_arrival.mp4",
     posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
@@ -180,10 +180,10 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/ep0_heli_arrival.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
-        isLipSync: false,
-        durationSec: 60,
+        isLipSync: true,
+        durationSec: 46,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a1_arrival,
-        badge: { zh: "SC-00A-1 · 末班降落 (01:00)", en: "SC-00A-1 · ARRIVAL (01:00)", ja: "SC-00A-1 · 到着 (01:00)" },
+        badge: { zh: "SC-00A-1 · 末班降落 (00:46)", en: "SC-00A-1 · ARRIVAL (00:46)", ja: "SC-00A-1 · 到着 (00:46)" },
         speaker: {
           zh: "字幕卡 // 2036.10.14",
           en: "TITLE CARD // OCT 14, 2036",
@@ -202,10 +202,10 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/ep0/ep0_canteen_leo_thor.jpg",
         fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
         hasAudio: true,
-        isLipSync: false,
-        durationSec: 65,
+        isLipSync: true,
+        durationSec: 42,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_crew,
-        badge: { zh: "SC-00A-2 · 食堂热汤 (01:05)", en: "SC-00A-2 · MESS HALL (01:05)", ja: "SC-00A-2 · 食堂 (01:05)" },
+        badge: { zh: "SC-00A-2 · 食堂热汤 (00:42)", en: "SC-00A-2 · MESS HALL (00:42)", ja: "SC-00A-2 · 食堂 (00:42)" },
         speaker: {
           zh: "焊工 老周 // 公共食堂",
           en: "WELDER ZHOU // MESS HALL",
@@ -224,10 +224,10 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/ep0/ep0_canteen_marcus_stew.jpg",
         fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
         hasAudio: true,
-        isLipSync: false,
-        durationSec: 50,
+        isLipSync: true,
+        durationSec: 38,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_clash,
-        badge: { zh: "SC-00A-2 · 鹿肉与手术钳 (00:50)", en: "SC-00A-2 · STEW & SCALPEL (00:50)", ja: "SC-00A-2 · 鹿肉と鉗子 (00:50)" },
+        badge: { zh: "SC-00A-2 · 鹿肉与手术钳 (00:38)", en: "SC-00A-2 · STEW & SCALPEL (00:38)", ja: "SC-00A-2 · 鹿肉と鉗子 (00:38)" },
         speaker: {
           zh: "V-04 马库斯 & V-01 艾琳娜 // 长桌左侧",
           en: "MARCUS CHEN & DR. ELENA VANCE",
@@ -246,10 +246,10 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/ep0/ep0_corner_arthur_holm.jpg",
         fallbackPosterSrc: "./portraits/story/ep0_crew_dinner.jpg",
         hasAudio: true,
-        isLipSync: false,
-        durationSec: 50,
+        isLipSync: true,
+        durationSec: 40,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_sc00a2_canteen_corners,
-        badge: { zh: "SC-00A-2 · 角落埋线 (00:50)", en: "SC-00A-2 · CORNER VIGNETTES (00:50)", ja: "SC-00A-2 · 四隅の伏線 (00:50)" },
+        badge: { zh: "SC-00A-2 · 角落埋线 (00:40)", en: "SC-00A-2 · CORNER VIGNETTES (00:40)", ja: "SC-00A-2 · 四隅の伏線 (00:40)" },
         speaker: {
           zh: "亚瑟 / 安娜 / 英格丽 / 林梅 / 汉娜 // 食堂四角",
           en: "ARTHUR / ANA / INGRID / LIN MEI / HANNAH",
@@ -269,9 +269,9 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
-        durationSec: 38,
+        durationSec: 32,
         subtitleCues: EP0_SUBTITLE_CUES.prequel_icecore_breach,
-        badge: { zh: "SC-00A-3 · 3,800m 井喷 (00:38)", en: "SC-00A-3 · 3,800M BLOWOUT (00:38)", ja: "SC-00A-3 · 3,800m噴出 (00:38)" },
+        badge: { zh: "SC-00A-3 · 3,800m 井喷 (00:32)", en: "SC-00A-3 · 3,800M BLOWOUT (00:32)", ja: "SC-00A-3 · 3,800m噴出 (00:32)" },
         speaker: {
           zh: "第 14 天 02:14 // 3,800m 古生代基岩主井",
           en: "DAY 14 · 02:14 // 3,800M BEDROCK RIG",
@@ -290,10 +290,10 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/ep0/ep0_briefing_topology.jpg",
         fallbackPosterSrc: "./portraits/story/prologue_01_handover.jpg",
         hasAudio: true,
-        isLipSync: false,
-        durationSec: 52,
+        isLipSync: true,
+        durationSec: 40,
         subtitleCues: EP0_SUBTITLE_CUES.prologue_01_main,
-        badge: { zh: "SC-00A-3 · 中枢拓扑与质询 (00:52)", en: "SC-00A-3 · TOPOLOGY BRIEF (00:52)", ja: "SC-00A-3 · 構造会議 (00:52)" },
+        badge: { zh: "SC-00A-3 · 中枢拓扑与质询 (00:40)", en: "SC-00A-3 · TOPOLOGY BRIEF (00:40)", ja: "SC-00A-3 · 構造会議 (00:40)" },
         speaker: {
           zh: "第 15 天 // 站长林德奎斯特 · 简报室",
           en: "DAY 15 // COMMANDER LINDQVIST",
@@ -356,13 +356,13 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "16日目、発熱したハンセンの代務を経て、02:40に前任#08が震える手で夜勤を押し付けて去る。04:15、連続覚醒20時間の限界で居眠りした瞬間、内側扉が3度叩かれる！"
     },
     speaker: {
-      zh: "序幕电影 // 第 16 天深夜（01:00）",
-      en: "PROLOGUE FILM // DAY 16 NIGHT (01:00)",
-      ja: "序幕映画 // 16日目深夜 (01:00)"
+      zh: "序幕电影 // 第 16 天深夜（00:52）",
+      en: "PROLOGUE FILM // DAY 16 NIGHT (00:52)",
+      ja: "序幕映画 // 16日目深夜 (00:52)"
     },
     kind: "movie",
     hasAudio: true,
-    isLipSync: false,
+    isLipSync: true,
     videoSrc: `${EP0_MEDIA_BASE_URL}/ep0_lonely_watch.mp4`,
     fallbackVideoSrc: "./videos/story/ep0_lonely_watch.mp4",
     posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
@@ -375,10 +375,10 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/ep0_lonely_watch.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
-        isLipSync: false,
-        durationSec: 36,
+        isLipSync: true,
+        durationSec: 30,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_lonely_watch,
-        badge: { zh: "SC-00B-1 · 提前交班 (00:36)", en: "SC-00B-1 · HANDOVER (00:36)", ja: "SC-00B-1 · 早朝引継 (00:36)" },
+        badge: { zh: "SC-00B-1 · 提前交班 (00:30)", en: "SC-00B-1 · HANDOVER (00:30)", ja: "SC-00B-1 · 早朝引継 (00:30)" },
         speaker: {
           zh: "前任值班员 #08 // 第 16 天 02:40",
           en: "OUTGOING OPERATOR #08 // 02:40",
@@ -397,10 +397,10 @@ export const STORY_NODES: readonly StoryNode[] = [
         posterSrc: "./portraits/story/ep0/ep0_inner_door_knock.jpg",
         fallbackPosterSrc: "./portraits/story/prologue_02_knock.jpg",
         hasAudio: true,
-        isLipSync: false,
-        durationSec: 24,
+        isLipSync: true,
+        durationSec: 22,
         subtitleCues: EP0_SUBTITLE_CUES.prologue_02_main,
-        badge: { zh: "SC-00B-2 · 内廊敲窗 (00:24)", en: "SC-00B-2 · INNER DOOR (00:24)", ja: "SC-00B-2 · 内側廊下 (00:24)" },
+        badge: { zh: "SC-00B-2 · 内廊敲窗 (00:22)", en: "SC-00B-2 · INNER DOOR (00:22)", ja: "SC-00B-2 · 内側廊下 (00:22)" },
         speaker: {
           zh: "第 16 天 04:15 // 内侧走廊门小窗",
           en: "DAY 16 · 04:15 // INNER CORRIDOR WINDOW",
@@ -463,9 +463,9 @@ export const STORY_NODES: readonly StoryNode[] = [
       ja: "17日目07:00、#08のロッカーは空、通常開閉記録はゼロ——だが手動オーバーライド盤の銅線鉛封が切断されていた。台の裏の黒テープが真実を語る。"
     },
     speaker: {
-      zh: "序幕终章 // 真相揭晓（01:00）",
-      en: "PROLOGUE CLIMAX // THE TRUTH (01:00)",
-      ja: "序幕終章 // 真実の開示 (01:00)"
+      zh: "序幕终章 // 真相揭晓（00:56）",
+      en: "PROLOGUE CLIMAX // THE TRUTH (00:56)",
+      ja: "序幕終章 // 真実の開示 (00:56)"
     },
     kind: "movie",
     hasAudio: true,
@@ -483,9 +483,9 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackPosterSrc: "./portraits/story/ep0_empty_booth.jpg",
         hasAudio: true,
         isLipSync: false,
-        durationSec: 18,
+        durationSec: 16,
         subtitleCues: EP0_SUBTITLE_CUES.ep0_empty_booth,
-        badge: { zh: "SC-00C-1 · 断铅越权面板 (00:18)", en: "SC-00C-1 · SNIPPED SEAL (00:18)", ja: "SC-00C-1 · 鉛封切断 (00:18)" },
+        badge: { zh: "SC-00C-1 · 断铅越权面板 (00:16)", en: "SC-00C-1 · SNIPPED SEAL (00:16)", ja: "SC-00C-1 · 鉛封切断 (00:16)" },
         speaker: {
           zh: "第 17 天 07:00 // 手动越权面板特写",
           en: "DAY 17 · 07:00 // OVERRIDE PANEL",
@@ -505,9 +505,9 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackPosterSrc: "./portraits/operator09.jpg",
         hasAudio: true,
         isLipSync: true,
-        durationSec: 27,
+        durationSec: 24,
         subtitleCues: EP0_SUBTITLE_CUES.prequel_op08_warning,
-        badge: { zh: "SC-00C-2 · #08 磁带原声 (00:27)", en: "SC-00C-2 · #08 TAPE (00:27)", ja: "SC-00C-2 · 遺言テープ (00:27)" },
+        badge: { zh: "SC-00C-2 · #08 磁带原声 (00:24)", en: "SC-00C-2 · #08 TAPE (00:24)", ja: "SC-00C-2 · 遺言テープ (00:24)" },
         speaker: {
           zh: "前任值班员 #08 // 02:30 黄色胶布黑磁带",
           en: "OPERATOR #08 // 02:30 CASSETTE TAPE",
@@ -527,9 +527,9 @@ export const STORY_NODES: readonly StoryNode[] = [
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
-        durationSec: 15,
+        durationSec: 16,
         subtitleCues: EP0_SUBTITLE_CUES.prologue_03_main,
-        badge: { zh: "SC-00C-3 · 断联与鹦鹉螺 0 号 (00:15)", en: "SC-00C-3 · NAUTILUS-0 (00:15)", ja: "SC-00C-3 · 全線孤立 (00:15)" },
+        badge: { zh: "SC-00C-3 · 断联与鹦鹉螺 0 号 (00:16)", en: "SC-00C-3 · NAUTILUS-0 (00:16)", ja: "SC-00C-3 · 全線孤立 (00:16)" },
         speaker: {
           zh: "第 17 天 23:55 // 暴雪扯断主天线",
           en: "DAY 17 · 23:55 // ANTENNA SNAPPED",
