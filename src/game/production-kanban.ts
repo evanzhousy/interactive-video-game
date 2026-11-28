@@ -68,7 +68,36 @@ export interface KanbanStats {
   byColumn: Record<KanbanColumnId, number>;
 }
 
+export type DecisionStatus = "pending" | "decided";
+
+export interface DecisionOption {
+  id: string;
+  label: LocalizedText;
+  tone?: "approve" | "route" | "warn";
+  effect?: {
+    nextStatus?: KanbanColumnId;
+    nextRoute?: RenderPipelineRoute;
+    nextPriority?: KanbanPriority;
+  };
+}
+
+export interface DirectorDecision {
+  id: string;
+  issueId?: string;
+  title: LocalizedText;
+  context: LocalizedText;
+  status: DecisionStatus;
+  options: readonly DecisionOption[];
+  chosenOptionId?: string;
+  chosenLabel?: string;
+  directorNote?: string;
+  decidedBy?: string;
+  decidedAt?: string;
+  createdAt: string;
+}
+
 export const KANBAN_STORAGE_KEY = "gate0_internal_kanban_v1";
+export const DECISIONS_STORAGE_KEY = "gate0_internal_decisions_v1";
 
 export const KANBAN_COLUMNS: readonly KanbanColumnSpec[] = [
   {
@@ -675,4 +704,302 @@ export function parseKanbanImport(raw: string): KanbanIssue[] | null {
   } catch {
     return null;
   }
+}
+
+export const DEFAULT_DIRECTOR_DECISIONS: readonly DirectorDecision[] = [
+  {
+    id: "DEC-01",
+    issueId: "G0-07",
+    title: {
+      zh: "拍板 SC-ONER-N1（24s 三段长镜头）3D 机位与 8.2s 钢柱擦除点",
+      en: "Approve SC-ONER-N1 (24s Oner) 3D Blocking & 8.2s Pillar Wipe",
+      ja: "SC-ONER-N1（24秒長回し）3D構図＆8.2秒鋼柱ワイプ承認"
+    },
+    context: {
+      zh: "红警走廊 → 8.2s 右钢柱 Cheat Point → 180° 绕控制台锁定防爆玻璃。确认后将直接进入 6 张 35mm 首尾帧精修。",
+      en: "Corridor track -> 8.2s steel pillar Cheat Point -> 180-deg console arc. Approval advances G0-07 to Keyframes.",
+      ja: "廊下追従→8.2秒鋼柱ワイプ→操作盤回り込み窓ロック。承認でKeyframes段階へ進行。"
+    },
+    status: "pending",
+    options: [
+      {
+        id: "approve_keyframes",
+        label: { zh: "✅ 锁定机位并推进到 Keyframes", en: "✅ Lock & Advance to Keyframes", ja: "✅ 構図確定 → Keyframesへ" },
+        tone: "approve",
+        effect: { nextStatus: "keyframes" }
+      },
+      {
+        id: "revise_cheatpoint",
+        label: { zh: "🔄 重调 8.2s 擦除点（保持 Pre-viz）", en: "🔄 Revise 8.2s Wipe (Keep Pre-viz)", ja: "🔄 8.2秒ワイプ再調整" },
+        tone: "warn",
+        effect: { nextStatus: "previz", nextPriority: "urgent" }
+      }
+    ],
+    createdAt: "2026-11-28T07:45:00.000Z"
+  },
+  {
+    id: "DEC-02",
+    issueId: "G0-08",
+    title: {
+      zh: "选择 SC-ONER-N5（21s 镜面对峙长镜头）生片技术路线",
+      en: "Choose Generation Route for SC-ONER-N5 (21s Mirror Oner)",
+      ja: "SC-ONER-N5（21秒鏡像長回し）生成ルート選定"
+    },
+    context: {
+      zh: "7.4s 贴结霜左钢框穿入岗亭并绕到正反打对峙位：走“写实首帧 + 完整白膜视频 (V2V)”最稳防穿模，还是拆 3 段首尾帧 (FL2VA)？",
+      en: "7.4s frosted-mullion wrap into booth: export full white-box WebM + realistic start frame (V2V), or split into 3 FL2VA segments?",
+      ja: "7.4秒霜枠回り込み：白模WebM＋写実先頭フレーム(V2V)か、3区間FL2VA分割かを選択。"
+    },
+    status: "pending",
+    options: [
+      {
+        id: "route_v2v",
+        label: { zh: "🎥 走 V2V 白膜视频流 (10% 路线)", en: "🎥 Use V2V Whitebox Route", ja: "🎥 V2V白模ルート採用" },
+        tone: "route",
+        effect: { nextRoute: "v2v_whitebox", nextStatus: "keyframes" }
+      },
+      {
+        id: "route_fl2va",
+        label: { zh: "🖼 改走 FL2VA 首尾帧流 (90% 路线)", en: "🖼 Switch to FL2VA Keyframes", ja: "🖼 FL2VA首尾フレームへ切替" },
+        tone: "approve",
+        effect: { nextRoute: "fl2va_keyframes", nextStatus: "keyframes" }
+      }
+    ],
+    createdAt: "2026-11-28T07:45:00.000Z"
+  },
+  {
+    id: "DEC-03",
+    issueId: "G0-13",
+    title: {
+      zh: "Stage 2（第 2–4 夜 · 74 镜）是否先补重点尾帧再上 Colab G4？",
+      en: "Stage 2 (Nights 2–4 · 74 Shots): Add End-Frame Anchors Before G4 Render?",
+      ja: "第2〜4夜（74カット）：G4レンダリング前に末尾アンカーを追加する？"
+    },
+    context: {
+      zh: "目前 render-n2-4-minimax-h3.py 中 last_frame_img=0。按新 Runbook 建议先为大调度镜头从 3D 导出尾帧，再放行渲染。",
+      en: "render-n2-4-minimax-h3.py currently has last_frame_img=0. Add 3D end-frame anchors for hero motion shots first, or start fast chain?",
+      ja: "現在last_frame_img=0。主要ムーブカットに3D末尾フレームを追加してから回すか即時着工か。"
+    },
+    status: "pending",
+    options: [
+      {
+        id: "add_endframes",
+        label: { zh: "🖼 先补重点尾帧（进 Keyframes）", en: "🖼 Add End-Frames First -> Keyframes", ja: "🖼 末尾フレーム追加 → Keyframes" },
+        tone: "approve",
+        effect: { nextStatus: "keyframes" }
+      },
+      {
+        id: "fast_chain",
+        label: { zh: "⚡ 直接按 chain_prev 开跑渲染", en: "⚡ Start Render with chain_prev Now", ja: "⚡ 即時レンダリング開始" },
+        tone: "warn",
+        effect: { nextStatus: "rendering" }
+      }
+    ],
+    createdAt: "2026-11-28T07:45:00.000Z"
+  },
+  {
+    id: "DEC-04",
+    issueId: "G0-05",
+    title: {
+      zh: "60 秒首发预告片 v2.0 是否签收发布，还是等 N5 长镜头替换压轴？",
+      en: "Launch Trailer v2.0: Sign Off Master Cut or Wait for N5 Oner?",
+      ja: "ローンチトレーラー v2.0：現行版で出荷承認するかN5長回しを待つか？"
+    },
+    context: {
+      zh: "TRAILER_STORYBOARD.md v2.0 已锁定 60.0s 音画预算并处于 Continuity QA 状态。",
+      en: "TRAILER_STORYBOARD.md v2.0 has verified 60.0s A/V timing in Continuity QA.",
+      ja: "TRAILER_STORYBOARD.md v2.0 は60.0秒構成でContinuity QA段階にあります。"
+    },
+    status: "pending",
+    options: [
+      {
+        id: "ship_v2",
+        label: { zh: "✅ 签收 v2.0 标记 Shipped", en: "✅ Sign Off v2.0 -> Shipped", ja: "✅ v2.0出荷承認 → Shipped" },
+        tone: "approve",
+        effect: { nextStatus: "shipped" }
+      },
+      {
+        id: "wait_oner",
+        label: { zh: "⏳ 留在 QA 等待 N5 长镜头接入", en: "⏳ Hold in QA for N5 Oner", ja: "⏳ N5長回し待ちでQA保留" },
+        tone: "route",
+        effect: { nextStatus: "qa" }
+      }
+    ],
+    createdAt: "2026-11-28T07:45:00.000Z"
+  }
+];
+
+function cloneDecision(d: DirectorDecision): DirectorDecision {
+  return {
+    ...d,
+    title: { ...d.title },
+    context: { ...d.context },
+    options: d.options.map((opt) => ({
+      ...opt,
+      label: { ...opt.label },
+      ...(opt.effect ? { effect: { ...opt.effect } } : {})
+    }))
+  };
+}
+
+export function loadDirectorDecisions(): DirectorDecision[] {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      const raw = window.localStorage.getItem(DECISIONS_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as unknown;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return (parsed as DirectorDecision[]).map(cloneDecision);
+        }
+      }
+    }
+  } catch {
+    // Ignore storage read errors
+  }
+  return DEFAULT_DIRECTOR_DECISIONS.map(cloneDecision);
+}
+
+export function saveDirectorDecisions(decisions: readonly DirectorDecision[]): void {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      window.localStorage.setItem(DECISIONS_STORAGE_KEY, JSON.stringify(decisions));
+    }
+  } catch {
+    // Ignore storage write errors
+  }
+}
+
+export function applyDirectorDecision(
+  issues: readonly KanbanIssue[],
+  decisions: readonly DirectorDecision[],
+  params: {
+    decisionId: string;
+    optionId: string;
+    note?: string;
+    decidedBy?: string;
+    lang?: Locale;
+  }
+): {
+  issues: KanbanIssue[];
+  decisions: DirectorDecision[];
+  updatedDecision?: DirectorDecision;
+} {
+  const target = decisions.find((d) => d.id === params.decisionId);
+  if (!target) {
+    return {
+      issues: issues.map(cloneIssue),
+      decisions: decisions.map(cloneDecision)
+    };
+  }
+  const chosen = target.options.find((o) => o.id === params.optionId);
+  if (!chosen) {
+    return {
+      issues: issues.map(cloneIssue),
+      decisions: decisions.map(cloneDecision)
+    };
+  }
+
+  const nowIso = new Date().toISOString();
+  const today = nowIso.slice(0, 10);
+  const cleanNote = params.note?.trim();
+  const lang = params.lang ?? "zh";
+
+  const updatedDecision: DirectorDecision = {
+    ...cloneDecision(target),
+    status: "decided",
+    chosenOptionId: chosen.id,
+    chosenLabel: chosen.label[lang] || chosen.label.en,
+    ...(cleanNote ? { directorNote: cleanNote } : { directorNote: undefined }),
+    decidedBy: params.decidedBy ?? "Director",
+    decidedAt: nowIso
+  };
+
+  const nextDecisions = decisions.map((d) => (d.id === target.id ? updatedDecision : cloneDecision(d)));
+
+  let nextIssues = issues.map(cloneIssue);
+  if (target.issueId && chosen.effect) {
+    const eff = chosen.effect;
+    nextIssues = nextIssues.map((issue) => {
+      if (issue.id !== target.issueId) return issue;
+      return {
+        ...issue,
+        ...(eff.nextStatus ? { status: eff.nextStatus } : {}),
+        ...(eff.nextRoute ? { route: eff.nextRoute } : {}),
+        ...(eff.nextPriority ? { priority: eff.nextPriority } : {}),
+        updatedAt: today
+      };
+    });
+  }
+
+  return {
+    issues: nextIssues,
+    decisions: nextDecisions,
+    updatedDecision
+  };
+}
+
+export function reopenDirectorDecision(
+  decisions: readonly DirectorDecision[],
+  decisionId: string
+): DirectorDecision[] {
+  return decisions.map((d) => {
+    if (d.id !== decisionId) return cloneDecision(d);
+    const next = cloneDecision(d);
+    next.status = "pending";
+    delete next.chosenOptionId;
+    delete next.chosenLabel;
+    delete next.decidedAt;
+    return next;
+  });
+}
+
+export function createDirectorDecision(
+  decisions: readonly DirectorDecision[],
+  draft: {
+    title: string;
+    context?: string;
+    issueId?: string;
+    options?: readonly DecisionOption[];
+  }
+): DirectorDecision[] {
+  let maxNum = 0;
+  for (const item of decisions) {
+    const m = /^DEC-(\d+)$/.exec(item.id);
+    if (m) {
+      const n = Number(m[1]);
+      if (Number.isFinite(n) && n > maxNum) maxNum = n;
+    }
+  }
+  const nextId = `DEC-${String(maxNum + 1).padStart(2, "0")}`;
+  const cleanTitle = draft.title.trim();
+  const cleanContext = (draft.context ?? "").trim();
+
+  const defaultOptions: readonly DecisionOption[] = [
+    {
+      id: "approve",
+      label: { zh: "✅ 批准放行", en: "✅ Approve", ja: "✅ 承認" },
+      tone: "approve"
+    },
+    {
+      id: "revise",
+      label: { zh: "🔄 需要修改", en: "🔄 Needs Revision", ja: "🔄 修正依頼" },
+      tone: "warn"
+    }
+  ];
+
+  const created: DirectorDecision = {
+    id: nextId,
+    ...(draft.issueId ? { issueId: draft.issueId } : {}),
+    title: { zh: cleanTitle, en: cleanTitle, ja: cleanTitle },
+    context: {
+      zh: cleanContext || "等待导演拍板确认",
+      en: cleanContext || "Pending director sign-off",
+      ja: cleanContext || "監督承認待ち"
+    },
+    status: "pending",
+    options: draft.options && draft.options.length > 0 ? draft.options : defaultOptions,
+    createdAt: new Date().toISOString()
+  };
+
+  return [created, ...decisions.map(cloneDecision)];
 }

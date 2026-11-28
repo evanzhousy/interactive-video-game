@@ -22,6 +22,9 @@
     },
     "api/rephrase.ts": {
       "maxDuration": 15
+    },
+    "api/studio-state.ts": {
+      "maxDuration": 15
     }
   },
   "headers": [

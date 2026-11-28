@@ -22,6 +22,7 @@
     "media:push-drive": "tsx scripts/push-gdrive-assets.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.2.2",
     "@ui-sdk/core": "0.1.0-beta.7",
     "@ui-sdk/react": "0.1.0-beta.7",
     "@vfx-js/core": "^1.6.0",

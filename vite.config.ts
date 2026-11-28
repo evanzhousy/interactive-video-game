@@ -8,6 +8,7 @@ import {
   executeServerRephrase,
   resolveServerFlashProvider
 } from "./src/server/rephrase-handler.js";
+import { handleStudioStateWebRequest } from "./src/server/studio-state-handler.js";
 
 function readRequestBody(req: IncomingMessage, maxBytes = 16_384): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -33,6 +34,31 @@ function flashRephraseDevPlugin(env: Record<string, string | undefined>): Plugin
     if (pathname === "/studio" || pathname === "/studio/") {
       req.url = "/studio.html";
       next();
+      return;
+    }
+    if (pathname === "/api/studio-state") {
+      try {
+        const method = req.method ?? "GET";
+        const body = method === "POST" ? await readRequestBody(req, 65_536) : undefined;
+        const webReq = new Request(`http://localhost:5173${req.url ?? "/api/studio-state"}`, {
+          method,
+          headers: {
+            "content-type": String(req.headers["content-type"] ?? "application/json"),
+            ...(req.headers.origin ? { origin: String(req.headers.origin) } : {})
+          },
+          body
+        });
+        const webRes = await handleStudioStateWebRequest(webReq, env);
+        res.statusCode = webRes.status;
+        webRes.headers.forEach((value, key) => {
+          res.setHeader(key, value);
+        });
+        res.end(await webRes.text());
+      } catch {
+        res.statusCode = 400;
+        res.setHeader("Content-Type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: false, error: "MALFORMED_REQUEST" }));
+      }
       return;
     }
     if (pathname === "/api/generate-visitors") {

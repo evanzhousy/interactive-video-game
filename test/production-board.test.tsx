@@ -14,20 +14,30 @@ import {
   STUDIO_STORYBOARD_SHOTS
 } from "../src/game/production-board.js";
 import {
+  applyDirectorDecision,
   computeKanbanStats,
+  createDirectorDecision,
   createKanbanIssue,
+  DEFAULT_DIRECTOR_DECISIONS,
   DEFAULT_KANBAN_ISSUES,
   filterKanbanIssues,
   KANBAN_COLUMNS,
   moveKanbanIssue,
   parseKanbanImport,
-  serializeKanbanExport
+  reopenDirectorDecision,
+  serializeKanbanExport,
+  type DirectorDecision,
+  type KanbanIssue
 } from "../src/game/production-kanban.js";
 import { getStoryNode } from "../src/game/story-graph.js";
 import {
   renderShotStartEndSnapshots,
   renderShotWhiteboxSnapshot
 } from "../src/game/three-whitebox-renderer.js";
+import {
+  handleStudioStateWebRequest,
+  type StudioSqlRunner
+} from "../src/server/studio-state-handler.js";
 import { App } from "../src/ui/App.js";
 import { InternalHubApp } from "../src/ui/components/InternalHubApp.js";
 
@@ -342,6 +352,43 @@ describe("Production Studio (Visual Asset Board + Storyboard + Three.js 3D Block
     expect(document.getElementById("production-studio-view")?.textContent).toContain("SC-ONER-N1");
     expect(document.querySelectorAll("[data-beat-id]").length).toBe(3);
 
+    // Switch back to Kanban and test Pending Decisions queue -> automatic Kanban transition
+    await act(async () => {
+      (document.getElementById("nav-hub-kanban") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("kanban-decisions-section")).not.toBeNull();
+    expect(document.querySelectorAll("[data-decision-id]").length).toBe(
+      DEFAULT_DIRECTOR_DECISIONS.length
+    );
+
+    const noteInput = document.querySelector('[data-decision-note="DEC-01"]') as HTMLInputElement;
+    await act(async () => {
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+      setter.call(noteInput, "8.2s pillar wipe approved");
+      noteInput.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    await act(async () => {
+      (document.querySelector('[data-decision-action="DEC-01:approve_keyframes"]') as HTMLButtonElement).click();
+    });
+
+    // DEC-01 leaves pending list and G0-07 is in keyframes column
+    expect(document.querySelectorAll("[data-decision-id]").length).toBe(
+      DEFAULT_DIRECTOR_DECISIONS.length - 1
+    );
+    expect(
+      document
+        .querySelector('[data-kanban-column="keyframes"]')
+        ?.querySelector('[data-kanban-issue="G0-07"]')
+    ).not.toBeNull();
+
+    // Decision Log tab displays DEC-01 with the recorded note
+    await act(async () => {
+      (document.getElementById("btn-decisions-tab-log") as HTMLButtonElement).click();
+    });
+    expect(document.getElementById("kanban-decisions-section")?.textContent).toContain(
+      "8.2s pillar wipe approved"
+    );
+
     // Switch to Shared Assets page
     await act(async () => {
       (document.getElementById("nav-hub-assets") as HTMLButtonElement).click();
@@ -360,5 +407,141 @@ describe("Production Studio (Visual Asset Board + Storyboard + Three.js 3D Block
     await act(async () => {
       root.unmount();
     });
+  });
+
+  it("handles Director Decisions pure transitions and /api/studio-state Neon SQL handler", async () => {
+    const applied = applyDirectorDecision(DEFAULT_KANBAN_ISSUES, DEFAULT_DIRECTOR_DECISIONS, {
+      decisionId: "DEC-02",
+      optionId: "route_fl2va",
+      note: "Prefer FL2VA first",
+      lang: "en"
+    });
+    expect(applied.updatedDecision?.status).toBe("decided");
+    expect(applied.updatedDecision?.directorNote).toBe("Prefer FL2VA first");
+    const g08 = applied.issues.find((i) => i.id === "G0-08");
+    expect(g08?.route).toBe("fl2va_keyframes");
+    expect(g08?.status).toBe("keyframes");
+
+    const reopened = reopenDirectorDecision(applied.decisions, "DEC-02");
+    expect(reopened.find((d) => d.id === "DEC-02")?.status).toBe("pending");
+
+    const addedDec = createDirectorDecision(reopened, {
+      title: "Approve Helipad Wind Pass",
+      issueId: "G0-15"
+    });
+    expect(addedDec.length).toBe(DEFAULT_DIRECTOR_DECISIONS.length + 1);
+    expect(addedDec[0]?.id).toBe("DEC-05");
+
+    // 503 when DATABASE_URL is absent
+    const unconfRes = await handleStudioStateWebRequest(
+      new Request("http://localhost:5173/api/studio-state", { method: "GET" }),
+      {}
+    );
+    expect(unconfRes.status).toBe(503);
+
+    // In-memory mock SQL runner verifying seed -> record_decision -> reopen_decision
+    const issueRows = new Map<string, Record<string, unknown>>();
+    const decisionRows = new Map<string, Record<string, unknown>>();
+    const mockSql: StudioSqlRunner = async (query, params = []) => {
+      const q = query.trim();
+      if (q.startsWith("CREATE TABLE")) return [];
+      if (q.includes("COUNT(*)::int AS cnt FROM studio_kanban_issues")) {
+        return [{ cnt: issueRows.size }];
+      }
+      if (q.includes("COUNT(*)::int AS cnt FROM studio_decisions")) {
+        return [{ cnt: decisionRows.size }];
+      }
+      if (q.startsWith("INSERT INTO studio_kanban_issues")) {
+        const id = String(params[0]);
+        issueRows.set(id, {
+          id,
+          title_json: params[1],
+          description_json: params[2],
+          status: params[3],
+          priority: params[4],
+          chapter: params[5],
+          owner: params[6],
+          route: params[7],
+          shot_count: params[8],
+          reel_count: params[9],
+          duration_sec: params[10],
+          linked_shot_id: params[11],
+          linked_asset_tags: params[12],
+          source_ref: params[13],
+          custom: params[14],
+          sort_order: params[15],
+          updated_at: new Date().toISOString()
+        });
+        return [];
+      }
+      if (q.startsWith("INSERT INTO studio_decisions")) {
+        const id = String(params[0]);
+        decisionRows.set(id, {
+          id,
+          issue_id: params[1],
+          title_json: params[2],
+          context_json: params[3],
+          status: params[4],
+          options_json: params[5],
+          chosen_option_id: params[6],
+          chosen_label: params[7],
+          director_note: params[8],
+          decided_by: params[9],
+          decided_at: params[10],
+          created_at: params[11],
+          updated_at: new Date().toISOString()
+        });
+        return [];
+      }
+      if (q.startsWith("SELECT * FROM studio_kanban_issues")) {
+        return [...issueRows.values()];
+      }
+      if (q.startsWith("SELECT * FROM studio_decisions")) {
+        return [...decisionRows.values()];
+      }
+      return [];
+    };
+
+    const getRes = await handleStudioStateWebRequest(
+      new Request("http://localhost:5173/api/studio-state", { method: "GET" }),
+      { DATABASE_URL: "postgres://mock" },
+      mockSql
+    );
+    expect(getRes.status).toBe(200);
+    const getBody = (await getRes.json()) as {
+      ok: boolean;
+      storage: string;
+      issues: KanbanIssue[];
+      decisions: DirectorDecision[];
+    };
+    expect(getBody.ok).toBe(true);
+    expect(getBody.storage).toBe("neon");
+    expect(getBody.issues.length).toBe(DEFAULT_KANBAN_ISSUES.length);
+    expect(getBody.decisions.length).toBe(DEFAULT_DIRECTOR_DECISIONS.length);
+
+    const postRes = await handleStudioStateWebRequest(
+      new Request("http://localhost:5173/api/studio-state", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "record_decision",
+          decisionId: "DEC-01",
+          optionId: "approve_keyframes",
+          note: "Locked in Neon",
+          lang: "en"
+        })
+      }),
+      { DATABASE_URL: "postgres://mock" },
+      mockSql
+    );
+    expect(postRes.status).toBe(200);
+    const postBody = (await postRes.json()) as {
+      ok: boolean;
+      issues: KanbanIssue[];
+      decisions: DirectorDecision[];
+    };
+    expect(postBody.decisions.find((d) => d.id === "DEC-01")?.status).toBe("decided");
+    expect(postBody.decisions.find((d) => d.id === "DEC-01")?.directorNote).toBe("Locked in Neon");
+    expect(postBody.issues.find((i) => i.id === "G0-07")?.status).toBe("keyframes");
   });
 });
