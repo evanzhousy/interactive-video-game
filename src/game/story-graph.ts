@@ -1,7 +1,9 @@
 import { EP0_SUBTITLE_CUES } from "./ep0-cues.generated.js";
+import { N1_SUBTITLE_CUES } from "./n1-cues.generated.js";
 import type { EndingId, LocalizedText } from "./types.js";
 
 export const EP0_MEDIA_BASE_URL = "https://pub-0ab426eff1a7472199ccc8f2292cac9e.r2.dev/ep0-h3-v2";
+export const N1_MEDIA_BASE_URL = "https://pub-0ab426eff1a7472199ccc8f2292cac9e.r2.dev/n1-h3-v1";
 
 export type StoryChapterId =
   | "prologue"
@@ -598,19 +600,22 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    videoSrc: "./videos/story/n1_elena_knock.mp4",
+    isLipSync: true,
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_knock.mp4`,
     fallbackVideoSrc: "./videos/elena/idle.mp4",
-    posterSrc: "./portraits/story/n1_elena_knock.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_elena_knock.jpg",
     fallbackPosterSrc: "./portraits/elena.jpg",
     clips: [
       {
         id: "fb_elena_cabin3",
-        videoSrc: "./videos/story/fb_elena_cabin3.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/fb_elena_cabin3.mp4`,
         fallbackVideoSrc: "./videos/elena/flinch.mp4",
-        posterSrc: "./portraits/story/fb_elena_cabin3.jpg",
+        posterSrc: "./portraits/story/n1/posters/fb_elena_cabin3.jpg",
         fallbackPosterSrc: "./portraits/elena.jpg",
         hasAudio: true,
         isLipSync: false,
+        durationSec: 32,
+        subtitleCues: N1_SUBTITLE_CUES.fb_elena_cabin3,
         badge: { zh: "背景故事 · 3号舱回放", en: "FLASHBACK · CABIN 3", ja: "過去映像 · 第3区画" },
         speaker: {
           zh: "一周前 · 3号舱监控录像",
@@ -625,11 +630,14 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "n1_elena_knock",
-        videoSrc: "./videos/story/n1_elena_knock.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_knock.mp4`,
         fallbackVideoSrc: "./videos/elena/idle.mp4",
-        posterSrc: "./portraits/story/n1_elena_knock.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_elena_knock.jpg",
         fallbackPosterSrc: "./portraits/elena.jpg",
         hasAudio: true,
+        isLipSync: true,
+        durationSec: 48,
+        subtitleCues: N1_SUBTITLE_CUES.n1_elena_knock,
         badge: { zh: "原声口型 · 门外求助", en: "LIP-SYNC · KNOCK", ja: "口型音声 · 現在" },
         speaker: {
           zh: "V-01 // 艾琳娜·万斯医生",
@@ -739,10 +747,35 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    videoSrc: "./videos/story/n1_elena_react_intercom.mp4",
+    isLipSync: true,
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_react_intercom.mp4`,
     fallbackVideoSrc: "./videos/elena/lean_in.mp4",
-    posterSrc: "./portraits/reactions/elena_lean_in.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_elena_react_intercom.jpg",
     fallbackPosterSrc: "./portraits/elena.jpg",
+    clips: [
+      {
+        id: "n1_elena_react_intercom",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_react_intercom.mp4`,
+        fallbackVideoSrc: "./videos/elena/lean_in.mp4",
+        posterSrc: "./portraits/story/n1/posters/n1_elena_react_intercom.jpg",
+        fallbackPosterSrc: "./portraits/elena.jpg",
+        hasAudio: true,
+        isLipSync: true,
+        durationSec: 40,
+        subtitleCues: N1_SUBTITLE_CUES.n1_elena_react_intercom,
+        badge: { zh: "原声口型 · 对讲质询", en: "LIP-SYNC · INTERCOM", ja: "口型音声 · 通話尋問" },
+        speaker: {
+          zh: "V-01 // 艾琳娜·万斯博士",
+          en: "V-01 // DR. ELENA VANCE",
+          ja: "V-01 // エレナ・ヴァンス医師"
+        },
+        subtitle: {
+          zh: "“当时失压只剩十秒，我反锁内门是为了保住站里唯一的手术医生！”",
+          en: "\"We had ten seconds before blowout—I locked it to save the station's sole surgeon!\"",
+          ja: "「減圧まで10秒しかなかった。唯一の執刀医を守るためのロックよ！」"
+        }
+      }
+    ],
     row: 0,
     col: 4,
     choices: [
@@ -816,10 +849,35 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    videoSrc: "./videos/story/n1_elena_react_strobe.mp4",
+    isLipSync: true,
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_react_strobe.mp4`,
     fallbackVideoSrc: "./videos/elena/flinch.mp4",
-    posterSrc: "./portraits/reactions/elena_flinch.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_elena_react_strobe.jpg",
     fallbackPosterSrc: "./portraits/elena.jpg",
+    clips: [
+      {
+        id: "n1_elena_react_strobe",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_react_strobe.mp4`,
+        fallbackVideoSrc: "./videos/elena/flinch.mp4",
+        posterSrc: "./portraits/story/n1/posters/n1_elena_react_strobe.jpg",
+        fallbackPosterSrc: "./portraits/elena.jpg",
+        hasAudio: true,
+        isLipSync: true,
+        durationSec: 40,
+        subtitleCues: N1_SUBTITLE_CUES.n1_elena_react_strobe,
+        badge: { zh: "原声口型 · 强光测试", en: "LIP-SYNC · STROBE", ja: "口型音声 · 閃光検査" },
+        speaker: {
+          zh: "V-01 // 艾琳娜·万斯博士",
+          en: "V-01 // DR. ELENA VANCE",
+          ja: "V-01 // エレナ・ヴァンス医師"
+        },
+        subtitle: {
+          zh: "“把强光关掉！我不是外面那些东西，去查我的配给记录！”",
+          en: "\"Kill that strobe! I am not one of the things out here—check my medbay logs!\"",
+          ja: "「ライトを消して！私は外の化け物じゃない、配給記録を調べなさい！」"
+        }
+      }
+    ],
     row: 2,
     col: 4,
     choices: [
@@ -989,18 +1047,22 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    videoSrc: "./videos/story/n1_elena_outcome_admit.mp4",
+    isLipSync: true,
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_outcome_admit.mp4`,
     fallbackVideoSrc: "./videos/chamber/admit.mp4",
-    posterSrc: "./portraits/reactions/chamber_admit.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_elena_outcome_admit.jpg",
     fallbackPosterSrc: "./portraits/elena.jpg",
     clips: [
       {
         id: "n1_elena_outcome_admit",
-        videoSrc: "./videos/story/n1_elena_outcome_admit.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_outcome_admit.mp4`,
         fallbackVideoSrc: "./videos/chamber/admit.mp4",
-        posterSrc: "./portraits/reactions/chamber_admit.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_elena_outcome_admit.jpg",
         fallbackPosterSrc: "./portraits/elena.jpg",
         hasAudio: true,
+        isLipSync: true,
+        durationSec: 24,
+        subtitleCues: N1_SUBTITLE_CUES.n1_elena_outcome_admit,
         badge: { zh: "原声口型 · 进门瞬间", en: "LIP-SYNC · ADMIT", ja: "口型音声 · 入室" },
         speaker: {
           zh: "V-01 // 艾琳娜走入走廊",
@@ -1015,11 +1077,14 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "n1_corridor_aftermath_admit",
-        videoSrc: "./videos/story/n1_corridor_aftermath_admit.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_corridor_aftermath_admit.mp4`,
         fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
-        posterSrc: "./portraits/story/n1_corridor_admit_frost.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_corridor_aftermath_admit.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_admit.jpg",
-        hasAudio: false,
+        hasAudio: true,
+        isLipSync: false,
+        durationSec: 24,
+        subtitleCues: N1_SUBTITLE_CUES.n1_corridor_aftermath_admit,
         badge: { zh: "走廊监控 · 二十分钟后", en: "CORRIDOR CAM", ja: "監視映像" },
         speaker: {
           zh: "B区医疗走廊监控",
@@ -1094,19 +1159,21 @@ export const STORY_NODES: readonly StoryNode[] = [
     kind: "movie",
     hasAudio: true,
     isLipSync: false,
-    videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_outcome_purge.mp4`,
     fallbackVideoSrc: "./videos/chamber/purge.mp4",
-    posterSrc: "./portraits/reactions/chamber_purge.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_elena_outcome_purge.jpg",
     fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
     clips: [
       {
         id: "n1_elena_outcome_purge",
-        videoSrc: "./videos/story/n1_elena_outcome_purge.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_elena_outcome_purge.mp4`,
         fallbackVideoSrc: "./videos/chamber/purge.mp4",
-        posterSrc: "./portraits/reactions/chamber_purge.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_elena_outcome_purge.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
         hasAudio: true,
         isLipSync: false,
+        durationSec: 24,
+        subtitleCues: N1_SUBTITLE_CUES.n1_elena_outcome_purge,
         badge: { zh: "净化实况 · 1,100°C", en: "THERMAL PURGE", ja: "高温焼却" },
         speaker: {
           zh: "0 号隔离窗 // 高温净化炉",
@@ -1121,12 +1188,14 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "n1_corridor_aftermath_purge",
-        videoSrc: "./videos/story/n1_corridor_aftermath_purge.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_corridor_aftermath_purge.mp4`,
         fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
-        posterSrc: "./portraits/story/n1_corridor_purge_duct.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_corridor_aftermath_purge.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_purge.jpg",
         hasAudio: true,
         isLipSync: false,
+        durationSec: 24,
+        subtitleCues: N1_SUBTITLE_CUES.n1_corridor_aftermath_purge,
         badge: { zh: "原声音效 · 通风口三声敲击", en: "SFX · DUCT KNOCKS", ja: "音声 · ダクト三連打" },
         speaker: {
           zh: "站内走廊顶部通风管",
@@ -1200,19 +1269,22 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    videoSrc: "./videos/story/n1_leo_arrival.mp4",
+    isLipSync: true,
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_arrival_main.mp4`,
     fallbackVideoSrc: "./videos/leo/idle.mp4",
-    posterSrc: "./portraits/story/n1_leo_arrival.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_leo_arrival_main.jpg",
     fallbackPosterSrc: "./portraits/leo.jpg",
     clips: [
       {
         id: "fb_leo_powerbay",
-        videoSrc: "./videos/story/fb_leo_powerbay.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/fb_leo_powerbay.mp4`,
         fallbackVideoSrc: "./videos/leo/flinch.mp4",
-        posterSrc: "./portraits/story/fb_leo_powerbay.jpg",
+        posterSrc: "./portraits/story/n1/posters/fb_leo_powerbay.jpg",
         fallbackPosterSrc: "./portraits/leo.jpg",
         hasAudio: true,
         isLipSync: false,
+        durationSec: 24,
+        subtitleCues: N1_SUBTITLE_CUES.fb_leo_powerbay,
         badge: { zh: "背景故事 · 动力舱暴走", en: "FLASHBACK · POWER BAY", ja: "過去映像 · 動力室" },
         speaker: {
           zh: "两小时前 · 2号动力舱监控",
@@ -1227,11 +1299,14 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "n1_leo_arrival_main",
-        videoSrc: "./videos/story/n1_leo_arrival.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_arrival_main.mp4`,
         fallbackVideoSrc: "./videos/leo/idle.mp4",
-        posterSrc: "./portraits/story/n1_leo_arrival.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_leo_arrival_main.jpg",
         fallbackPosterSrc: "./portraits/leo.jpg",
         hasAudio: true,
+        isLipSync: true,
+        durationSec: 40,
+        subtitleCues: N1_SUBTITLE_CUES.n1_leo_arrival_main,
         badge: { zh: "原声口型 · 抵窗求助", en: "LIP-SYNC · ARRIVAL", ja: "口型音声 · 現在" },
         speaker: {
           zh: "V-02 // 佐藤莱奥",
@@ -1341,10 +1416,35 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    videoSrc: "./videos/story/n1_leo_react_intercom.mp4",
+    isLipSync: true,
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_react_intercom.mp4`,
     fallbackVideoSrc: "./videos/leo/lean_in.mp4",
-    posterSrc: "./portraits/reactions/leo_lean_in.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_leo_react_intercom.jpg",
     fallbackPosterSrc: "./portraits/leo.jpg",
+    clips: [
+      {
+        id: "n1_leo_react_intercom",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_react_intercom.mp4`,
+        fallbackVideoSrc: "./videos/leo/lean_in.mp4",
+        posterSrc: "./portraits/story/n1/posters/n1_leo_react_intercom.jpg",
+        fallbackPosterSrc: "./portraits/leo.jpg",
+        hasAudio: true,
+        isLipSync: true,
+        durationSec: 32,
+        subtitleCues: N1_SUBTITLE_CUES.n1_leo_react_intercom,
+        badge: { zh: "原声口型 · 对讲辩解", en: "LIP-SYNC · INTERCOM", ja: "口型音声 · 通話" },
+        speaker: {
+          zh: "V-02 // 佐藤莱奥",
+          en: "V-02 // LEO SATO",
+          ja: "V-02 // 佐藤レオ"
+        },
+        subtitle: {
+          zh: "“液压总阀崩的时候烟冲满整间机房，老师傅喊我抱着备用箱先往外冲——我没扔下谁！”",
+          en: "\"Smoke flooded Bay 2 when the valve sheared—the chief yelled for me to haul the spare kit outside!\"",
+          ja: "「バルブが飛んだ時、部屋中が煙で埋まって親方が俺に工具箱を持って先に出ろって叫んだんだ！」"
+        }
+      }
+    ],
     row: 0,
     col: 9,
     choices: [
@@ -1418,12 +1518,36 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    isLipSync: false,
+    isLipSync: true,
     visitorId: "V-02",
-    videoSrc: "./videos/story/n1_leo_toolbox_check.mp4",
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_react_toolbox.mp4`,
     fallbackVideoSrc: "./videos/leo/flinch.mp4",
-    posterSrc: "./portraits/story/n1_leo_toolbox_check.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_leo_react_toolbox.jpg",
     fallbackPosterSrc: "./portraits/leo.jpg",
+    clips: [
+      {
+        id: "n1_leo_react_toolbox",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_react_toolbox.mp4`,
+        fallbackVideoSrc: "./videos/leo/flinch.mp4",
+        posterSrc: "./portraits/story/n1/posters/n1_leo_react_toolbox.jpg",
+        fallbackPosterSrc: "./portraits/leo.jpg",
+        hasAudio: true,
+        isLipSync: true,
+        durationSec: 32,
+        subtitleCues: N1_SUBTITLE_CUES.n1_leo_react_toolbox,
+        badge: { zh: "原声口型 · 工具箱核验", en: "LIP-SYNC · TOOL CHEST", ja: "口型音声 · 工具箱確認" },
+        speaker: {
+          zh: "V-02 // 佐藤莱奥（窗前近景）",
+          en: "V-02 // LEO SATO (GLASS CLOSE-UP)",
+          ja: "V-02 // 佐藤レオ（窓前近景）"
+        },
+        subtitle: {
+          zh: "“看，备用黄铜减压阀真在里面！箱扣被电弧熏黑了……扳手刚才跑太急掉风闸口了，快放我进去吧！”",
+          en: "\"Look—the brass thermal valve is right inside! The latch got scorched by the arc… I dropped the wrench by the vent hatch, just open the lock!\"",
+          ja: "「見てくれ、予備の真鍮バルブは中にある！留め金が焦げて……レンチはハッチで落とした、早く入れてくれ！」"
+        }
+      }
+    ],
     row: 2,
     col: 9,
     choices: [
@@ -1593,18 +1717,22 @@ export const STORY_NODES: readonly StoryNode[] = [
     },
     kind: "movie",
     hasAudio: true,
-    videoSrc: "./videos/story/n1_leo_outcome_admit.mp4",
+    isLipSync: true,
+    videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_outcome_admit.mp4`,
     fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
-    posterSrc: "./portraits/leo.jpg",
+    posterSrc: "./portraits/story/n1/posters/n1_leo_outcome_admit.jpg",
     fallbackPosterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
     clips: [
       {
         id: "n1_leo_outcome_admit",
-        videoSrc: "./videos/story/n1_leo_outcome_admit.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_leo_outcome_admit.mp4`,
         fallbackVideoSrc: "./videos/leo/idle.mp4",
-        posterSrc: "./portraits/leo.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_leo_outcome_admit.jpg",
         fallbackPosterSrc: "./portraits/reactions/chamber_admit.jpg",
         hasAudio: true,
+        isLipSync: true,
+        durationSec: 14,
+        subtitleCues: N1_SUBTITLE_CUES.n1_leo_outcome_admit,
         badge: { zh: "原声口型 · 第 1 夜收尾", en: "LIP-SYNC · LEO ADMIT", ja: "口型音声 · リオ入室" },
         speaker: {
           zh: "V-02 // 佐藤里奥进舱后",
@@ -1619,12 +1747,14 @@ export const STORY_NODES: readonly StoryNode[] = [
       },
       {
         id: "n1_cliffhanger_shadow",
-        videoSrc: "./videos/story/n1_cliffhanger_shadow.mp4",
+        videoSrc: `${N1_MEDIA_BASE_URL}/n1_cliffhanger_shadow.mp4`,
         fallbackVideoSrc: "./videos/story/n1_corridor_aftermath.mp4",
-        posterSrc: "./portraits/story/n1_corridor_aftermath.jpg",
+        posterSrc: "./portraits/story/n1/posters/n1_cliffhanger_shadow.jpg",
         fallbackPosterSrc: "./portraits/lobby_bg.jpg",
         hasAudio: true,
         isLipSync: false,
+        durationSec: 14,
+        subtitleCues: N1_SUBTITLE_CUES.n1_cliffhanger_shadow,
         badge: { zh: "片尾悬念 · 走廊黑影", en: "CLIFFHANGER · SHADOW", ja: "次回予告 · 廊下の影" },
         speaker: {
           zh: "03:00 // 内舱长廊 7 号监控",

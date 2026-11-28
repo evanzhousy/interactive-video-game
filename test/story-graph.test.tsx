@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { INTAKE_QUESTIONS } from "../src/game/night5.js";
 import { loadCompendium, recordStoryProgress } from "../src/game/storage.js";
 import {
+  N1_MEDIA_BASE_URL,
   PROLOGUE_NODE_IDS,
   STORY_EDGES,
   STORY_NODES,
@@ -109,11 +110,40 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
     expect(getStoryNode("ending_dawn_break")!.clips?.length).toBe(2);
     expect(getStoryNode("n1_leo_react_toolbox")).toBeDefined();
 
+    // Stage 1 Night 1 MiniMax-H3 master (14 reels = 412s): R2 URLs, local posters, subtitleCues, and speaking vs SFX flags
+    const n1MovieNodeIds = [
+      "n1_elena_arrival",
+      "n1_elena_react_intercom",
+      "n1_elena_react_strobe",
+      "n1_corridor_admit",
+      "n1_corridor_purge",
+      "n1_leo_arrival",
+      "n1_leo_react_intercom",
+      "n1_leo_react_toolbox",
+      "n1_leo_aftermath"
+    ] as const;
+    const n1Clips = n1MovieNodeIds.flatMap((nid) => getStoryNode(nid)!.clips ?? []);
+    expect(n1Clips.length).toBe(14);
+    expect(n1Clips.reduce((sum, c) => sum + (c.durationSec ?? 0), 0)).toBe(412);
+    for (const seg of n1Clips) {
+      expect(seg.videoSrc.startsWith(`${N1_MEDIA_BASE_URL}/`)).toBe(true);
+      expect(seg.posterSrc).toBe(`./portraits/story/n1/posters/${seg.id}.jpg`);
+      expect(seg.hasAudio).toBe(true);
+      expect(seg.subtitleCues?.length ?? 0).toBeGreaterThan(0);
+    }
+    const n1LeoArrivalCues = JSON.stringify(
+      getStoryNode("n1_leo_arrival")!.clips?.find((c) => c.id === "n1_leo_arrival_main")?.subtitleCues ?? []
+    );
+    expect(n1LeoArrivalCues).toContain("姜茶");
+    expect(n1LeoArrivalCues).toContain("转正");
+
     // Every native-SFX Hollywood clip must be unmuted with isLipSync: false
     const nativeSfxClipIds = [
       ["prologue_01", "prequel_icecore_breach"],
       ["n1_elena_arrival", "fb_elena_cabin3"],
+      ["n1_corridor_admit", "n1_corridor_aftermath_admit"],
       ["n1_corridor_purge", "n1_elena_outcome_purge"],
+      ["n1_corridor_purge", "n1_corridor_aftermath_purge"],
       ["n1_leo_arrival", "fb_leo_powerbay"],
       ["n1_leo_aftermath", "n1_cliffhanger_shadow"],
       ["ending_eternal_seal", "end_b_purge_blast"],
@@ -362,8 +392,8 @@ describe("Interactive Movie Story Graph & Flowchart Persistence", () => {
       "./videos/story/ending_c_mirror_door.mp4",
       "./videos/story/ending_d_op09_tape.mp4",
       "./videos/story/ending_d_dawn_logbook.mp4",
-      "./videos/story/n1_corridor_aftermath_admit.mp4",
-      "./videos/story/n1_corridor_aftermath_purge.mp4"
+      `${N1_MEDIA_BASE_URL}/n1_corridor_aftermath_admit.mp4`,
+      `${N1_MEDIA_BASE_URL}/n1_corridor_aftermath_purge.mp4`
     ]) {
       expect(allAssetsJson).toContain(expectedVideo);
     }
