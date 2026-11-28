@@ -100,7 +100,8 @@ IMAGES = {
 STYLE = (
     "r34l1sm, Facial Realism, unretouched 35mm anamorphic cinema still, ARRI Alexa Mini LF, "
     "Kodak Vision3 500T film look, natural matte skin texture with fine pores, zero oily shine, "
-    "no harsh specular highlights, grounded Hollywood Arctic sci-fi realism. No subtitles, no text overlays."
+    "no harsh specular highlights, grounded Hollywood Arctic sci-fi realism. "
+    "Zero burnt-in subtitles, zero Chinese or English captions, clean unobstructed bottom frame, no text overlays anywhere."
 )
 
 
@@ -277,8 +278,8 @@ SHOTS: list[dict] = [
 
     # ================= 3. n1_elena_react_intercom (5 shots, 42s, lipSync) =================
     make_shot(
-        "n1_ei_01", "n1_elena_react_intercom", "elena_lean_in.jpg", 192, 0.45, 41301,
-        "Tight medium close-up across the scarred steel intercom counter: Elena leans sharply forward, eyes cold and unflinching behind frosted rimless glasses as she snaps back at your Cabin 3 accusation.",
+        "n1_ei_01", "n1_elena_react_intercom", "elena_lean_in.jpg", 192, 0.45, 41311,
+        "Tight medium close-up across the scarred steel intercom counter in dim amber and cyan booth light (clean dark bottom frame edge, zero burnt-in subtitles, zero captions): Elena leans sharply forward, eyes cold and unflinching behind frosted rimless glasses as she snaps back at your Cabin 3 accusation.",
         "Sharp intercom click, tense booth silence outside storm hiss, cold defensive female voice.",
         "V-01 // 艾琳娜（对讲辩解）", "V-01 // ELENA (INTERCOM)", "V-01 // エレナ（弁明）",
         "你现在跟我翻三号舱的旧账？当时失压只剩十秒！",
@@ -288,8 +289,8 @@ SHOTS: list[dict] = [
         dialogue_window=("00:00.40", "00:06.50"),
     ),
     make_shot(
-        "n1_ei_02", "n1_elena_react_intercom", "elena_lean_in.jpg", 192, 0.45, 41302,
-        "Seamless continuation: Elena holds her chin steady without flinching, speaking with razor-sharp clinical precision as frost flakes melt under the amber booth lamp.",
+        "n1_ei_02", "n1_elena_react_intercom", "elena_lean_in.jpg", 192, 0.45, 41312,
+        "Seamless continuation (clean unobstructed bottom frame, zero text or subtitles): Elena holds her chin steady without flinching, speaking with razor-sharp clinical precision as frost flakes melt under the amber booth lamp.",
         "Crisp quiet intercom acoustics, razor-sharp clinical female Mandarin.",
         "V-01 // 艾琳娜（对讲辩解）", "V-01 // ELENA (INTERCOM)", "V-01 // エレナ（弁明）",
         "我反锁内门是为了保住站里唯一的手术医生，不是因为我怕死！",
@@ -473,8 +474,8 @@ SHOTS: list[dict] = [
         "焼却レバーを引く。前後シャッターが閉鎖され、天井の燃料ノズルが一斉に点火する！",
     ),
     make_shot(
-        "n1_ep_02", "n1_elena_outcome_purge", "chamber_purge.jpg", 192, 0.0, 41702,
-        "Seamless continuation behind the armored glass: blinding 1,100C orange-white plasma flames roar downward filling the entire steel chamber in violent swirling firelight, vibrating the observation pane.",
+        "n1_ep_02", "n1_elena_outcome_purge", "chamber_purge.jpg", 192, 0.0, 41712,
+        "Strictly empty unoccupied industrial steel containment chamber behind armored glass—ZERO humans, NO people, NO faces, NO characters anywhere: blinding 1,100C orange-white plasma flames roar downward from ceiling thermal nozzles, engulfing bare riveted steel walls and grating in swirling firelight.",
         "Deafening 1,100C furnace blast roar, metallic chamber reverberation, intense crackling inferno.",
         "0号隔离窗 // 燃料 -1 FUEL", "GATE 0 FURNACE // -1 FUEL", "第0関門 // 燃料 -1 FUEL",
         "1,100°C 烈焰在防爆玻璃后轰鸣吞没了一切，供暖燃料随之消耗一格。",
@@ -483,8 +484,8 @@ SHOTS: list[dict] = [
         chain_prev="n1_ep_01",
     ),
     make_shot(
-        "n1_ep_03", "n1_elena_outcome_purge", "chamber_purge.jpg", 192, 0.0, 41703,
-        "Direct seamless continuation as the thermal jets cut off: thick black smoke curls upward past glowing red-hot blackened steel walls while amber cooling fans whirr to life.",
+        "n1_ep_03", "n1_elena_outcome_purge", "chamber_purge.jpg", 192, 0.0, 41713,
+        "Strictly empty unoccupied charred steel containment chamber—ZERO humans, NO faces, NO people: as thermal nozzles shut off, thick black smoke curls upward past blackened scorched riveted steel walls and floor grates while ceiling exhaust fans spin in amber emergency light.",
         "Fuel cutoff clunk, cooling exhaust fan spooling up, crackling hot steel ticks.",
         "0号隔离窗 // 冷却排烟", "GATE 0 // COOLING CYCLE", "第0関門 // 冷却排煙",
         "喷嘴切断，余烬在焦黑钢壁上噼啪作响，排烟扇嗡鸣启动。",
@@ -665,8 +666,8 @@ SHOTS: list[dict] = [
 
     # ================= 12. n1_leo_react_toolbox (4 shots, 34s, dual-frame bridge) =================
     make_shot(
-        "n1_lt_01", "n1_leo_react_toolbox", "leo_flinch.jpg", 192, 0.40, 42201,
-        "Startled at first by your intercom order, Leo nods rapidly with frost-red cheeks and grabs both handles of his heavy white tool chest to lift it up toward the blast glass.",
+        "n1_lt_01", "n1_leo_react_toolbox", "leo_flinch.jpg", 192, 0.40, 42211,
+        "Locked tight medium close-up outside the dark frost-framed Gate 0 steel blast window in cold cyan-blue polar night lighting (preserve exact dark quilted winter parka, dark knit beanie, and ice-rimmed blast glass; NO bright white corridor, NO shirt text, clean unobstructed bottom frame with zero subtitles): startled Leo nods rapidly with frost-red cheeks and lifts the edge of his heavy white tool chest into the lower window frame.",
         "Heavy plastic-and-steel tool chest scraping off icy grating, hurried breath, eager young male voice.",
         "V-02 // 莱奥（举箱核验）", "V-02 // LEO (TOOLBOX)", "V-02 // レオ（工具箱確認）",
         "好好好，我举起来！您透过防爆窗仔细看——",
@@ -676,8 +677,8 @@ SHOTS: list[dict] = [
         dialogue_window=("00:00.40", "00:06.20"),
     ),
     make_shot(
-        "n1_lt_02", "n1_leo_react_toolbox", "leo_flinch.jpg", 192, 0.25, 42202,
-        "Seamless continuous downward tilt and push-in from Leo's shivering face onto his gloved hands heaving the heavy scorched white tool chest right against the frosted blast glass and popping open the charred metal latches to reveal the glowing brass valve inside.",
+        "n1_lt_02", "n1_leo_react_toolbox", "leo_flinch.jpg", 192, 0.25, 42212,
+        "Staying strictly outside the same dark cyan-blue frosted Gate 0 blast window in -46C polar night (NO white hallway, zero subtitles or text): smooth continuous tilt down from Leo's frost-red face onto his gloved hands heaving the heavy scorched white tool chest right against the wired glass and popping open the charred metal latches to reveal the glowing brass valve inside.",
         "Loud metallic latch snap open, heavy chest thumping gently against thick glass, breathless young male exertion.",
         "V-02 // 焦黑工具箱贴窗", "SCORCHED TOOL CHEST // LATCH", "焦げた工具箱 // 留め金",
         "箱扣刚才被高压电弧熏黑了，我掰开盖子给您核验里头的备件！",
@@ -715,9 +716,9 @@ SHOTS: list[dict] = [
 
     # ================= 13. n1_leo_outcome_admit (2 shots, 14s, lipSync) =================
     make_shot(
-        "n1_lo_01", "n1_leo_outcome_admit", "chamber_admit.jpg", 192, 0.0, 42301,
-        "Inside Gate 0 airlock threshold: green clearance lamps illuminate, locking bolts slide open with a crisp pneumatic hiss, and young Leo rushes gratefully into the warm corridor clutching his white tool chest.",
-        "Airlock bolts retracting, green clearance chime, heavy boots hurrying inside, relieved breathless young male thanks.",
+        "n1_lo_01", "n1_leo_outcome_admit", "chamber_admit.jpg", 192, 0.0, 42311,
+        "Inside Gate 0 airlock threshold (strictly framing the heavy steel airlock doorway, green clearance lamps, and swirling white cold mist; NO random faces, NO close-up strangers): green clearance lamps illuminate, steel locking bolts slide open with a sharp pneumatic hiss, and a dark parka-clad arm carrying a white tool chest steps across the threshold into warm amber corridor light while Leo's grateful voice calls from the doorway.",
+        "Airlock bolts retracting, green clearance chime, heavy boots stepping inside, relieved breathless young male thanks.",
         "V-02 // 莱奥进舱后", "V-02 // LEO ADMITTED", "V-02 // レオ入室後",
         "谢了兄弟！备用阀放这儿了，您真够意思！",
         "Thanks pal! Spare valve kit is right here—you saved my skin!",
@@ -748,8 +749,8 @@ SHOTS: list[dict] = [
         "午前3時、交代の鐘の直前、第7監視カメラの廊下灯が激しく明滅し始めた——",
     ),
     make_shot(
-        "n1_cs_02", "n1_cliffhanger_shadow", "n1_corridor_aftermath.jpg", 141, 0.0, 42402,
-        "Direct seamless continuation on the flickering corridor camera: during a single strobe flash, a tall motionless parka-clad silhouette stands dead still at the far end of the corridor staring directly toward Gate 0 before the lamp snaps dark.",
+        "n1_cs_02", "n1_cliffhanger_shadow", "n1_corridor_aftermath.jpg", 141, 0.0, 42412,
+        "Locked static wide-angle CCTV corridor perspective (zero camera cut, zero close-up, no turning woman, keep deep hallway perspective unchanged): during a brief overhead strobe flash at the very far twenty-meter end of the dark riveted steel corridor, a distant motionless dark winter-parka silhouette stands completely still in deep shadow staring straight down the hallway toward Gate 0 before the bulb snaps dark.",
         "Sharp electrical lamp pop, deep ominous sub-bass cinema drone, dead quiet.",
         "第 1 夜片尾悬念 // 走廊黑影", "NIGHT 1 FINALE // CORRIDOR SHADOW", "第1夜終盤 // 廊下の影",
         "一个很高的人影站在走廊尽头一动不动盯着岗亭方向——明晚，更危险的访客要敲门了。",

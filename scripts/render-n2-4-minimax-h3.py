@@ -117,7 +117,8 @@ IMAGES = {
 STYLE = (
     "r34l1sm, Facial Realism, unretouched 35mm anamorphic cinema still, ARRI Alexa Mini LF, "
     "Kodak Vision3 500T film look, natural matte skin texture with fine pores, zero oily shine, "
-    "no harsh specular highlights, grounded Hollywood Arctic sci-fi realism. No subtitles, no text overlays."
+    "no harsh specular highlights, grounded Hollywood Arctic sci-fi realism. "
+    "Zero burnt-in subtitles, zero Chinese or English captions, clean unobstructed bottom frame, no text overlays anywhere."
 )
 
 
