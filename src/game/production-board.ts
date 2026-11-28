@@ -4,7 +4,51 @@ import { ALL_VISITORS } from "./visitors/index.js";
 
 export type AssetKind = "cast" | "prop" | "set";
 export type WhiteboxRenderMode = "clay" | "depth" | "lit";
-export type CameraMotionPreset = "static" | "dolly_in" | "pan" | "handheld" | "pull_back";
+export type CameraMotionPreset = "static" | "dolly_in" | "pan" | "handheld" | "pull_back" | "oner";
+export type RenderPipelineRoute = "fl2va_keyframes" | "v2v_whitebox";
+
+export interface CameraKeyframe3D {
+  pos: [number, number, number];
+  target: [number, number, number];
+  fov: number;
+  lensLabel: string;
+}
+
+export interface ActorPathOverride3D {
+  id: string;
+  startPos: [number, number, number];
+  endPos: [number, number, number];
+  startRotY: number;
+  endRotY: number;
+}
+
+export interface CheatPoint3D {
+  atSec: number;
+  pos: [number, number, number];
+  label: LocalizedText;
+}
+
+export interface CameraBeat3D {
+  id: string;
+  label: LocalizedText;
+  startSec: number;
+  endSec: number;
+  color: string;
+  camera: CameraKeyframe3D;
+  endCamera: CameraKeyframe3D;
+  rigNote: LocalizedText;
+  cheatPoint?: CheatPoint3D;
+  actorOverrides?: readonly ActorPathOverride3D[];
+}
+
+export interface SampledBlockingFrame {
+  timeSec: number;
+  progress: number;
+  camera: CameraBlocking3D;
+  actors: ActorBlocking3D[];
+  activeBeat?: CameraBeat3D;
+  activeBeatIndex: number;
+}
 
 export interface CastAssetSpec {
   id: string;
@@ -101,10 +145,13 @@ export interface StoryboardShot {
   fallbackVideoSrc: string;
   boundAssetTags: readonly string[];
   motionPreset: CameraMotionPreset;
+  pipelineRoute?: RenderPipelineRoute;
   blocking: {
     zone: "outer_blizzard" | "vestibule" | "booth" | "inner_corridor";
     alertLight: "amber" | "red" | "cyan";
     camera: CameraBlocking3D;
+    endCamera?: CameraKeyframe3D;
+    beats?: readonly CameraBeat3D[];
     actors: readonly ActorBlocking3D[];
     props?: readonly PropBlocking3D[];
   };
@@ -118,8 +165,19 @@ export interface ShotExportPackage {
   lens: string;
   fov: number;
   motionPreset: CameraMotionPreset;
+  pipelineRoute?: RenderPipelineRoute;
   cameraPos: [number, number, number];
   cameraTarget: [number, number, number];
+  endCameraPos?: [number, number, number];
+  endCameraTarget?: [number, number, number];
+  beats?: Array<{
+    id: string;
+    label: string;
+    startSec: number;
+    endSec: number;
+    rigNote: string;
+    cheatPointSec?: number;
+  }>;
   boundAssets: Array<{ tag: string; name: string; promptAnchor: string }>;
   lipSyncLine?: string;
   promptText: string;
@@ -1613,8 +1671,386 @@ export const STUDIO_STORYBOARD_SHOTS: readonly StoryboardShot[] = [
       ],
       props: []
     }
+  },
+  {
+    id: "shot_oner_n1_corridor_booth",
+    storyNodeId: "prologue_03",
+    shotCode: "SC-ONER-N1",
+    chapter: { zh: "长镜头预演 · 第 1 夜接班", en: "ONER PRE-VIZ · NIGHT 01", ja: "長回し · 第1夜交代" },
+    title: {
+      zh: "N1 一镜到底：红警走廊 → 钢柱擦除入亭 → 锁定防爆窗",
+      en: "N1 Oner: Red Corridor -> Pillar Wipe -> Blast Window Lock",
+      ja: "N1 長回し：赤色廊下 → 鋼柱ワイプ → 防爆窓ロック"
+    },
+    framing: "35mm→50mm Stabilized Oner (3 Beats · 24s)",
+    cameraMove: {
+      zh: "稳定器跟拍 #09 穿行冰封走廊，贴右钢柱擦除进入 0 号岗亭并绕过控制台定格防爆玻璃",
+      en: "Stabilizer tracks #09 down iced corridor, wipes past bulkhead pillar into Booth 0, and arcs around console onto blast glass",
+      ja: "廊下から鋼柱ワイプで当直室0へ入り、操作盤を回り込み防爆窓へ定着"
+    },
+    durationSec: 24.0,
+    frames: 576,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/story/prologue_01_handover.jpg",
+    videoSrc: "./videos/story/prologue_01_handover.mp4",
+    fallbackVideoSrc: "./videos/story/prologue_01_handover.mp4",
+    boundAssetTags: ["@set_corridor", "@set_booth", "@op09", "@intercom", "@blackbox", "@ledger", "@purge_valve"],
+    motionPreset: "oner",
+    pipelineRoute: "fl2va_keyframes",
+    blocking: {
+      zone: "inner_corridor",
+      alertLight: "amber",
+      camera: {
+        pos: [6.2, 1.52, -2.6],
+        target: [5.9, 1.38, -1.5],
+        fov: 54,
+        lensLabel: "35mm Anamorphic",
+        axisNote: {
+          zh: "3 段 8s 接力（匹配 fl2va 上限）：借 8.2s 右钢柱遮挡完成走廊→岗亭擦除转场。",
+          en: "3x 8s fl2va segments: 8.2s steel pillar wipe masks corridor-to-booth transition cleanly.",
+          ja: "8秒×3区間構成：8.2秒の鋼柱ワイプで廊下から当直室へシームレス接続。"
+        }
+      },
+      endCamera: {
+        pos: [0.0, 1.46, 1.72],
+        target: [0.0, 1.42, 0.0],
+        fov: 39,
+        lensLabel: "50mm Anamorphic"
+      },
+      beats: [
+        {
+          id: "beat_n1_1",
+          label: { zh: "1. 走廊跟拍", en: "1. Corridor Track", ja: "1. 廊下追従" },
+          startSec: 0,
+          endSec: 8,
+          color: "#5bbad5",
+          camera: { pos: [6.2, 1.52, -2.6], target: [5.9, 1.38, -1.5], fov: 54, lensLabel: "35mm Anamorphic" },
+          endCamera: { pos: [3.9, 1.5, 1.4], target: [3.2, 1.4, 1.1], fov: 54, lensLabel: "35mm Anamorphic" },
+          rigNote: {
+            zh: "稳定器低速跟拍 #09 从气闸门走向岗亭通道口",
+            en: "Stabilizer tracks #09 from airlock toward booth threshold",
+            ja: "気閘扉から当直室通路へステディカム追従"
+          },
+          actorOverrides: [
+            { id: "op09", startPos: [5.9, 0, -1.5], endPos: [3.2, 0, 1.1], startRotY: 0, endRotY: -Math.PI / 2 }
+          ]
+        },
+        {
+          id: "beat_n1_2",
+          label: { zh: "2. 钢柱擦除入亭", en: "2. Pillar Wipe Entry", ja: "2. 鋼柱ワイプ入室" },
+          startSec: 8,
+          endSec: 16,
+          color: "#eba834",
+          camera: { pos: [3.9, 1.5, 1.4], target: [3.2, 1.4, 1.1], fov: 54, lensLabel: "35mm Anamorphic" },
+          endCamera: { pos: [1.2, 1.48, 2.35], target: [0.1, 1.42, 1.1], fov: 46, lensLabel: "40mm Anamorphic" },
+          rigNote: {
+            zh: "8.2s 紧贴右钢柱擦除遮挡，无缝切入 0 号岗亭并收紧至 40mm",
+            en: "Grazes right steel bulkhead at 8.2s to wipe cleanly into Booth 0 at 40mm",
+            ja: "8.2秒に右鋼柱を擦過ワイプして当直室0へ入室（40mm）"
+          },
+          cheatPoint: {
+            atSec: 8.2,
+            pos: [2.1, 1.5, 0.08],
+            label: { zh: "右钢柱前景擦除 (Cheat Point)", en: "Steel Pillar Wipe (Cheat Point)", ja: "鋼柱ワイプ通過点" }
+          },
+          actorOverrides: [
+            { id: "op09", startPos: [3.2, 0, 1.1], endPos: [0.1, 0, 2.15], startRotY: -Math.PI / 2, endRotY: Math.PI }
+          ]
+        },
+        {
+          id: "beat_n1_3",
+          label: { zh: "3. 绕台锁定窗框", en: "3. Console Arc Lock", ja: "3. 卓回り窓ロック" },
+          startSec: 16,
+          endSec: 24,
+          color: "#e04634",
+          camera: { pos: [1.2, 1.48, 2.35], target: [0.1, 1.42, 1.1], fov: 46, lensLabel: "40mm Anamorphic" },
+          endCamera: { pos: [0.0, 1.46, 1.72], target: [0.0, 1.42, 0.0], fov: 39, lensLabel: "50mm Anamorphic" },
+          rigNote: {
+            zh: "180° 绕过琥珀控制台落幅防爆玻璃正前方，接第 1 夜首声敲门",
+            en: "180-deg arc around amber console locking POV onto blast glass before Night 1 knock",
+            ja: "操作盤を180度回り込み防爆窓正面で静止、第1夜のノックへ接続"
+          },
+          actorOverrides: [
+            { id: "op09", startPos: [0.1, 0, 2.15], endPos: [0.0, 0, 2.2], startRotY: Math.PI, endRotY: Math.PI }
+          ]
+        }
+      ],
+      actors: [
+        { id: "op09", label: "新任值班员 #09", pos: [5.9, 0, -1.5], rotY: 0, color: "#49b882", speaking: true },
+        { id: "op08", label: "前任值班员 #08", pos: [0.35, 0, 2.1], rotY: -Math.PI / 2, color: "#eba834" }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.38, 0.82, 1.42], color: "#eba834" },
+        { id: "p_blackbox", assetTag: "@blackbox", label: "#08 黑匣子磁带机", primitive: "tape", pos: [0.35, 0.82, 1.46], rotY: 0.25, color: "#49b882" },
+        { id: "p_ledger", assetTag: "@ledger", label: "记录板与密钥", primitive: "ledger", pos: [0.02, 0.82, 1.48], color: "#d08770" },
+        { id: "p_valve", assetTag: "@purge_valve", label: "高温净化阀组", primitive: "box", pos: [7.0, 0.85, -0.4], rotY: -Math.PI / 2, color: "#e04634" }
+      ]
+    }
+  },
+  {
+    id: "shot_oner_n5_mirror_approach",
+    storyNodeId: "n5_final_mirror",
+    shotCode: "SC-ONER-N5",
+    chapter: { zh: "长镜头预演 · 第 5 夜终局", en: "ONER PRE-VIZ · NIGHT 05", ja: "長回し · 第5夜終局" },
+    title: {
+      zh: "N5 一镜到底：白化逼近 → 结霜窗框擦除 → 镜面对峙",
+      en: "N5 Oner: Blizzard Approach -> Frost Frame Wipe -> Mirror Reveal",
+      ja: "N5 長回し：吹雪接近 → 霜枠ワイプ → 鏡像対峙"
+    },
+    framing: "28mm→50mm Mirror Oner (3 Beats · 21s)",
+    cameraMove: {
+      zh: "低机位跟随兜帽身影穿过暴雪逼近隔离窗，贴结霜左钢框擦除绕入岗亭内部反拍替身",
+      en: "Low blizzard track behind hooded silhouette, wipes past frosted mullion into booth, revealing your identical double",
+      ja: "吹雪のフード姿を背後から追い、霜の窓枠ワイプで当直室内へ回り込み同一人物を明かす"
+    },
+    durationSec: 21.0,
+    frames: 504,
+    hasNativeAudio: false,
+    posterSrc: "./portraits/operator09.jpg",
+    videoSrc: "./videos/operator09/idle.mp4",
+    fallbackVideoSrc: "./videos/operator09/idle.mp4",
+    boundAssetTags: ["@set_vestibule", "@set_booth", "@op09", "@intercom", "@ledger"],
+    motionPreset: "oner",
+    pipelineRoute: "v2v_whitebox",
+    blocking: {
+      zone: "vestibule",
+      alertLight: "red",
+      camera: {
+        pos: [-0.35, 1.25, -5.2],
+        target: [-0.2, 1.42, -3.5],
+        fov: 64,
+        lensLabel: "28mm Anamorphic",
+        axisNote: {
+          zh: "复杂绕窗长镜头：7.4s 结霜左钢框作为 Cheat Point，建议导出写实首帧 + 完整白膜视频走 V2V。",
+          en: "Complex window wrap: 7.4s frosted mullion Cheat Point; export realistic start frame + full white-box V2V video.",
+          ja: "7.4秒の霜枠ワイプ経由で室内へ回り込むため、写実先頭フレーム＋白模V2V動画を推奨。"
+        }
+      },
+      endCamera: {
+        pos: [0.12, 1.46, 1.42],
+        target: [-0.1, 1.48, -1.05],
+        fov: 38,
+        lensLabel: "50mm Anamorphic"
+      },
+      beats: [
+        {
+          id: "beat_n5_1",
+          label: { zh: "1. 暴雪低机位跟拍", en: "1. Blizzard Low Track", ja: "1. 吹雪ロー追従" },
+          startSec: 0,
+          endSec: 7,
+          color: "#5bbad5",
+          camera: { pos: [-0.35, 1.25, -5.2], target: [-0.2, 1.42, -3.5], fov: 64, lensLabel: "28mm Anamorphic" },
+          endCamera: { pos: [-0.85, 1.45, -1.75], target: [-0.15, 1.48, -0.9], fov: 64, lensLabel: "28mm Anamorphic" },
+          rigNote: {
+            zh: "外舱暴雪低机位紧跟兜帽背影向隔离窗推进（全程不露正脸）",
+            en: "Low exterior track behind hooded silhouette approaching blast glass (face hidden)",
+            ja: "外郭の吹雪でフード姿の背後を低位置から追尾"
+          },
+          actorOverrides: [
+            { id: "op09_double", startPos: [-0.2, 0, -4.1], endPos: [-0.15, 0, -1.15], startRotY: 0, endRotY: 0 }
+          ]
+        },
+        {
+          id: "beat_n5_2",
+          label: { zh: "2. 窗框擦除入亭", en: "2. Frost Mullion Wipe", ja: "2. 霜窓枠ワイプ" },
+          startSec: 7,
+          endSec: 14,
+          color: "#eba834",
+          camera: { pos: [-0.85, 1.45, -1.75], target: [-0.15, 1.48, -0.9], fov: 64, lensLabel: "28mm Anamorphic" },
+          endCamera: { pos: [0.65, 1.48, 1.85], target: [-0.1, 1.48, -0.8], fov: 54, lensLabel: "35mm Anamorphic" },
+          rigNote: {
+            zh: "7.4s 贴结霜左钢框擦除穿过边界，绕入岗亭内侧建立主客对峙关系",
+            en: "7.4s wipe across frosted left mullion wrapping inside Booth 0",
+            ja: "7.4秒で左の霜枠を擦過し、当直室側へ回り込み対峙構図を作る"
+          },
+          cheatPoint: {
+            atSec: 7.4,
+            pos: [-1.08, 1.52, 0.0],
+            label: { zh: "结霜钢框擦除入亭 (Cheat Point)", en: "Frosted Frame Wipe (Cheat Point)", ja: "霜鋼枠ワイプ通過点" }
+          },
+          actorOverrides: [
+            { id: "op09_double", startPos: [-0.15, 0, -1.15], endPos: [-0.1, 0, -0.85], startRotY: 0, endRotY: 0 }
+          ]
+        },
+        {
+          id: "beat_n5_3",
+          label: { zh: "3. 镜面推近揭晓", en: "3. Mirror Push Reveal", ja: "3. 鏡像プッシュ reveal" },
+          startSec: 14,
+          endSec: 21,
+          color: "#e04634",
+          camera: { pos: [0.65, 1.48, 1.85], target: [-0.1, 1.48, -0.8], fov: 54, lensLabel: "35mm Anamorphic" },
+          endCamera: { pos: [0.12, 1.46, 1.42], target: [-0.1, 1.48, -1.05], fov: 38, lensLabel: "50mm Anamorphic" },
+          rigNote: {
+            zh: "50mm 对称推近隔窗定格：窗外兜帽落下，露出与 #09 完全相同的面孔",
+            en: "50mm symmetrical push across glass as the double drops the hood",
+            ja: "50mm対称プッシュで窓外の同一人物の素顔を捉える"
+          },
+          actorOverrides: [
+            { id: "op09_double", startPos: [-0.1, 0, -0.85], endPos: [-0.1, 0, -0.85], startRotY: 0, endRotY: 0 }
+          ]
+        }
+      ],
+      actors: [
+        { id: "op09_double", label: "另一个你 (#09 镜像)", pos: [-0.2, 0, -4.1], rotY: 0, color: "#e04634", speaking: true },
+        { id: "op09", label: "值班员 #09 (玩家)", pos: [0.05, 0, 2.05], rotY: Math.PI, color: "#49b882" }
+      ],
+      props: [
+        { id: "p_intercom", assetTag: "@intercom", label: "PTT 对讲控制台", primitive: "console", pos: [-0.42, 0.82, 1.42], color: "#eba834" },
+        { id: "p_ledger", assetTag: "@ledger", label: "记录板与密钥", primitive: "ledger", pos: [0.15, 0.82, 1.45], color: "#d08770" }
+      ]
+    }
   }
 ];
+
+function lerpNum(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+function lerpVec3(
+  a: readonly [number, number, number],
+  b: readonly [number, number, number],
+  t: number
+): [number, number, number] {
+  return [lerpNum(a[0], b[0], t), lerpNum(a[1], b[1], t), lerpNum(a[2], b[2], t)];
+}
+
+function smoothstep01(u: number): number {
+  const c = Math.max(0, Math.min(1, u));
+  return c * c * (3 - 2 * c);
+}
+
+function synthesizeLegacyEndCamera(shot: StoryboardShot, startCam: CameraBlocking3D): CameraKeyframe3D {
+  const pos = [...startCam.pos] as [number, number, number];
+  const tgt = [...startCam.target] as [number, number, number];
+  switch (shot.motionPreset) {
+    case "dolly_in": {
+      const nextPos = lerpVec3(pos, tgt, 0.16);
+      return { pos: nextPos, target: tgt, fov: Math.max(20, startCam.fov - 3), lensLabel: startCam.lensLabel };
+    }
+    case "pull_back": {
+      const dx = pos[0] - tgt[0];
+      const dy = pos[1] - tgt[1];
+      const dz = pos[2] - tgt[2];
+      return {
+        pos: [pos[0] + dx * 0.18, pos[1] + dy * 0.12, pos[2] + dz * 0.18],
+        target: tgt,
+        fov: Math.min(82, startCam.fov + 3),
+        lensLabel: startCam.lensLabel
+      };
+    }
+    case "pan":
+      return { pos, target: [tgt[0] + 0.45, tgt[1], tgt[2]], fov: startCam.fov, lensLabel: startCam.lensLabel };
+    case "handheld":
+      return {
+        pos: [pos[0] + 0.08, pos[1] + 0.04, pos[2] - 0.06],
+        target: [tgt[0] + 0.05, tgt[1] - 0.02, tgt[2]],
+        fov: startCam.fov,
+        lensLabel: startCam.lensLabel
+      };
+    case "static":
+    default:
+      return { pos, target: tgt, fov: startCam.fov, lensLabel: startCam.lensLabel };
+  }
+}
+
+/**
+ * Samples a StoryboardShot's 3D camera & actor blocking at a given timestamp (0..durationSec).
+ */
+export function sampleShotBlockingAtTime(
+  shot: StoryboardShot,
+  timeSec: number,
+  startCameraOverride?: Partial<CameraBlocking3D>
+): SampledBlockingFrame {
+  const duration = Math.max(0.01, shot.durationSec);
+  const clamped = Math.max(0, Math.min(duration, timeSec));
+  const progress = clamped / duration;
+
+  const baseStart: CameraBlocking3D = {
+    pos: [...(startCameraOverride?.pos ?? shot.blocking.camera.pos)] as [number, number, number],
+    target: [...(startCameraOverride?.target ?? shot.blocking.camera.target)] as [number, number, number],
+    fov: startCameraOverride?.fov ?? shot.blocking.camera.fov,
+    lensLabel: startCameraOverride?.lensLabel ?? shot.blocking.camera.lensLabel,
+    axisNote: startCameraOverride?.axisNote ?? shot.blocking.camera.axisNote
+  };
+
+  const beats = shot.blocking.beats;
+  if (beats && beats.length > 0) {
+    let activeBeatIndex = beats.length - 1;
+    for (let i = 0; i < beats.length; i++) {
+      if (clamped < beats[i]!.endSec || i === beats.length - 1) {
+        activeBeatIndex = i;
+        break;
+      }
+    }
+    const beat = beats[activeBeatIndex]!;
+    const span = beat.endSec - beat.startSec;
+    const localU = span > 0 ? Math.max(0, Math.min(1, (clamped - beat.startSec) / span)) : 1;
+    const s = smoothstep01(localU);
+
+    const beatStartCam: CameraKeyframe3D =
+      activeBeatIndex === 0 && startCameraOverride
+        ? {
+            pos: [...baseStart.pos],
+            target: [...baseStart.target],
+            fov: baseStart.fov,
+            lensLabel: baseStart.lensLabel
+          }
+        : beat.camera;
+
+    const sampledCam: CameraBlocking3D = {
+      pos: lerpVec3(beatStartCam.pos, beat.endCamera.pos, s),
+      target: lerpVec3(beatStartCam.target, beat.endCamera.target, s),
+      fov: lerpNum(beatStartCam.fov, beat.endCamera.fov, s),
+      lensLabel: localU < 0.5 ? beatStartCam.lensLabel : beat.endCamera.lensLabel,
+      axisNote: beat.rigNote
+    };
+
+    const actorOverrides = new Map<string, ActorPathOverride3D>();
+    for (const ov of beat.actorOverrides ?? []) {
+      actorOverrides.set(ov.id, ov);
+    }
+
+    const actors: ActorBlocking3D[] = shot.blocking.actors.map((a) => {
+      const ov = actorOverrides.get(a.id);
+      if (!ov) return { ...a, pos: [...a.pos] as [number, number, number] };
+      return {
+        ...a,
+        pos: lerpVec3(ov.startPos, ov.endPos, s),
+        rotY: lerpNum(ov.startRotY, ov.endRotY, s)
+      };
+    });
+
+    return {
+      timeSec: clamped,
+      progress,
+      camera: sampledCam,
+      actors,
+      activeBeat: beat,
+      activeBeatIndex
+    };
+  }
+
+  const endCam = shot.blocking.endCamera ?? synthesizeLegacyEndCamera(shot, baseStart);
+  const s = smoothstep01(progress);
+  const actors: ActorBlocking3D[] = shot.blocking.actors.map((a) => ({
+    ...a,
+    pos: [...a.pos] as [number, number, number]
+  }));
+
+  return {
+    timeSec: clamped,
+    progress,
+    camera: {
+      pos: lerpVec3(baseStart.pos, endCam.pos, s),
+      target: lerpVec3(baseStart.target, endCam.target, s),
+      fov: lerpNum(baseStart.fov, endCam.fov, s),
+      lensLabel: progress < 0.5 ? baseStart.lensLabel : endCam.lensLabel,
+      axisNote: baseStart.axisNote
+    },
+    actors,
+    activeBeatIndex: 0
+  };
+}
 
 export function getStoryboardShot(id: string): StoryboardShot | undefined {
   return STUDIO_STORYBOARD_SHOTS.find((s) => s.id === id);
@@ -1697,11 +2133,37 @@ export function buildShotExportPackage(
   const posStr = `[${cameraPos.map((n) => n.toFixed(2)).join(", ")}]`;
   const tgtStr = `[${cameraTarget.map((n) => n.toFixed(2)).join(", ")}]`;
 
+  const endSample =
+    shot.blocking.endCamera || shot.blocking.beats?.length
+      ? sampleShotBlockingAtTime(shot, shot.durationSec, cameraOverride).camera
+      : undefined;
+  const endPosStr = endSample ? `[${endSample.pos.map((n) => n.toFixed(2)).join(", ")}]` : undefined;
+  const endTgtStr = endSample ? `[${endSample.target.map((n) => n.toFixed(2)).join(", ")}]` : undefined;
+
+  const beatExports = shot.blocking.beats?.map((b) => ({
+    id: b.id,
+    label: tl(b.label, lang),
+    startSec: b.startSec,
+    endSec: b.endSec,
+    rigNote: tl(b.rigNote, lang),
+    ...(b.cheatPoint ? { cheatPointSec: b.cheatPoint.atSec } : {})
+  }));
+
   const promptSections = [
     `[${shot.shotCode} // ${title}] 16:9 Anamorphic Live-Action Cinema (${shot.durationSec.toFixed(2)}s / ${shot.frames}f @ 24fps)`,
-    `Camera & Lens: ${lens}, FOV ${fov}deg, Motion=${shot.motionPreset}, Pos=${posStr} -> Aim=${tgtStr}`,
+    `Camera & Lens: ${lens}, FOV ${fov}deg, Motion=${shot.motionPreset}${shot.pipelineRoute ? `, Route=${shot.pipelineRoute}` : ""}, Pos=${posStr} -> Aim=${tgtStr}${endPosStr ? ` | EndPos=${endPosStr} -> EndAim=${endTgtStr}` : ""}`,
     `Action & Movement: ${tl(shot.cameraMove, lang)}`,
     `Axis & Lighting (${shot.blocking.zone}, alert=${shot.blocking.alertLight}): ${tl(shot.blocking.camera.axisNote, lang)}`,
+    ...(beatExports && beatExports.length > 0
+      ? [
+          `Beats & Cheat Points:\n${beatExports
+            .map(
+              (b) =>
+                `- ${b.label} (${b.startSec.toFixed(1)}s-${b.endSec.toFixed(1)}s): ${b.rigNote}${b.cheatPointSec !== undefined ? ` [CheatPoint @ ${b.cheatPointSec.toFixed(1)}s]` : ""}`
+            )
+            .join("\n")}`
+        ]
+      : []),
     `Bound Assets:\n${assetLines}`,
     lipSyncLine
       ? `Dialogue (Lip-Sync${shot.speakerName ? ` - ${tl(shot.speakerName, lang)}` : ""}): ${lipSyncLine}`
@@ -1718,8 +2180,11 @@ export function buildShotExportPackage(
     lens,
     fov,
     motionPreset: shot.motionPreset,
+    ...(shot.pipelineRoute ? { pipelineRoute: shot.pipelineRoute } : {}),
     cameraPos,
     cameraTarget,
+    ...(endSample ? { endCameraPos: endSample.pos, endCameraTarget: endSample.target } : {}),
+    ...(beatExports ? { beats: beatExports } : {}),
     boundAssets,
     ...(lipSyncLine ? { lipSyncLine } : {}),
     promptText

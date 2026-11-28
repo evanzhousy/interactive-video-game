@@ -1,9 +1,10 @@
 import * as THREE from "three";
-import type {
-  CameraBlocking3D,
-  PropBlocking3D,
-  StoryboardShot,
-  WhiteboxRenderMode
+import {
+  sampleShotBlockingAtTime,
+  type CameraBlocking3D,
+  type PropBlocking3D,
+  type StoryboardShot,
+  type WhiteboxRenderMode
 } from "./production-board.js";
 
 export interface WhiteboxSnapshotOptions {
@@ -11,6 +12,23 @@ export interface WhiteboxSnapshotOptions {
   width?: number;
   height?: number;
   cameraOverride?: Partial<CameraBlocking3D>;
+  timeSec?: number;
+}
+
+export interface ShotRigBuildOptions {
+  timeSec?: number;
+  showCamPath?: boolean;
+  showFovCone?: boolean;
+  showActors?: boolean;
+}
+
+export interface StartEndWhiteboxSnapshots {
+  clayStart: string | null;
+  clayEnd: string | null;
+  depthStart: string | null;
+  depthEnd: string | null;
+  litStart: string | null;
+  litEnd: string | null;
 }
 
 export interface OutpostSceneHandles {
@@ -584,23 +602,29 @@ export function rebuildShotBlockingRig(
   camRigGroup: THREE.Group,
   shot: StoryboardShot,
   renderMode: WhiteboxRenderMode,
-  cameraOverride?: Partial<CameraBlocking3D>
+  cameraOverride?: Partial<CameraBlocking3D>,
+  rigOpts?: ShotRigBuildOptions
 ): void {
   disposeGroupChildren(dynamicGroup);
   disposeGroupChildren(camRigGroup);
 
-  for (const actor of shot.blocking.actors) {
-    dynamicGroup.add(buildHumanoidMannequin(actor, renderMode));
+  const timeSec = rigOpts?.timeSec ?? 0;
+  const sampled = sampleShotBlockingAtTime(shot, timeSec, cameraOverride);
+
+  if (rigOpts?.showActors !== false) {
+    for (const actor of sampled.actors) {
+      dynamicGroup.add(buildHumanoidMannequin(actor, renderMode));
+    }
   }
 
   for (const prop of shot.blocking.props ?? []) {
     dynamicGroup.add(buildPropBlockingRig(prop, renderMode));
   }
 
-  // Build Cinema Camera Body & Viewing Frustum Pyramid
-  const pos = cameraOverride?.pos ?? shot.blocking.camera.pos;
-  const target = cameraOverride?.target ?? shot.blocking.camera.target;
-  const fov = cameraOverride?.fov ?? shot.blocking.camera.fov;
+  // Build Cinema Camera Body & Viewing Frustum Pyramid at sampled timestamp
+  const pos = sampled.camera.pos;
+  const target = sampled.camera.target;
+  const fov = sampled.camera.fov;
 
   const camPos = new THREE.Vector3(pos[0], pos[1], pos[2]);
   const camTgt = new THREE.Vector3(target[0], target[1], target[2]);
@@ -621,25 +645,27 @@ export function rebuildShotBlockingRig(
   lens.position.z = 0.24;
   camContainer.add(body, lens);
 
-  const dist = Math.max(1.2, Math.min(4.2, camPos.distanceTo(camTgt)));
-  const halfH = Math.tan(THREE.MathUtils.degToRad(fov / 2)) * dist;
-  const halfW = halfH * (16 / 9);
-  const o = new THREE.Vector3(0, 0, 0.28);
-  const tlPt = new THREE.Vector3(-halfW, halfH, dist);
-  const trPt = new THREE.Vector3(halfW, halfH, dist);
-  const blPt = new THREE.Vector3(-halfW, -halfH, dist);
-  const brPt = new THREE.Vector3(halfW, -halfH, dist);
+  if (rigOpts?.showFovCone !== false) {
+    const dist = Math.max(1.2, Math.min(4.2, camPos.distanceTo(camTgt)));
+    const halfH = Math.tan(THREE.MathUtils.degToRad(fov / 2)) * dist;
+    const halfW = halfH * (16 / 9);
+    const o = new THREE.Vector3(0, 0, 0.28);
+    const tlPt = new THREE.Vector3(-halfW, halfH, dist);
+    const trPt = new THREE.Vector3(halfW, halfH, dist);
+    const blPt = new THREE.Vector3(-halfW, -halfH, dist);
+    const brPt = new THREE.Vector3(halfW, -halfH, dist);
 
-  const frustumPts = [
-    o, tlPt, o, trPt, o, blPt, o, brPt,
-    tlPt, trPt, trPt, brPt, brPt, blPt, blPt, tlPt
-  ];
-  const frustumGeo = new THREE.BufferGeometry().setFromPoints(frustumPts);
-  const frustumLines = new THREE.LineSegments(
-    frustumGeo,
-    new THREE.LineBasicMaterial({ color: 0xeba834, transparent: true, opacity: 0.85 })
-  );
-  camContainer.add(frustumLines);
+    const frustumPts = [
+      o, tlPt, o, trPt, o, blPt, o, brPt,
+      tlPt, trPt, trPt, brPt, brPt, blPt, blPt, tlPt
+    ];
+    const frustumGeo = new THREE.BufferGeometry().setFromPoints(frustumPts);
+    const frustumLines = new THREE.LineSegments(
+      frustumGeo,
+      new THREE.LineBasicMaterial({ color: 0xeba834, transparent: true, opacity: 0.85 })
+    );
+    camContainer.add(frustumLines);
+  }
   camRigGroup.add(camContainer);
 
   const tgtSphere = new THREE.Mesh(
@@ -648,6 +674,81 @@ export function rebuildShotBlockingRig(
   );
   tgtSphere.position.copy(camTgt);
   camRigGroup.add(tgtSphere);
+
+  // Camera & Actor Path Splines + Cheat Point markers
+  if (rigOpts?.showCamPath !== false) {
+    const beats = shot.blocking.beats;
+    if (beats && beats.length > 0) {
+      for (const beat of beats) {
+        const pts: THREE.Vector3[] = [];
+        const samples = 14;
+        for (let i = 0; i <= samples; i++) {
+          const t = beat.startSec + ((beat.endSec - beat.startSec) * i) / samples;
+          const s = sampleShotBlockingAtTime(shot, t, cameraOverride);
+          pts.push(new THREE.Vector3(s.camera.pos[0], s.camera.pos[1], s.camera.pos[2]));
+        }
+        const pathGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        camRigGroup.add(
+          new THREE.Line(
+            pathGeo,
+            new THREE.LineBasicMaterial({ color: beat.color, transparent: true, opacity: 0.92 })
+          )
+        );
+
+        if (beat.cheatPoint) {
+          const cp = beat.cheatPoint.pos;
+          const diamond = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.16, 0),
+            new THREE.MeshBasicMaterial({ color: 0xe04634, wireframe: true })
+          );
+          diamond.position.set(cp[0], cp[1], cp[2]);
+          camRigGroup.add(diamond);
+
+          const cpRing = new THREE.Mesh(
+            new THREE.RingGeometry(0.18, 0.24, 20),
+            new THREE.MeshBasicMaterial({
+              color: 0xeba834,
+              side: THREE.DoubleSide,
+              transparent: true,
+              opacity: 0.88
+            })
+          );
+          cpRing.rotation.x = -Math.PI / 2;
+          cpRing.position.set(cp[0], 0.04, cp[2]);
+          camRigGroup.add(cpRing);
+        }
+
+        if (rigOpts?.showActors !== false && beat.actorOverrides) {
+          for (const ov of beat.actorOverrides) {
+            const actorPts = [
+              new THREE.Vector3(ov.startPos[0], 0.05, ov.startPos[2]),
+              new THREE.Vector3(ov.endPos[0], 0.05, ov.endPos[2])
+            ];
+            camRigGroup.add(
+              new THREE.Line(
+                new THREE.BufferGeometry().setFromPoints(actorPts),
+                new THREE.LineBasicMaterial({ color: 0x49b882, transparent: true, opacity: 0.55 })
+              )
+            );
+          }
+        }
+      }
+    } else if (shot.blocking.endCamera || shot.motionPreset !== "static") {
+      const pts: THREE.Vector3[] = [];
+      const samples = 10;
+      for (let i = 0; i <= samples; i++) {
+        const t = (shot.durationSec * i) / samples;
+        const s = sampleShotBlockingAtTime(shot, t, cameraOverride);
+        pts.push(new THREE.Vector3(s.camera.pos[0], s.camera.pos[1], s.camera.pos[2]));
+      }
+      camRigGroup.add(
+        new THREE.Line(
+          new THREE.BufferGeometry().setFromPoints(pts),
+          new THREE.LineBasicMaterial({ color: 0x5bbad5, transparent: true, opacity: 0.78 })
+        )
+      );
+    }
+  }
 }
 
 interface SnapshotRendererCache {
@@ -725,14 +826,21 @@ export function renderShotWhiteboxSnapshot(
 
   try {
     const { renderer, scene, camera, handles, dynamicGroup, camRigGroup } = cache;
+    const timeSec = opts.timeSec ?? 0;
+    const sampled = sampleShotBlockingAtTime(shot, timeSec, opts.cameraOverride);
+
     handles.alertLight.color.setHex(ALERT_COLORS[shot.blocking.alertLight]);
     handles.applyRenderMode(opts.renderMode);
-    rebuildShotBlockingRig(dynamicGroup, camRigGroup, shot, opts.renderMode, opts.cameraOverride);
+    rebuildShotBlockingRig(dynamicGroup, camRigGroup, shot, opts.renderMode, opts.cameraOverride, {
+      timeSec,
+      showCamPath: false,
+      showFovCone: false
+    });
     camRigGroup.visible = false;
 
-    const pos = opts.cameraOverride?.pos ?? shot.blocking.camera.pos;
-    const target = opts.cameraOverride?.target ?? shot.blocking.camera.target;
-    const fov = opts.cameraOverride?.fov ?? shot.blocking.camera.fov;
+    const pos = sampled.camera.pos;
+    const target = sampled.camera.target;
+    const fov = sampled.camera.fov;
 
     camera.position.set(pos[0], pos[1], pos[2]);
     camera.fov = fov;
@@ -747,4 +855,64 @@ export function renderShotWhiteboxSnapshot(
   } catch {
     return null;
   }
+}
+
+/**
+ * Renders Start (t=0) and End (t=durationSec) Clay/Depth/Lit white-box snapshots for FL2VA keyframe workflows.
+ */
+export function renderShotStartEndSnapshots(
+  shot: StoryboardShot,
+  opts?: {
+    width?: number;
+    height?: number;
+    startCameraOverride?: Partial<CameraBlocking3D>;
+  }
+): StartEndWhiteboxSnapshots {
+  const width = opts?.width ?? 640;
+  const height = opts?.height ?? 360;
+  const endTime = Math.max(0, shot.durationSec);
+  return {
+    clayStart: renderShotWhiteboxSnapshot(shot, {
+      renderMode: "clay",
+      width,
+      height,
+      cameraOverride: opts?.startCameraOverride,
+      timeSec: 0
+    }),
+    clayEnd: renderShotWhiteboxSnapshot(shot, {
+      renderMode: "clay",
+      width,
+      height,
+      cameraOverride: opts?.startCameraOverride,
+      timeSec: endTime
+    }),
+    depthStart: renderShotWhiteboxSnapshot(shot, {
+      renderMode: "depth",
+      width,
+      height,
+      cameraOverride: opts?.startCameraOverride,
+      timeSec: 0
+    }),
+    depthEnd: renderShotWhiteboxSnapshot(shot, {
+      renderMode: "depth",
+      width,
+      height,
+      cameraOverride: opts?.startCameraOverride,
+      timeSec: endTime
+    }),
+    litStart: renderShotWhiteboxSnapshot(shot, {
+      renderMode: "lit",
+      width,
+      height,
+      cameraOverride: opts?.startCameraOverride,
+      timeSec: 0
+    }),
+    litEnd: renderShotWhiteboxSnapshot(shot, {
+      renderMode: "lit",
+      width,
+      height,
+      cameraOverride: opts?.startCameraOverride,
+      timeSec: endTime
+    })
+  };
 }

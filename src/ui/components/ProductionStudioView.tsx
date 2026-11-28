@@ -25,9 +25,10 @@ import {
 } from "../../game/production-board.js";
 import { renderShotWhiteboxSnapshot } from "../../game/three-whitebox-renderer.js";
 import type { Locale } from "../../game/types.js";
+import { LinearKanbanBoard } from "./LinearKanbanBoard.js";
 import { type CapturedShotFrame, ThreeBlockingStage } from "./ThreeBlockingStage.js";
 
-export type StudioTab = "assets" | "blocking" | "storyboard";
+export type StudioTab = "assets" | "blocking" | "storyboard" | "kanban";
 type AssetCategoryFilter = "all" | "cast" | "prop" | "set";
 type StoryboardPreviewMode = "clay" | "depth" | "ai" | "compare";
 
@@ -35,6 +36,9 @@ interface Props {
   lang: Locale;
   motionPaused: boolean;
   initialTab?: StudioTab;
+  externalTab?: StudioTab;
+  onTabChange?: (next: StudioTab) => void;
+  standaloneMode?: boolean;
   onBack: () => void;
   onPlayStoryNode?: (nodeId: string) => void;
 }
@@ -155,10 +159,27 @@ export function ProductionStudioView({
   lang,
   motionPaused,
   initialTab = "assets",
+  externalTab,
+  onTabChange,
+  standaloneMode = false,
   onBack,
   onPlayStoryNode
 }: Props) {
-  const [tab, setTab] = useState<StudioTab>(initialTab);
+  const [tab, setTab] = useState<StudioTab>(externalTab ?? initialTab);
+
+  useEffect(() => {
+    if (externalTab && externalTab !== tab) {
+      setTab(externalTab);
+    }
+  }, [externalTab, tab]);
+
+  const switchTab = useCallback(
+    (next: StudioTab) => {
+      setTab(next);
+      onTabChange?.(next);
+    },
+    [onTabChange]
+  );
   const [assetFilter, setAssetFilter] = useState<AssetCategoryFilter>("all");
   const [highlightedAssetTag, setHighlightedAssetTag] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -229,11 +250,30 @@ export function ProductionStudioView({
     [copyToClipboard]
   );
 
-  const handleJumpToAsset = useCallback((tag: string) => {
-    setAssetFilter("all");
-    setHighlightedAssetTag(tag);
-    setTab("assets");
-  }, []);
+  const handleJumpToAsset = useCallback(
+    (tag: string) => {
+      setAssetFilter("all");
+      setHighlightedAssetTag(tag);
+      switchTab("assets");
+    },
+    [switchTab]
+  );
+
+  const handleOpenShotInBlocking = useCallback(
+    (shotId: string) => {
+      setSelectedShotId(shotId);
+      switchTab("blocking");
+    },
+    [switchTab]
+  );
+
+  const handleOpenShotInStoryboard = useCallback(
+    (shotId: string) => {
+      setPendingScrollShotId(shotId);
+      switchTab("storyboard");
+    },
+    [switchTab]
+  );
 
   useEffect(() => {
     if (tab !== "assets" || !highlightedAssetTag) return;
@@ -388,6 +428,10 @@ export function ProductionStudioView({
         renderMode === "depth"
           ? captured?.depthDataUrl ?? batchPair?.depth ?? null
           : captured?.clayDataUrl ?? batchPair?.clay ?? null;
+      const endDataUrl =
+        renderMode === "depth"
+          ? captured?.depthEndDataUrl ?? null
+          : captured?.clayEndDataUrl ?? null;
 
       if (!dataUrl) {
         dataUrl = renderShotWhiteboxSnapshot(shot, {
@@ -399,12 +443,19 @@ export function ProductionStudioView({
       }
       if (!dataUrl) return;
 
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `${shot.shotCode.toLowerCase()}-${renderMode}.png`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const downloadPng = (href: string, filename: string) => {
+        const link = document.createElement("a");
+        link.href = href;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      };
+
+      downloadPng(dataUrl, `${shot.shotCode.toLowerCase()}-${renderMode}-start.png`);
+      if (endDataUrl) {
+        downloadPng(endDataUrl, `${shot.shotCode.toLowerCase()}-${renderMode}-end.png`);
+      }
     },
     [cameraOverrides, capturedFrames, storyboardPreviewMode, whiteboxSnapshots]
   );
@@ -428,88 +479,109 @@ export function ProductionStudioView({
     batchState.total > 0 ? Math.round((batchState.completed / batchState.total) * 100) : 0;
 
   return (
-    <section className="panel modal-stage studio-shell" id="production-studio-view">
-      <div className="studio-header">
-        <div>
-          <div className="section-kicker">
-            {tl(
-              {
-                zh: "HOLLYWOOD 制片美术与分镜设计台 // 公共造型 → 3D 白模片场 → 分镜工作台",
-                en: "PRODUCTION DESIGN BIBLE // SHARED ASSETS → 3D WHITE-BOX STAGE → STORYBOARD",
-                ja: "制作デザインボード // 共通アセット → 3Dホワイトボックス → 絵コンテ"
-              },
-              lang
-            )}
+    <section
+      className={`panel modal-stage studio-shell ${standaloneMode ? "is-standalone" : ""}`}
+      id="production-studio-view"
+    >
+      {!standaloneMode ? (
+        <div className="studio-header">
+          <div>
+            <div className="section-kicker">
+              {tl(
+                {
+                  zh: "HOLLYWOOD 制片美术与分镜设计台 // 公共造型 → 3D 白模片场 → 分镜工作台",
+                  en: "PRODUCTION DESIGN BIBLE // SHARED ASSETS → 3D WHITE-BOX STAGE → STORYBOARD",
+                  ja: "制作デザインボード // 共通アセット → 3Dホワイトボックス → 絵コンテ"
+                },
+                lang
+              )}
+            </div>
+            <h2 className="studio-title">
+              {tl(
+                {
+                  zh: `公共造型资产库 · Three.js 3D 白模片场 · ${STUDIO_STORYBOARD_SHOTS.length} 镜分镜头工作台`,
+                  en: `Shared Asset Library · Three.js 3D White-Box Stage · ${STUDIO_STORYBOARD_SHOTS.length}-Shot Storyboard`,
+                  ja: `共通造型アセット庫・Three.js 3D舞台・${STUDIO_STORYBOARD_SHOTS.length}カット絵コンテ`
+                },
+                lang
+              )}
+            </h2>
           </div>
-          <h2 className="studio-title">
-            {tl(
-              {
-                zh: "公共造型资产库 · Three.js 3D 白模片场 · 25 镜分镜头工作台",
-                en: "Shared Asset Library · Three.js 3D White-Box Stage · 25-Shot Storyboard",
-                ja: "共通造型アセット庫・Three.js 3D舞台・25カット絵コンテ"
-              },
-              lang
-            )}
-          </h2>
-        </div>
 
-        <Button type="button" id="btn-studio-back" className="ctrl-btn amber" onClick={onBack}>
-          {tl({ zh: "← 返回游戏", en: "← Back to Game", ja: "← ゲームへ戻る" }, lang)}
-        </Button>
-      </div>
+          <Button type="button" id="btn-studio-back" className="ctrl-btn amber" onClick={onBack}>
+            {tl({ zh: "← 返回游戏", en: "← Back to Game", ja: "← ゲームへ戻る" }, lang)}
+          </Button>
+        </div>
+      ) : null}
 
       <Tabs
         className="studio-tabs-root"
         value={tab}
         onValueChange={(next) => {
-          if (next) setTab(next as StudioTab);
+          if (next) switchTab(next as StudioTab);
         }}
       >
-        <TabsList className="tab-strip studio-tab-strip" aria-label="Production Studio Pipeline">
-          <TabsTab
-            value="assets"
-            id="tab-studio-assets"
-            className={`tab-btn ${tab === "assets" ? "active" : ""}`}
-          >
-            {tl(
-              {
-                zh: "01 公共造型库 (资产)",
-                en: "01 ASSET LIBRARY",
-                ja: "01 共通アセット庫"
-              },
-              lang
-            )}
-          </TabsTab>
-          <TabsTab
-            value="blocking"
-            id="tab-studio-blocking"
-            className={`tab-btn ${tab === "blocking" ? "active" : ""}`}
-          >
-            {tl(
-              {
-                zh: "02 Three.js 3D 白模片场",
-                en: "02 3D WHITE-BOX STAGE",
-                ja: "02 3Dホワイトボックス"
-              },
-              lang
-            )}
-          </TabsTab>
-          <TabsTab
-            value="storyboard"
-            id="tab-studio-storyboard"
-            className={`tab-btn ${tab === "storyboard" ? "active" : ""}`}
-          >
-            {tl(
-              {
-                zh: `03 分镜头工作台 (${STUDIO_STORYBOARD_SHOTS.length})`,
-                en: `03 STORYBOARD (${STUDIO_STORYBOARD_SHOTS.length})`,
-                ja: `03 絵コンテ (${STUDIO_STORYBOARD_SHOTS.length})`
-              },
-              lang
-            )}
-          </TabsTab>
-          <TabsIndicator className="tab-indicator" />
-        </TabsList>
+        {!standaloneMode ? (
+          <TabsList className="tab-strip studio-tab-strip" aria-label="Production Studio Pipeline">
+            <TabsTab
+              value="assets"
+              id="tab-studio-assets"
+              className={`tab-btn ${tab === "assets" ? "active" : ""}`}
+            >
+              {tl(
+                {
+                  zh: "01 公共造型库 (资产)",
+                  en: "01 ASSET LIBRARY",
+                  ja: "01 共通アセット庫"
+                },
+                lang
+              )}
+            </TabsTab>
+            <TabsTab
+              value="blocking"
+              id="tab-studio-blocking"
+              className={`tab-btn ${tab === "blocking" ? "active" : ""}`}
+            >
+              {tl(
+                {
+                  zh: "02 Three.js 3D 白模片场",
+                  en: "02 3D WHITE-BOX STAGE",
+                  ja: "02 3Dホワイトボックス"
+                },
+                lang
+              )}
+            </TabsTab>
+            <TabsTab
+              value="storyboard"
+              id="tab-studio-storyboard"
+              className={`tab-btn ${tab === "storyboard" ? "active" : ""}`}
+            >
+              {tl(
+                {
+                  zh: `03 分镜头工作台 (${STUDIO_STORYBOARD_SHOTS.length})`,
+                  en: `03 STORYBOARD (${STUDIO_STORYBOARD_SHOTS.length})`,
+                  ja: `03 絵コンテ (${STUDIO_STORYBOARD_SHOTS.length})`
+                },
+                lang
+              )}
+            </TabsTab>
+            <TabsTab
+              value="kanban"
+              id="tab-studio-kanban"
+              className={`tab-btn ${tab === "kanban" ? "active" : ""}`}
+            >
+              {tl(
+                {
+                  zh: "04 制片看板 Kanban",
+                  en: "04 KANBAN",
+                  ja: "04 制作カンバン"
+                },
+                lang
+              )}
+            </TabsTab>
+            <TabsIndicator className="tab-indicator" />
+          </TabsList>
+        ) : null}
 
         {/* STAGE 01: SHARED ASSET LIBRARY */}
         <TabsPanel value="assets" className="studio-tab-panel">
@@ -908,6 +980,7 @@ export function ProductionStudioView({
                               <span className="blocking-btn-title">{tl(s.title, lang)}</span>
                               <span className="blocking-btn-sub">
                                 {activeCam.lensLabel} · {s.hasNativeAudio ? "LIP-SYNC" : `${s.frames}f`}
+                                {s.blocking.beats?.length ? ` · ONER(${s.blocking.beats.length}B)` : ""}
                                 {hasCaptured ? " · ✓已拍" : hasOverride ? " · ✎机位" : ""}
                               </span>
                             </span>
@@ -1002,7 +1075,7 @@ export function ProductionStudioView({
                     className="ctrl-btn amber"
                     onClick={() => {
                       setPendingScrollShotId(selectedShot.id);
-                      setTab("storyboard");
+                      switchTab("storyboard");
                     }}
                   >
                     {tl(
@@ -1029,7 +1102,7 @@ export function ProductionStudioView({
           </div>
         </TabsPanel>
 
-        {/* STAGE 03: 3D-DRIVEN STORYBOARD WORKBENCH (25 SHOTS) */}
+        {/* STAGE 03: 3D-DRIVEN STORYBOARD WORKBENCH */}
         <TabsPanel value="storyboard" className="studio-tab-panel">
           <div className="storyboard-toolbar">
             <div className="storyboard-toolbar-left">
@@ -1051,9 +1124,9 @@ export function ProductionStudioView({
                     )
                   : tl(
                       {
-                        zh: "🎬 从 3D 白模批量生成全部 25 镜分镜图",
-                        en: "🎬 Batch Render All 25 3D White-Box Shots",
-                        ja: "🎬 3D白模から全25カットを一括生成"
+                        zh: `🎬 从 3D 白模批量生成全部 ${STUDIO_STORYBOARD_SHOTS.length} 镜分镜图`,
+                        en: `🎬 Batch Render All ${STUDIO_STORYBOARD_SHOTS.length} 3D White-Box Shots`,
+                        ja: `🎬 3D白模から全${STUDIO_STORYBOARD_SHOTS.length}カットを一括生成`
                       },
                       lang
                     )}
@@ -1137,7 +1210,9 @@ export function ProductionStudioView({
                     const captured = capturedFrames[shot.id];
                     const batchPair = whiteboxSnapshots[shot.id];
                     const clayUrl = captured?.clayDataUrl ?? batchPair?.clay ?? null;
+                    const clayEndUrl = captured?.clayEndDataUrl ?? null;
                     const depthUrl = captured?.depthDataUrl ?? batchPair?.depth ?? null;
+                    const depthEndUrl = captured?.depthEndDataUrl ?? null;
                     const hasCustomCam = Boolean(cameraOverrides[shot.id]);
                     const isExportCopied = copiedKey === `pkg:${shot.id}`;
 
@@ -1160,21 +1235,67 @@ export function ProductionStudioView({
                       >
                         <div className="storyboard-media">
                           {storyboardPreviewMode === "clay" ? (
-                            <img
-                              className="storyboard-still-img"
-                              src={clayUrl ?? shot.posterSrc}
-                              alt={tl(shot.title, lang)}
-                              decoding="sync"
-                            />
+                            clayEndUrl && clayUrl ? (
+                              <div className="storyboard-compare-split">
+                                <div className="storyboard-compare-pane">
+                                  <img
+                                    className="storyboard-still-img"
+                                    src={clayUrl}
+                                    alt={`${tl(shot.title, lang)} (Start)`}
+                                    decoding="sync"
+                                  />
+                                  <span className="compare-pane-tag">START (0s)</span>
+                                </div>
+                                <div className="storyboard-compare-pane">
+                                  <img
+                                    className="storyboard-still-img"
+                                    src={clayEndUrl}
+                                    alt={`${tl(shot.title, lang)} (End)`}
+                                    decoding="sync"
+                                  />
+                                  <span className="compare-pane-tag ai">END ({shot.durationSec.toFixed(0)}s)</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <img
+                                className="storyboard-still-img"
+                                src={clayUrl ?? shot.posterSrc}
+                                alt={tl(shot.title, lang)}
+                                decoding="sync"
+                              />
+                            )
                           ) : storyboardPreviewMode === "depth" ? (
-                            <img
-                              className={`storyboard-still-img ${
-                                depthUrl ? "" : "depth-fallback-filter"
-                              }`}
-                              src={depthUrl ?? shot.posterSrc}
-                              alt={`${tl(shot.title, lang)} (Depth)`}
-                              decoding="sync"
-                            />
+                            depthEndUrl && depthUrl ? (
+                              <div className="storyboard-compare-split">
+                                <div className="storyboard-compare-pane">
+                                  <img
+                                    className="storyboard-still-img"
+                                    src={depthUrl}
+                                    alt={`${tl(shot.title, lang)} (Depth Start)`}
+                                    decoding="sync"
+                                  />
+                                  <span className="compare-pane-tag">DEPTH START</span>
+                                </div>
+                                <div className="storyboard-compare-pane">
+                                  <img
+                                    className="storyboard-still-img"
+                                    src={depthEndUrl}
+                                    alt={`${tl(shot.title, lang)} (Depth End)`}
+                                    decoding="sync"
+                                  />
+                                  <span className="compare-pane-tag ai">DEPTH END</span>
+                                </div>
+                              </div>
+                            ) : (
+                              <img
+                                className={`storyboard-still-img ${
+                                  depthUrl ? "" : "depth-fallback-filter"
+                                }`}
+                                src={depthUrl ?? shot.posterSrc}
+                                alt={`${tl(shot.title, lang)} (Depth)`}
+                                decoding="sync"
+                              />
+                            )
                           ) : storyboardPreviewMode === "ai" ? (
                             <video
                               controls
@@ -1234,6 +1355,12 @@ export function ProductionStudioView({
                           </span>
                           {hasCustomCam ? (
                             <span className="storyboard-custom-cam-pill">CUSTOM CAM</span>
+                          ) : null}
+                          {shot.blocking.beats?.length ? (
+                            <span className="storyboard-oner-pill">
+                              ONER · {shot.blocking.beats.length} BEATS
+                              {shot.pipelineRoute === "v2v_whitebox" ? " · V2V" : " · FL2VA"}
+                            </span>
                           ) : null}
                           {shot.hasNativeAudio ? (
                             <span className="storyboard-audio-badge live">
@@ -1317,7 +1444,7 @@ export function ProductionStudioView({
                               className="ctrl-btn amber"
                               onClick={() => {
                                 setSelectedShotId(shot.id);
-                                setTab("blocking");
+                                switchTab("blocking");
                               }}
                             >
                               {tl(
@@ -1357,6 +1484,16 @@ export function ProductionStudioView({
               <ScrollAreaThumb className="gta-dossier-thumb" />
             </ScrollAreaScrollbar>
           </ScrollArea>
+        </TabsPanel>
+
+        {/* STAGE 04: LINEAR-STYLE PRODUCTION KANBAN */}
+        <TabsPanel value="kanban" className="studio-tab-panel">
+          <LinearKanbanBoard
+            lang={lang}
+            onOpenShotInBlocking={handleOpenShotInBlocking}
+            onOpenShotInStoryboard={handleOpenShotInStoryboard}
+            onJumpToAsset={handleJumpToAsset}
+          />
         </TabsPanel>
       </Tabs>
     </section>

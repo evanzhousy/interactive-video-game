@@ -1,4 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import { handleGenerateVisitorsWebRequest } from "./src/server/generate-visitors-handler.js";
@@ -29,6 +30,11 @@ function readRequestBody(req: IncomingMessage, maxBytes = 16_384): Promise<strin
 function flashRephraseDevPlugin(env: Record<string, string | undefined>): Plugin {
   const handler = async (req: IncomingMessage, res: ServerResponse, next: () => void) => {
     const pathname = req.url?.split("?")[0];
+    if (pathname === "/studio" || pathname === "/studio/") {
+      req.url = "/studio.html";
+      next();
+      return;
+    }
     if (pathname === "/api/generate-visitors") {
       try {
         const method = req.method ?? "GET";
@@ -152,6 +158,10 @@ export default defineConfig(({ mode }) => {
       outDir: "dist",
       emptyOutDir: true,
       rollupOptions: {
+        input: {
+          main: fileURLToPath(new URL("./index.html", import.meta.url)),
+          studio: fileURLToPath(new URL("./studio.html", import.meta.url))
+        },
         output: {
           manualChunks(id) {
             if (id.includes("node_modules/react") || id.includes("node_modules/scheduler")) {

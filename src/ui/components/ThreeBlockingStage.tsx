@@ -4,6 +4,7 @@ import * as THREE from "three";
 import { tl } from "../../game/i18n.js";
 import {
   resolveAssetByTag,
+  sampleShotBlockingAtTime,
   type CameraBlocking3D,
   type StoryboardShot,
   type WhiteboxRenderMode
@@ -11,15 +12,18 @@ import {
 import {
   createOutpostWhiteboxSet,
   rebuildShotBlockingRig,
-  renderShotWhiteboxSnapshot,
+  renderShotStartEndSnapshots,
   type OutpostSceneHandles
 } from "../../game/three-whitebox-renderer.js";
 import type { Locale } from "../../game/types.js";
 
 export interface CapturedShotFrame {
   clayDataUrl: string | null;
+  clayEndDataUrl?: string | null;
   depthDataUrl: string | null;
+  depthEndDataUrl?: string | null;
   litDataUrl: string | null;
+  litEndDataUrl?: string | null;
   cameraOverride: CameraBlocking3D;
   capturedAt: number;
 }
@@ -33,7 +37,7 @@ interface Props {
   onCaptureToStoryboard?: (shotId: string, frame: CapturedShotFrame) => void;
 }
 
-type ViewMode = "orbit" | "pov";
+type ViewMode = "orbit" | "top" | "follow" | "pov";
 
 const ALERT_COLORS: Record<"amber" | "red" | "cyan", number> = {
   amber: 0xeba834,
@@ -102,6 +106,14 @@ export function ThreeBlockingStage({
   const [renderMode, setRenderMode] = useState<WhiteboxRenderMode>("clay");
   const [viewMode, setViewMode] = useState<ViewMode>("orbit");
   const [showSafeFrame, setShowSafeFrame] = useState(true);
+  const [showFovCone, setShowFovCone] = useState(true);
+  const [showCamPath, setShowCamPath] = useState(true);
+  const [showActors, setShowActors] = useState(true);
+  const [showPipCam, setShowPipCam] = useState(true);
+  const [playheadSec, setPlayheadSec] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState<0.5 | 1 | 1.5>(1);
+  const [isRecordingWebm, setIsRecordingWebm] = useState(false);
   const [webglReady, setWebglReady] = useState(true);
   const [captureSynced, setCaptureSynced] = useState(false);
   const [localCamOverride, setLocalCamOverride] = useState<CameraBlocking3D | undefined>(cameraOverride);
@@ -110,7 +122,14 @@ export function ThreeBlockingStage({
     setLocalCamOverride(cameraOverride);
   }, [shot.id, cameraOverride]);
 
+  useEffect(() => {
+    setIsPlaying(false);
+    setPlayheadSec(0);
+    playheadRef.current = 0;
+  }, [shot.id]);
+
   const effectiveCam: CameraBlocking3D = localCamOverride ?? shot.blocking.camera;
+  const sampledFrame = sampleShotBlockingAtTime(shot, playheadSec, effectiveCam);
 
   const renderModeRef = useRef<WhiteboxRenderMode>(renderMode);
   renderModeRef.current = renderMode;
@@ -122,11 +141,27 @@ export function ThreeBlockingStage({
   activeShotRef.current = shot;
   const effectiveCamRef = useRef<CameraBlocking3D>(effectiveCam);
   effectiveCamRef.current = effectiveCam;
+  const showFovConeRef = useRef(showFovCone);
+  showFovConeRef.current = showFovCone;
+  const showCamPathRef = useRef(showCamPath);
+  showCamPathRef.current = showCamPath;
+  const showActorsRef = useRef(showActors);
+  showActorsRef.current = showActors;
+  const showPipCamRef = useRef(showPipCam);
+  showPipCamRef.current = showPipCam;
+  const playheadRef = useRef(playheadSec);
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
+  const playbackRateRef = useRef(playbackRate);
+  playbackRateRef.current = playbackRate;
+  const recordingStopCbRef = useRef<(() => void) | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 
   const orbitRef = useRef({
     yaw: -0.68,
     pitch: 0.42,
     distance: 9.2,
+    topHeight: 13.0,
     dragging: false,
     lastX: 0,
     lastY: 0
@@ -144,6 +179,13 @@ export function ThreeBlockingStage({
     return () => {
       if (syncTimerRef.current !== null) {
         window.clearTimeout(syncTimerRef.current);
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+        try {
+          mediaRecorderRef.current.stop();
+        } catch {
+          // ignore
+        }
       }
     };
   }, []);
@@ -183,7 +225,8 @@ export function ThreeBlockingStage({
     mount.appendChild(renderer.domElement);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(48, initW / initH, 0.25, 24);
+    const camera = new THREE.PerspectiveCamera(48, initW / initH, 0.25, 32);
+    const pipCamera = new THREE.PerspectiveCamera(45, 16 / 9, 0.25, 30);
 
     const outpostHandles = createOutpostWhiteboxSet(scene);
     outpostHandles.applyRenderMode(renderModeRef.current);
@@ -231,12 +274,19 @@ export function ThreeBlockingStage({
       orbitRef.current.dragging = false;
     };
     const onWheel = (e: WheelEvent) => {
-      if (viewModeRef.current !== "orbit") return;
-      e.preventDefault();
-      orbitRef.current.distance = Math.max(
-        3.5,
-        Math.min(16, orbitRef.current.distance + e.deltaY * 0.006)
-      );
+      if (viewModeRef.current === "orbit") {
+        e.preventDefault();
+        orbitRef.current.distance = Math.max(
+          3.5,
+          Math.min(16, orbitRef.current.distance + e.deltaY * 0.006)
+        );
+      } else if (viewModeRef.current === "top") {
+        e.preventDefault();
+        orbitRef.current.topHeight = Math.max(
+          6,
+          Math.min(24, orbitRef.current.topHeight + e.deltaY * 0.008)
+        );
+      }
     };
 
     domEl.addEventListener("pointerdown", onPointerDown);
@@ -245,14 +295,49 @@ export function ThreeBlockingStage({
     domEl.addEventListener("wheel", onWheel, { passive: false });
 
     let rafId = 0;
+    let lastNow = performance.now();
+    let lastUiSyncNow = 0;
     const lookTarget = new THREE.Vector3(0, 1.2, 0);
     const desiredCamPos = new THREE.Vector3();
     const desiredTarget = new THREE.Vector3();
+    const followForward = new THREE.Vector3();
 
-    const animate = () => {
+    const animate = (now: number) => {
+      const dt = Math.min(0.1, Math.max(0, (now - lastNow) / 1000));
+      lastNow = now;
+
       const curShot = activeShotRef.current;
       const curCam = effectiveCamRef.current;
       const snowAttr = outpostHandles.snowPosAttr;
+
+      if (isPlayingRef.current) {
+        const nextT = playheadRef.current + dt * playbackRateRef.current;
+        if (nextT >= curShot.durationSec) {
+          if (recordingStopCbRef.current) {
+            playheadRef.current = curShot.durationSec;
+            setPlayheadSec(curShot.durationSec);
+            isPlayingRef.current = false;
+            setIsPlaying(false);
+            const stopCb = recordingStopCbRef.current;
+            recordingStopCbRef.current = null;
+            stopCb();
+          } else {
+            playheadRef.current = 0;
+          }
+        } else {
+          playheadRef.current = nextT;
+        }
+        rebuildShotBlockingRig(dynamicGroup, camRigGroup, curShot, renderModeRef.current, curCam, {
+          timeSec: playheadRef.current,
+          showCamPath: showCamPathRef.current,
+          showFovCone: showFovConeRef.current,
+          showActors: showActorsRef.current
+        });
+        if (now - lastUiSyncNow > 55) {
+          lastUiSyncNow = now;
+          setPlayheadSec(playheadRef.current);
+        }
+      }
 
       if (!motionPausedRef.current && snowAttr) {
         for (let i = 0; i < snowAttr.count; i++) {
@@ -264,17 +349,53 @@ export function ThreeBlockingStage({
         snowAttr.needsUpdate = true;
       }
 
+      const sampled = sampleShotBlockingAtTime(curShot, playheadRef.current, curCam);
+      const [cx, cy, cz] = sampled.camera.pos;
+      const [tx, ty, tz] = sampled.camera.target;
+      const snapAlpha = motionPausedRef.current || isPlayingRef.current ? 1 : 0.18;
+
       if (viewModeRef.current === "pov") {
         camRigGroup.visible = false;
-        const [cx, cy, cz] = curCam.pos;
-        const [tx, ty, tz] = curCam.target;
         desiredCamPos.set(cx, cy, cz);
         desiredTarget.set(tx, ty, tz);
-        const lerpAlpha = motionPausedRef.current ? 1 : 0.16;
-        camera.position.lerp(desiredCamPos, lerpAlpha);
-        lookTarget.lerp(desiredTarget, lerpAlpha);
-        if (Math.abs(camera.fov - curCam.fov) > 0.15) {
-          camera.fov += (curCam.fov - camera.fov) * (motionPausedRef.current ? 1 : 0.22);
+        camera.position.lerp(desiredCamPos, snapAlpha);
+        lookTarget.lerp(desiredTarget, snapAlpha);
+        if (Math.abs(camera.fov - sampled.camera.fov) > 0.15) {
+          camera.fov += (sampled.camera.fov - camera.fov) * (snapAlpha === 1 ? 1 : 0.24);
+          camera.updateProjectionMatrix();
+        }
+        camera.lookAt(lookTarget);
+      } else if (viewModeRef.current === "top") {
+        camRigGroup.visible = true;
+        const centerX = curShot.blocking.zone === "inner_corridor" ? 3.1 : 0.0;
+        const centerZ = curShot.blocking.zone === "vestibule" ? -1.4 : 0.0;
+        desiredCamPos.set(centerX, orbitRef.current.topHeight, centerZ + 0.01);
+        desiredTarget.set(centerX, 0, centerZ);
+        camera.position.lerp(desiredCamPos, 0.22);
+        lookTarget.lerp(desiredTarget, 0.22);
+        if (Math.abs(camera.fov - 46) > 0.15) {
+          camera.fov += (46 - camera.fov) * 0.22;
+          camera.updateProjectionMatrix();
+        }
+        camera.lookAt(lookTarget);
+      } else if (viewModeRef.current === "follow") {
+        camRigGroup.visible = true;
+        desiredTarget.set(tx, ty, tz);
+        followForward.set(tx - cx, ty - cy, tz - cz);
+        if (followForward.lengthSq() < 0.001) {
+          followForward.set(0, 0, -1);
+        } else {
+          followForward.normalize();
+        }
+        desiredCamPos.set(
+          cx - followForward.x * 2.6,
+          cy + 1.15,
+          cz - followForward.z * 2.6
+        );
+        camera.position.lerp(desiredCamPos, snapAlpha);
+        lookTarget.lerp(desiredTarget, snapAlpha);
+        if (Math.abs(camera.fov - 52) > 0.15) {
+          camera.fov += (52 - camera.fov) * 0.2;
           camera.updateProjectionMatrix();
         }
         camera.lookAt(lookTarget);
@@ -282,18 +403,17 @@ export function ThreeBlockingStage({
         camRigGroup.visible = true;
         const { yaw, pitch, distance } = orbitRef.current;
         if (curShot.blocking.zone === "inner_corridor") {
-          desiredTarget.set(5.4, 1.2, -0.4);
+          desiredTarget.set(3.4, 1.2, 0.2);
         } else {
-          desiredTarget.set(0.2, 1.15, 0.1);
+          desiredTarget.set(0.1, 1.15, -0.3);
         }
         desiredCamPos.set(
           desiredTarget.x + Math.sin(yaw) * Math.cos(pitch) * distance,
           desiredTarget.y + Math.sin(pitch) * distance,
           desiredTarget.z + Math.cos(yaw) * Math.cos(pitch) * distance
         );
-        const lerpAlpha = motionPausedRef.current ? 1 : 0.16;
-        camera.position.lerp(desiredCamPos, lerpAlpha);
-        lookTarget.lerp(desiredTarget, lerpAlpha);
+        camera.position.lerp(desiredCamPos, motionPausedRef.current ? 1 : 0.16);
+        lookTarget.lerp(desiredTarget, motionPausedRef.current ? 1 : 0.16);
         if (Math.abs(camera.fov - 48) > 0.15) {
           camera.fov += (48 - camera.fov) * (motionPausedRef.current ? 1 : 0.18);
           camera.updateProjectionMatrix();
@@ -301,7 +421,41 @@ export function ThreeBlockingStage({
         camera.lookAt(lookTarget);
       }
 
-      renderer?.render(scene, camera);
+      const canvasW = domEl.clientWidth || renderer.domElement.width;
+      const canvasH = domEl.clientHeight || renderer.domElement.height;
+      renderer.setScissorTest(false);
+      renderer.setViewport(0, 0, canvasW, canvasH);
+      renderer.render(scene, camera);
+
+      // Picture-in-Picture live Cam POV viewfinder when inspecting in Orbit/Top/Follow
+      if (viewModeRef.current !== "pov" && showPipCamRef.current && !recordingStopCbRef.current) {
+        const pipW = Math.max(120, Math.round(canvasW * 0.28));
+        const pipH = Math.max(68, Math.round((pipW * 9) / 16));
+        const margin = 12;
+        if (canvasW > pipW + margin * 2 && canvasH > pipH + margin * 2) {
+          const pipX = canvasW - pipW - margin;
+          const pipY = canvasH - pipH - margin;
+          const prevRigVis = camRigGroup.visible;
+          camRigGroup.visible = false;
+          pipCamera.position.set(cx, cy, cz);
+          pipCamera.fov = sampled.camera.fov;
+          pipCamera.aspect = pipW / pipH;
+          pipCamera.near = renderModeRef.current === "depth" ? 0.3 : 0.25;
+          pipCamera.far = renderModeRef.current === "depth" ? 14 : 30;
+          pipCamera.updateProjectionMatrix();
+          pipCamera.lookAt(tx, ty, tz);
+
+          renderer.setScissorTest(true);
+          renderer.setViewport(pipX, pipY, pipW, pipH);
+          renderer.setScissor(pipX, pipY, pipW, pipH);
+          renderer.clearDepth();
+          renderer.render(scene, pipCamera);
+          renderer.setScissorTest(false);
+          renderer.setViewport(0, 0, canvasW, canvasH);
+          camRigGroup.visible = prevRigVis;
+        }
+      }
+
       rafId = requestAnimationFrame(animate);
     };
     rafId = requestAnimationFrame(animate);
@@ -335,10 +489,42 @@ export function ThreeBlockingStage({
     const outpostHandles = outpostHandlesRef.current;
     if (!dynamicGroup || !camRigGroup || !outpostHandles) return;
 
+    playheadRef.current = playheadSec;
     outpostHandles.alertLight.color.setHex(ALERT_COLORS[shot.blocking.alertLight]);
-    rebuildShotBlockingRig(dynamicGroup, camRigGroup, shot, renderMode, effectiveCam);
+    rebuildShotBlockingRig(dynamicGroup, camRigGroup, shot, renderMode, effectiveCam, {
+      timeSec: playheadSec,
+      showCamPath,
+      showFovCone,
+      showActors
+    });
     outpostHandles.applyRenderMode(renderMode);
-  }, [shot, renderMode, effectiveCam]);
+  }, [shot, renderMode, effectiveCam, playheadSec, showCamPath, showFovCone, showActors]);
+
+  const handleScrubTime = (nextSec: number) => {
+    const clamped = Math.max(0, Math.min(shot.durationSec, nextSec));
+    setIsPlaying(false);
+    isPlayingRef.current = false;
+    playheadRef.current = clamped;
+    setPlayheadSec(clamped);
+  };
+
+  const handleTogglePlay = () => {
+    if (isPlaying) {
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      return;
+    }
+    if (playheadRef.current >= shot.durationSec - 0.05) {
+      playheadRef.current = 0;
+      setPlayheadSec(0);
+    }
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+  };
+
+  const handleCyclePlaybackRate = () => {
+    setPlaybackRate((prev) => (prev === 1 ? 1.5 : prev === 1.5 ? 0.5 : 1));
+  };
 
   const commitCameraOverride = (nextCam: CameraBlocking3D) => {
     setLocalCamOverride(nextCam);
@@ -365,24 +551,14 @@ export function ThreeBlockingStage({
   };
 
   const handleCaptureToStoryboard = () => {
-    let clayDataUrl = renderShotWhiteboxSnapshot(shot, {
-      renderMode: "clay",
+    const snaps = renderShotStartEndSnapshots(shot, {
       width: 640,
       height: 360,
-      cameraOverride: effectiveCam
+      startCameraOverride: effectiveCam
     });
-    let depthDataUrl = renderShotWhiteboxSnapshot(shot, {
-      renderMode: "depth",
-      width: 640,
-      height: 360,
-      cameraOverride: effectiveCam
-    });
-    let litDataUrl = renderShotWhiteboxSnapshot(shot, {
-      renderMode: "lit",
-      width: 640,
-      height: 360,
-      cameraOverride: effectiveCam
-    });
+    let clayDataUrl = snaps.clayStart;
+    let depthDataUrl = snaps.depthStart;
+    let litDataUrl = snaps.litStart;
 
     const fallbackLiveUrl = (() => {
       try {
@@ -403,8 +579,11 @@ export function ThreeBlockingStage({
 
     const frame: CapturedShotFrame = {
       clayDataUrl,
+      clayEndDataUrl: snaps.clayEnd,
       depthDataUrl,
+      depthEndDataUrl: snaps.depthEnd,
       litDataUrl,
+      litEndDataUrl: snaps.litEnd,
       cameraOverride: cloneCamera(effectiveCam),
       capturedAt: Date.now()
     };
@@ -419,6 +598,59 @@ export function ThreeBlockingStage({
     }, 2400);
   };
 
+  const handleRecordPrevizWebm = () => {
+    const renderer = rendererRef.current;
+    if (!renderer || isRecordingWebm) return;
+    const canvas = renderer.domElement as HTMLCanvasElement & {
+      captureStream?: (fps?: number) => MediaStream;
+    };
+    if (typeof MediaRecorder === "undefined" || typeof canvas.captureStream !== "function") {
+      return;
+    }
+
+    const prevView = viewMode;
+    const chunks: BlobPart[] = [];
+    const stream = canvas.captureStream(24);
+    const mimeType = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+      ? "video/webm;codecs=vp9"
+      : "video/webm";
+    const recorder = new MediaRecorder(stream, { mimeType });
+    mediaRecorderRef.current = recorder;
+
+    recorder.ondataavailable = (ev) => {
+      if (ev.data && ev.data.size > 0) chunks.push(ev.data);
+    };
+    recorder.onstop = () => {
+      setIsRecordingWebm(false);
+      setViewMode(prevView);
+      viewModeRef.current = prevView;
+      if (chunks.length > 0) {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `${shot.shotCode.toLowerCase()}-previz-${renderMode}.webm`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      mediaRecorderRef.current = null;
+    };
+
+    setViewMode("pov");
+    viewModeRef.current = "pov";
+    playheadRef.current = 0;
+    setPlayheadSec(0);
+    setIsRecordingWebm(true);
+    recordingStopCbRef.current = () => {
+      if (recorder.state !== "inactive") recorder.stop();
+    };
+    recorder.start(120);
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+  };
+
   const boundAssets = (shot.boundAssetTags ?? [])
     .map((tag) => resolveAssetByTag(tag))
     .filter((item): item is NonNullable<typeof item> => Boolean(item));
@@ -429,8 +661,13 @@ export function ThreeBlockingStage({
         <div className="three-toolbar-meta">
           <span className="fmv-code-badge">{shot.shotCode}</span>
           <span className="three-lens-badge">
-            {effectiveCam.lensLabel} · FOV {effectiveCam.fov}°
+            {sampledFrame.camera.lensLabel} · FOV {Math.round(sampledFrame.camera.fov)}°
           </span>
+          {shot.pipelineRoute ? (
+            <span className="three-route-badge">
+              {shot.pipelineRoute === "v2v_whitebox" ? "V2V WHITEBOX" : "FL2VA KEYFRAMES"}
+            </span>
+          ) : null}
         </div>
 
         <div className="three-mode-switch" role="group" aria-label="White-Box Render Mode">
@@ -466,7 +703,23 @@ export function ThreeBlockingStage({
             className={`ctrl-btn ${viewMode === "orbit" ? "amber" : ""}`}
             onClick={() => setViewMode("orbit")}
           >
-            {tl({ zh: "导演全局调度 (Orbit)", en: "Director Orbit", ja: "全体俯瞰 (Orbit)" }, lang)}
+            {tl({ zh: "Orbit 3D", en: "Orbit 3D", ja: "Orbit 3D" }, lang)}
+          </Button>
+          <Button
+            type="button"
+            id="btn-three-top"
+            className={`ctrl-btn ${viewMode === "top" ? "amber" : ""}`}
+            onClick={() => setViewMode("top")}
+          >
+            {tl({ zh: "俯视轴线 Top Map", en: "Top Map", ja: "俯瞰 Top Map" }, lang)}
+          </Button>
+          <Button
+            type="button"
+            id="btn-three-follow"
+            className={`ctrl-btn ${viewMode === "follow" ? "amber" : ""}`}
+            onClick={() => setViewMode("follow")}
+          >
+            {tl({ zh: "跟随 Follow Rig", en: "Follow Rig", ja: "追従 Follow" }, lang)}
           </Button>
           <Button
             type="button"
@@ -474,7 +727,7 @@ export function ThreeBlockingStage({
             className={`ctrl-btn ${viewMode === "pov" ? "amber" : ""}`}
             onClick={() => setViewMode("pov")}
           >
-            {tl({ zh: "实拍机位取景 (POV)", en: "Camera POV", ja: "実写視点 (POV)" }, lang)}
+            {tl({ zh: "机位 Cam POV", en: "Cam POV", ja: "視点 Cam POV" }, lang)}
           </Button>
           <Button
             type="button"
@@ -483,11 +736,11 @@ export function ThreeBlockingStage({
             aria-pressed={showSafeFrame}
             onClick={() => setShowSafeFrame((prev) => !prev)}
           >
-            {tl({ zh: "安全框 16:9 / 2.39:1", en: "Safe Frame 2.39:1", ja: "安全枠 2.39:1" }, lang)}
+            {tl({ zh: "安全框 2.39:1", en: "Safe Frame", ja: "安全枠" }, lang)}
           </Button>
         </div>
 
-        <div className="three-capture-group" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="three-capture-group" style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
           <Button
             type="button"
             id="btn-capture-whitebox"
@@ -496,12 +749,23 @@ export function ThreeBlockingStage({
           >
             {tl(
               {
-                zh: "📸 拍摄此 3D 机位到分镜板",
-                en: "📸 Capture 3D POV to Storyboard",
-                ja: "📸 3Dカメラを絵コンテへ撮影"
+                zh: "📸 导出首尾白模帧到分镜",
+                en: "📸 Capture Start+End to Storyboard",
+                ja: "📸 首尾フレームを絵コンテへ"
               },
               lang
             )}
+          </Button>
+          <Button
+            type="button"
+            id="btn-export-previz-webm"
+            className={`ctrl-btn ${isRecordingWebm ? "amber" : ""}`}
+            disabled={!webglReady || isRecordingWebm}
+            onClick={handleRecordPrevizWebm}
+          >
+            {isRecordingWebm
+              ? tl({ zh: "⏺ 录制白膜中...", en: "⏺ Recording WebM...", ja: "⏺ 録画中..." }, lang)
+              : tl({ zh: "🎥 导出白膜视频", en: "🎥 Export WebM", ja: "🎥 白模動画出力" }, lang)}
           </Button>
           {captureSynced ? (
             <span
@@ -515,10 +779,119 @@ export function ThreeBlockingStage({
                 border: "1px solid var(--safe-admit)"
               }}
             >
-              {tl({ zh: "已同步至分镜板 ✓", en: "Synced to Storyboard ✓", ja: "絵コンテに同期済 ✓" }, lang)}
+              {tl({ zh: "首尾帧已同步 ✓", en: "Start+End Synced ✓", ja: "首尾同期済 ✓" }, lang)}
             </span>
           ) : null}
         </div>
+      </div>
+
+      {/* Layer Toggles + Beat Timeline Bar */}
+      <div className="three-timeline-bar">
+        <div className="three-timeline-controls">
+          <Button
+            type="button"
+            id="btn-three-play"
+            className={`ctrl-btn ${isPlaying ? "amber" : ""}`}
+            onClick={handleTogglePlay}
+          >
+            {isPlaying
+              ? tl({ zh: "⏸ 暂停", en: "⏸ Pause", ja: "⏸ 停止" }, lang)
+              : tl({ zh: "▶ 预演播放", en: "▶ Play", ja: "▶ 再生" }, lang)}
+          </Button>
+          <Button type="button" className="ctrl-btn" onClick={handleCyclePlaybackRate}>
+            {playbackRate}x
+          </Button>
+          <span className="three-time-readout">
+            {playheadSec.toFixed(1)}s / {shot.durationSec.toFixed(1)}s
+          </span>
+          <input
+            type="range"
+            className="three-timeline-slider"
+            min={0}
+            max={shot.durationSec}
+            step={0.05}
+            value={playheadSec}
+            aria-label="Pre-viz Timeline Scrubber"
+            onChange={(e) => handleScrubTime(Number(e.target.value))}
+          />
+          <Button type="button" className="ctrl-btn" onClick={() => handleScrubTime(0)}>
+            {tl({ zh: "首帧", en: "Start", ja: "先頭" }, lang)}
+          </Button>
+          <Button type="button" className="ctrl-btn" onClick={() => handleScrubTime(shot.durationSec)}>
+            {tl({ zh: "尾帧", en: "End", ja: "末尾" }, lang)}
+          </Button>
+        </div>
+
+        <div className="three-layer-toggles">
+          <Button
+            type="button"
+            className={`ctrl-btn ${showFovCone ? "amber" : ""}`}
+            onClick={() => setShowFovCone((v) => !v)}
+          >
+            + FovCone
+          </Button>
+          <Button
+            type="button"
+            className={`ctrl-btn ${showCamPath ? "amber" : ""}`}
+            onClick={() => setShowCamPath((v) => !v)}
+          >
+            + Cam Path
+          </Button>
+          <Button
+            type="button"
+            className={`ctrl-btn ${showActors ? "amber" : ""}`}
+            onClick={() => setShowActors((v) => !v)}
+          >
+            + Actors
+          </Button>
+          <Button
+            type="button"
+            className={`ctrl-btn ${showPipCam ? "amber" : ""}`}
+            onClick={() => setShowPipCam((v) => !v)}
+          >
+            + PiP POV
+          </Button>
+        </div>
+
+        {shot.blocking.beats && shot.blocking.beats.length > 0 ? (
+          <div className="three-beat-strip">
+            <div className="three-beat-pills">
+              {shot.blocking.beats.map((beat, idx) => {
+                const isActive = sampledFrame.activeBeatIndex === idx;
+                return (
+                  <button
+                    key={beat.id}
+                    type="button"
+                    data-beat-id={beat.id}
+                    className={`three-beat-pill ${isActive ? "active" : ""}`}
+                    style={{ borderColor: beat.color }}
+                    onClick={() => handleScrubTime(beat.startSec)}
+                  >
+                    <span className="three-beat-dot" style={{ backgroundColor: beat.color }} />
+                    <span>{tl(beat.label, lang)}</span>
+                    <span className="three-beat-span">
+                      {(beat.endSec - beat.startSec).toFixed(0)}s
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {sampledFrame.activeBeat ? (
+              <div className="three-beat-note">
+                <span>
+                  <strong>BEAT {sampledFrame.activeBeatIndex + 1}:</strong>{" "}
+                  {tl(sampledFrame.activeBeat.rigNote, lang)}
+                </span>
+                {sampledFrame.activeBeat.cheatPoint ? (
+                  <span className="three-cheat-badge">
+                    ◆ {tl(sampledFrame.activeBeat.cheatPoint.label, lang)} @{" "}
+                    {sampledFrame.activeBeat.cheatPoint.atSec.toFixed(1)}s
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
 
       {/* Director Camera Tuning Bar */}
@@ -664,6 +1037,15 @@ export function ThreeBlockingStage({
           style={{ position: "absolute", inset: 0 }}
         />
 
+        {viewMode !== "pov" && showPipCam && webglReady && !isRecordingWebm ? (
+          <div className="three-pip-frame" aria-hidden="true">
+            <div className="three-pip-header">
+              <span>CAM 1 · 16:9 LIVE POV</span>
+              <span>{Math.round(sampledFrame.camera.fov)}°</span>
+            </div>
+          </div>
+        ) : null}
+
         {viewMode === "pov" && showSafeFrame && webglReady ? (
           <div
             className="three-safeframe-overlay"
@@ -789,18 +1171,18 @@ export function ThreeBlockingStage({
         <div className="three-telem-chip">
           <span className="telem-k">CAM XYZ</span>
           <span className="telem-v">
-            [{effectiveCam.pos.map((n) => n.toFixed(2)).join(", ")}]
+            [{sampledFrame.camera.pos.map((n) => n.toFixed(2)).join(", ")}]
           </span>
         </div>
         <div className="three-telem-chip">
           <span className="telem-k">AIM XYZ</span>
           <span className="telem-v">
-            [{effectiveCam.target.map((n) => n.toFixed(2)).join(", ")}]
+            [{sampledFrame.camera.target.map((n) => n.toFixed(2)).join(", ")}]
           </span>
         </div>
         <div className="three-telem-chip wide">
           <span className="telem-k">{tl({ zh: "180° 轴线与走位", en: "180° AXIS & BLOCKING", ja: "軸線と動線" }, lang)}</span>
-          <span className="telem-v">{tl(effectiveCam.axisNote, lang)}</span>
+          <span className="telem-v">{tl(sampledFrame.camera.axisNote, lang)}</span>
         </div>
         {boundAssets.length > 0 ? (
           <div className="three-telem-chip wide">
